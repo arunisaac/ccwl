@@ -13,7 +13,9 @@
             input
             output
             step
-            workflow-output))
+            workflow-output
+            intermediate
+            clitool-step))
 
 (define-record-type (<input> make-input input?)
   (fields (immutable id input-id)
@@ -37,6 +39,29 @@
 (define* (output id #:key type binding (other '()))
   "Build and return an <output> object."
   (make-output id type binding other))
+
+(define-record-type (<intermediate> intermediate intermediate?)
+  (fields (immutable input intermediate-input)
+          (immutable output-source intermediate-output-source)))
+
+(define* (clitool-step id args #:key (additional-inputs '()) (outputs '()) stdout stderr (other '()))
+  (step id
+        (clitool (map (lambda (arg)
+                        (if (intermediate? arg)
+                            (intermediate-input arg)
+                            arg))
+                      args)
+                 #:additional-inputs additional-inputs
+                 #:outputs outputs
+                 #:stdout stdout
+                 #:stderr stderr
+                 #:other other)
+        (append (filter (lambda (arg)
+                          (or (input? arg)
+                              (intermediate? arg)))
+                        args)
+                additional-inputs)
+        (map output-id outputs)))
 
 (define* (parse-arguments args #:optional (position 1))
   "Parse ARGS, a list of command line arguments and return a parse
@@ -156,6 +181,7 @@ lists---the base command and the actual arguments."
                       (append-map (lambda (step)
                                     (filter-map (match-lambda
                                                   ((id . (? input? input)) input)
+                                                  ((? input? input) input)
                                                   (_ #f))
                                                 (step-in step)))
                                   steps)
@@ -176,7 +202,12 @@ lists---the base command and the actual arguments."
                                      ((id . input)
                                       (cons id (if (input? input)
                                                    (input-id input)
-                                                   input))))
+                                                   input)))
+                                     ((? input? input)
+                                      (cons (input-id input) (input-id input)))
+                                     ((? intermediate? intermediate)
+                                      (cons (input-id (intermediate-input intermediate))
+                                            (intermediate-output-source intermediate))))
                                    (step-in step)))
                        (out . ,(list->vector (step-out step)))
                        (run . ,(step-run step))))
