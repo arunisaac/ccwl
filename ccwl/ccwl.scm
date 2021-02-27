@@ -80,6 +80,22 @@ variable."
            (parse-arguments tail (1+ position))))
     (() '())))
 
+(define (break-pair pred lst)
+  "Return the longest initial prefix of LST that does not satisfy PRED,
+and the remaining tail. PRED is a 2-arity predicate. For each element
+under consideration, PRED is passed that element and the next. For the
+last element of LST, PRED is passed that element alone."
+  (match lst
+    ((head next tail ...)
+     (if (not (pred head next))
+         (let ((prefix tail (break-pair pred (cons next tail))))
+           (values (cons head prefix) tail))
+         (values (list) lst)))
+    ((last)
+     (if (not (pred last))
+         (values lst (list))
+         (values (list) lst)))))
+
 (define (parse-command args)
   "Parse ARGS, a list of command line arguments and return two
 lists---the base command and the actual arguments."
