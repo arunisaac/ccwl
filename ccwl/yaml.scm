@@ -3,7 +3,7 @@
 ;;
 ;; This file implements a library to convert a scm tree to yaml.
 
-(define-module (generate-cwl yaml)
+(define-module (ccwl yaml)
   #:use-module (ice-9 match)
   #:export (scm->yaml))
 

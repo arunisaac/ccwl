@@ -3,7 +3,7 @@
 ;;
 ;; This file implements a generator to generate CWL files.
 
-(define-module (generate-cwl generate-cwl)
+(define-module (ccwl ccwl)
   #:use-module (rnrs records syntactic)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-71)
