@@ -4,8 +4,10 @@
 ;; This file implements a library to convert a scm tree to yaml.
 
 (define-module (ccwl yaml)
+  #:use-module (srfi srfi-26)
   #:use-module (ice-9 match)
-  #:export (scm->yaml))
+  #:export (scm->yaml
+            scm->yaml-string))
 
 (define (kebab->camel string)
   "Convert STRING from kebab case to CAMEL case."
@@ -83,3 +85,7 @@ PORT. LEVEL is an internal recursion variable."
     (symbol
      (display-atom symbol port)
      (newline port))))
+
+(define (scm->yaml-string scm)
+  (call-with-output-string
+    (cut scm->yaml scm <>)))
