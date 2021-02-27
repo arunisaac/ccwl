@@ -100,25 +100,16 @@ last element of LST, PRED is passed that element alone."
   "Parse ARGS, a list of command line arguments and return two
 lists---the base command and the actual arguments."
   (let ((base-command arguments
-                      (break (match-lambda
-                               ((arg next)
-                                (and (string? arg)
-                                     (string-prefix? "-" arg)
-                                     (input? next))))
-                             (map list args (drop args 1)))))
-    (values (append (map (match-lambda
-                           ((arg next) arg))
-                         base-command)
-                    (if (input? (last args))
-                        (list)
-                        (take-right args 1)))
-            (parse-arguments
-             (append (map (match-lambda
-                            ((arg next) arg))
-                          arguments)
-                     (if (input? (last args))
-                         (take-right args 1)
-                         (list)))))))
+                      (break-pair (case-lambda
+                                    ((arg next)
+                                     (and (string? arg)
+                                          (string-prefix? "-" arg)
+                                          (input? next)))
+                                    ((last-arg)
+                                     (input? last-arg)))
+                                  args)))
+    (values base-command
+            (parse-arguments arguments))))
 
 (define (input->tree input)
   "Convert INPUT, an <input> object, to a tree."
