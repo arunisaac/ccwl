@@ -53,13 +53,16 @@ ATOM is a symbol."
      (display-atom key port)
      (display ":" port)
      (match value
-       ((or #(_ ...)
-            ((_ . _) (_ . _) ...))
+       ;; If value is an empty array or dictionary, display it on the
+       ;; same line.
+       ((or #() ())
+        (display " " port)
+        (scm->yaml value port level))
+       ;; Else, display it on the next line.
+       (_
         (newline port)
         (indent-level port (1+ level))
-        (scm->yaml value port (1+ level)))
-       (_ (display " " port)
-          (scm->yaml value port level))))))
+        (scm->yaml value port (1+ level)))))))
 
 (define* (scm->yaml scm #:optional (port (current-output-port)) (level 0))
   "Convert SCM, an S-expression tree, to YAML and display to
@@ -72,7 +75,8 @@ PORT. LEVEL is an internal recursion variable."
                  (display-array-element element port level))
                tail))
     (#()
-     (display "[]" port))
+     (display "[]" port)
+     (newline port))
     ((head tail ...)
      (display-dictionary-entry head port level)
      (for-each (lambda (entry)
