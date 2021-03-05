@@ -23,8 +23,8 @@
   input?
   (id input-id)
   (type input-type)
-  (default input-default)
   (label input-label)
+  (default input-default)
   (other input-other))
 
 (define-immutable-record-type <unspecified-default>
@@ -33,7 +33,7 @@
 
 (define* (input id #:key type label (default (make-unspecified-default)) (other '()))
   "Build and return an <input> object."
-  (make-input id type default label other))
+  (make-input id type label default other))
 
 (define-immutable-record-type <output>
   (make-output id type binding source other)
