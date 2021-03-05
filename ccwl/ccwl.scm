@@ -61,7 +61,6 @@
                          (cons 'default (input-default input)))))
     ,@(input-other input)))
 
-(define* (workflow steps outputs #:key (other '()))
 (define-immutable-record-type <step>
   (make-step id run in out)
   step?
@@ -111,47 +110,55 @@
   (string=? (input-id input1)
             (input-id input2)))
 
+(define* (workflow id steps outputs #:key (other '()))
   "Build a Workflow class CWL workflow."
-  `((cwlVersion . "v1.1")
-    (class . Workflow)
-    ,@other
-    (inputs . ,(delete-duplicates
-                (map input->tree
-                     (append
-                      (append-map (lambda (step)
-                                    (filter-map (match-lambda
-                                                  ((id . (? input? input)) input)
-                                                  ((? input? input) input)
-                                                  (_ #f))
+  (let* ((inputs
+          ;; When the same input is used by multiple steps, there will
+          ;; be duplicates. So, deduplicate.
+          (delete-duplicates
+           (append (append-map step-in steps)
+                   ;; If an input is directly copied to the output, an
+                   ;; output-source will be an <input> object.
+                   (filter-map (lambda (output)
+                                 (and (input? (output-source output))
+                                      (output-source output)))
+                               outputs))
+           input=?))
+         ;; List of non-internal inputs that should be interfaced with
+         ;; the outside world.
+         (interface-inputs
+          (filter (lambda (input)
+                    (string=? (input-id input)
+                              (input-source input)))
+                  inputs)))
+    (make-step id
+               `((cwlVersion . "v1.1")
+                 (class . Workflow)
+                 (requirements (Subworkflow-feature-requirement))
+                 ,@other
+                 (inputs . ,(map input->tree interface-inputs))
+                 (outputs . ,(map (lambda (output)
+                                    `(,(output-id output)
+                                      (type . ,(output-type output))
+                                      (output-source . ,(match (output-source output)
+                                                          ((? string? source) source)
+                                                          ((? input? input) (input-id input))))))
+                                  outputs))
+                 (steps . ,(map (lambda (step)
+                                  `(,(step-id step)
+                                    (in . ,(map (lambda (input)
+                                                  (cons (input-id input)
+                                                        (input-source input)))
                                                 (step-in step)))
-                                  steps)
-                      (filter-map (lambda (output)
-                                    (and (input? (workflow-output-source output))
-                                         (workflow-output-source output)))
-                                  outputs)))))
-    (outputs . ,(map (lambda (output)
-                       `(,(workflow-output-id output)
-                         (type . ,(workflow-output-type output))
-                         (output-source . ,(match (workflow-output-source output)
-                                             ((? string? source) source)
-                                             ((? input? input) (input-id input))))))
-                     outputs))
-    (steps . ,(map (lambda (step)
-                     `(,(step-id step)
-                       (in . ,(map (match-lambda
-                                     ((id . input)
-                                      (cons id (if (input? input)
-                                                   (input-id input)
-                                                   input)))
-                                     ((? input? input)
-                                      (cons (input-id input) (input-id input)))
-                                     ((? intermediate? intermediate)
-                                      (cons (input-id (intermediate-input intermediate))
-                                            (intermediate-output-source intermediate))))
-                                   (step-in step)))
-                       (out . ,(list->vector (step-out step)))
-                       (run . ,(step-run step))))
-                   steps))))
+                                    (out . ,(list->vector (map output-id (step-out step))))
+                                    (run . ,(match (step-run step)
+                                              ((? command? command)
+                                               (command->cwl command))
+                                              (tree tree)))))
+                                steps)))
+               interface-inputs
+               outputs)))
+
 (define (output->cwl output)
   `(,(output-id output)
     ,@(filter identity
