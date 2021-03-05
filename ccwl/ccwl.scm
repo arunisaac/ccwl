@@ -4,8 +4,9 @@
 ;; This file implements a generator to generate CWL files.
 
 (define-module (ccwl ccwl)
-  #:use-module (rnrs records syntactic)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-9)
+  #:use-module (srfi srfi-9 gnu)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
   #:export (clitool
@@ -17,32 +18,35 @@
             intermediate
             clitool-step))
 
-(define-record-type (<input> make-input input?)
-  (fields (immutable id input-id)
-          (immutable type input-type)
-          (immutable default input-default)
-          (immutable label input-label)
-          (immutable other input-other)))
 
-(define-record-type unspecified-default)
+(define-immutable-record-type <input>
+  (make-input id type label default binding source other)
+  input?
+  (id input-id)
+  (type input-type)
+  (default input-default)
+  (label input-label)
+  (other input-other))
+
+(define-immutable-record-type <unspecified-default>
+  (make-unspecified-default)
+  unspecified-default?)
 
 (define* (input id #:key type label (default (make-unspecified-default)) (other '()))
   "Build and return an <input> object."
   (make-input id type default label other))
 
-(define-record-type (<output> make-output output?)
-  (fields (immutable id output-id)
-          (immutable type output-type)
-          (immutable binding output-binding)
-          (immutable other output-other)))
+(define-immutable-record-type <output>
+  (make-output id type binding source other)
+  output?
+  (id output-id)
+  (type output-type)
+  (binding output-binding)
+  (other output-other))
 
 (define* (output id #:key type binding (other '()))
   "Build and return an <output> object."
   (make-output id type binding other))
-
-(define-record-type (<intermediate> intermediate intermediate?)
-  (fields (immutable input intermediate-input)
-          (immutable output-source intermediate-output-source)))
 
 (define* (clitool-step id args #:key (additional-inputs '()) (outputs '()) stdout stderr (other '()))
   (step id
@@ -110,6 +114,12 @@ lists---the base command and the actual arguments."
                                   args)))
     (values base-command
             (parse-arguments arguments))))
+(define-immutable-record-type <intermediate>
+  (intermediate input output-source)
+  intermediate?
+  (input intermediate-input)
+  (output-source intermediate-output-source))
+
 
 (define (input->tree input)
   "Convert INPUT, an <input> object, to a tree."
@@ -161,23 +171,27 @@ lists---the base command and the actual arguments."
             `((stderr . ,stderr))
             '()))))
 
-(define-record-type (<workflow-output> make-workflow-output workflow-output?)
-  (fields (immutable id workflow-output-id)
-          (immutable type workflow-output-type)
-          (immutable source workflow-output-source)
-          (immutable other workflow-output-other)))
-
 (define* (workflow-output id #:key type source (other '()))
   "Build and return a <workflow-output> object."
   (make-workflow-output id type source other))
 
-(define-record-type (<step> step step?)
-  (fields (immutable id step-id)
-          (immutable run step-run)
-          (immutable in step-in)
-          (immutable out step-out)))
-
 (define* (workflow steps outputs #:key (other '()))
+(define-immutable-record-type <workflow-output>
+  (make-workflow-output id type source other)
+  workflow-output?
+  (id workflow-output-id)
+  (type workflow-output-type)
+  (source workflow-output-source)
+  (other workflow-output-other))
+
+(define-immutable-record-type <step>
+  (make-step id run in out)
+  step?
+  (id step-id)
+  (run step-run set-step-run)
+  (in step-in set-step-in)
+  (out step-out set-step-out))
+
   "Build a Workflow class CWL workflow."
   `((cwlVersion . "v1.1")
     (class . Workflow)
