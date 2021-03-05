@@ -9,6 +9,7 @@
   #:use-module (srfi srfi-9 gnu)
   #:use-module (ice-9 match)
   #:export (clitool
+            command
             workflow
             input
             output
@@ -125,6 +126,24 @@
   (run step-run set-step-run)
   (in step-in set-step-in)
   (out step-out set-step-out))
+
+(define-immutable-record-type <command>
+  (make-command inputs outputs args stdin other)
+  command?
+  (inputs command-inputs set-command-inputs)
+  (outputs command-outputs set-command-outputs)
+  (args command-args)
+  (stdin command-stdin set-command-stdin)
+  (other command-other))
+
+(define* (command id arguments #:key (additional-inputs '()) (outputs '()) (other '()))
+  (make-step id
+             (make-command (append (filter input? arguments)
+                                   additional-inputs)
+                           outputs arguments #f other)
+             (append (filter input? arguments)
+                     additional-inputs)
+             outputs))
 
   "Build a Workflow class CWL workflow."
   `((cwlVersion . "v1.1")
