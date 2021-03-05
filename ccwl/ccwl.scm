@@ -107,6 +107,10 @@
                      additional-inputs)
              outputs))
 
+(define (input=? input1 input2)
+  (string=? (input-id input1)
+            (input-id input2)))
+
   "Build a Workflow class CWL workflow."
   `((cwlVersion . "v1.1")
     (class . Workflow)
