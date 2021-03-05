@@ -7,7 +7,6 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-9 gnu)
-  #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
   #:export (clitool
             workflow
@@ -65,53 +64,6 @@
                 additional-inputs)
         (map output-id outputs)))
 
-(define* (parse-arguments args #:optional (position 1))
-  "Parse ARGS, a list of command line arguments and return a parse
-tree of labelled arguments. POSITION is an internal recursion
-variable."
-  (match args
-    (((? string? head) tail ...)
-     (if (string-prefix? "-" head)
-         (match tail
-           ((tail-head tail ...)
-            (cons (list 'keyword head tail-head)
-                  (parse-arguments tail position))))
-         (error "Unrecognized argument" head)))
-    ((head tail ...)
-     (cons (list 'positional position head)
-           (parse-arguments tail (1+ position))))
-    (() '())))
-
-(define (break-pair pred lst)
-  "Return the longest initial prefix of LST that does not satisfy PRED,
-and the remaining tail. PRED is a 2-arity predicate. For each element
-under consideration, PRED is passed that element and the next. For the
-last element of LST, PRED is passed that element alone."
-  (match lst
-    ((head next tail ...)
-     (if (not (pred head next))
-         (let ((prefix tail (break-pair pred (cons next tail))))
-           (values (cons head prefix) tail))
-         (values (list) lst)))
-    ((last)
-     (if (not (pred last))
-         (values lst (list))
-         (values (list) lst)))))
-
-(define (parse-command args)
-  "Parse ARGS, a list of command line arguments and return two
-lists---the base command and the actual arguments."
-  (let ((base-command arguments
-                      (break-pair (case-lambda
-                                    ((arg next)
-                                     (and (string? arg)
-                                          (string-prefix? "-" arg)
-                                          (input? next)))
-                                    ((last-arg)
-                                     (input? last-arg)))
-                                  args)))
-    (values base-command
-            (parse-arguments arguments))))
   (make-output id type binding source other))
 
 
