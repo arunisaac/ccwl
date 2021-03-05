@@ -131,6 +131,9 @@
   (lambda (object element)
     (setter object (cons element (getter object)))))
 
+(define (modify-step-run step proc)
+  (set-step-run step (proc (step-run step))))
+
 (define append-step-in
   (field-appender step-in set-step-in))
 
