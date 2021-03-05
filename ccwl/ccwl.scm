@@ -21,6 +21,7 @@
   (type input-type)
   (label input-label)
   (default input-default)
+  (source input-source set-input-source)
   (other input-other))
 
 (define-immutable-record-type <unspecified-default>
@@ -29,7 +30,10 @@
 
 (define* (input id #:key type label (default (make-unspecified-default)) (other '()))
   "Build and return an <input> object."
-  (make-input id type label default other))
+  ;; The user should not set source. Hence, do not expose it as a
+  ;; parameter of this constructor.
+  (let ((source #f))
+    (make-input id type label default source other)))
 
 (define-immutable-record-type <output>
   (make-output id type binding source other)
