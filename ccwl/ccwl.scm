@@ -127,6 +127,16 @@
   (in step-in set-step-in)
   (out step-out set-step-out))
 
+(define (field-appender getter setter)
+  (lambda (object element)
+    (setter object (cons element (getter object)))))
+
+(define append-step-in
+  (field-appender step-in set-step-in))
+
+(define append-step-out
+  (field-appender step-out set-step-out))
+
 (define-immutable-record-type <command>
   (make-command inputs outputs args stdin other)
   command?
@@ -135,6 +145,12 @@
   (args command-args)
   (stdin command-stdin set-command-stdin)
   (other command-other))
+
+(define append-command-inputs
+  (field-appender command-inputs set-command-inputs))
+
+(define append-command-outputs
+  (field-appender command-outputs set-command-outputs))
 
 (define* (command id arguments #:key (additional-inputs '()) (outputs '()) (other '()))
   (make-step id
