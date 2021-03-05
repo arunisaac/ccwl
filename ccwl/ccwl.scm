@@ -14,7 +14,6 @@
             input
             output
             step
-            workflow-output
             intermediate
             clitool-step))
 
@@ -42,11 +41,11 @@
   (id output-id)
   (type output-type)
   (binding output-binding)
+  (source output-source)
   (other output-other))
 
-(define* (output id #:key type binding (other '()))
+(define* (output id #:key type binding source (other '()))
   "Build and return an <output> object."
-  (make-output id type binding other))
 
 (define* (clitool-step id args #:key (additional-inputs '()) (outputs '()) stdout stderr (other '()))
   (step id
@@ -119,6 +118,7 @@ lists---the base command and the actual arguments."
   intermediate?
   (input intermediate-input)
   (output-source intermediate-output-source))
+  (make-output id type binding source other))
 
 
 (define (input->tree input)
@@ -171,19 +171,7 @@ lists---the base command and the actual arguments."
             `((stderr . ,stderr))
             '()))))
 
-(define* (workflow-output id #:key type source (other '()))
-  "Build and return a <workflow-output> object."
-  (make-workflow-output id type source other))
-
 (define* (workflow steps outputs #:key (other '()))
-(define-immutable-record-type <workflow-output>
-  (make-workflow-output id type source other)
-  workflow-output?
-  (id workflow-output-id)
-  (type workflow-output-type)
-  (source workflow-output-source)
-  (other workflow-output-other))
-
 (define-immutable-record-type <step>
   (make-step id run in out)
   step?
