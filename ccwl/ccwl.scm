@@ -14,7 +14,6 @@
             input
             output
             step
-            intermediate
             clitool-step))
 
 
@@ -113,11 +112,6 @@ lists---the base command and the actual arguments."
                                   args)))
     (values base-command
             (parse-arguments arguments))))
-(define-immutable-record-type <intermediate>
-  (intermediate input output-source)
-  intermediate?
-  (input intermediate-input)
-  (output-source intermediate-output-source))
   (make-output id type binding source other))
 
 
