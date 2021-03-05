@@ -116,9 +116,39 @@
   (string=? (input-id input1)
             (input-id input2)))
 
+(define (auto-connect steps)
+  "Auto-connect STEPS by matching inputs to outputs using their unique
+identifiers. If any inputs are already matched, they are not
+re-matched."
+  (map (lambda (step)
+         (set-step-in step
+                      (map (lambda (input)
+                             ;; If input is already connected, return
+                             ;; it unaltered. Else, try to connect it
+                             ;; to a source.
+                             (cond
+                              ((input-source input)
+                               input)
+                              ;; Input that should be connected to
+                              ;; some intermediate output
+                              ((find (lambda (step)
+                                       (member (input-id input)
+                                               (map output-id (step-out step))))
+                                     steps)
+                               => (lambda (source-step)
+                                    (set-input-source input
+                                                      (string-append (step-id source-step)
+                                                                     "/" (input-id input)))))
+                              ;; Non-internal input that should be
+                              ;; interfaced with the outside world
+                              (else input)))
+                           (step-in step))))
+       steps))
+
 (define* (workflow id steps outputs #:key (other '()))
   "Build a Workflow class CWL workflow."
-  (let* ((inputs
+  (let* ((steps (auto-connect steps))
+         (inputs
           ;; When the same input is used by multiple steps, there will
           ;; be duplicates. So, deduplicate.
           (delete-duplicates
@@ -132,11 +162,7 @@
            input=?))
          ;; List of non-internal inputs that should be interfaced with
          ;; the outside world.
-         (interface-inputs
-          (filter (lambda (input)
-                    (string=? (input-id input)
-                              (input-source input)))
-                  inputs)))
+         (interface-inputs (remove input-source inputs)))
     (make-step id
                `((cwlVersion . "v1.1")
                  (class . Workflow)
@@ -154,7 +180,8 @@
                                   `(,(step-id step)
                                     (in . ,(map (lambda (input)
                                                   (cons (input-id input)
-                                                        (input-source input)))
+                                                        (or (input-source input)
+                                                            (input-id input))))
                                                 (step-in step)))
                                     (out . ,(list->vector (map output-id (step-out step))))
                                     (run . ,(match (step-run step)
