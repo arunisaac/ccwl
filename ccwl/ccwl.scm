@@ -16,7 +16,7 @@
             pipeline))
 
 (define-immutable-record-type <input>
-  (make-input id type label default binding source other)
+  (make-input id type label default source other)
   input?
   (id input-id)
   (type input-type)
