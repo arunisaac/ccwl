@@ -25,12 +25,14 @@ ATOM is a symbol."
    ((number? atom)
     (display atom port))
    ((string? atom)
+    ;; TODO: Implement the complete escape logic as per the YAML
+    ;; specification.
     ;; Escape string with double quotes if
     ;; - every character is a digit or period, and the unescaped
     ;; string can therefore be misinterpreted as a number
-    ;; - string contains the colon character
+    ;; - string contains the colon or hyphen characters
     (if (or (string-every (char-set-union char-set:digit (char-set #\.)) atom)
-            (string-any #\: atom))
+            (string-any (char-set #\: #\-) atom))
         (write atom port)
         (display atom port)))
    ((boolean? atom)
