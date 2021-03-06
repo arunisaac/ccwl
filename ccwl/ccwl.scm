@@ -7,13 +7,16 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-9 gnu)
+  #:use-module (srfi srfi-26)
   #:use-module (ice-9 match)
+  #:use-module (ccwl yaml)
   #:export (command
             workflow
             input
             output
             step
-            pipeline))
+            pipeline
+            write-cwl))
 
 (define-immutable-record-type <input>
   (make-input id type label default source other)
@@ -252,3 +255,7 @@ re-matched."
                                      (input-id (command-stdin command))
                                      ".path)")))
           '())))
+
+(define (write-cwl step file)
+  (call-with-output-file file
+    (cut scm->yaml (step-run step) <>)))
