@@ -48,7 +48,7 @@
   (source output-source)
   (other output-other))
 
-(define* (output id #:key type binding source (other '()))
+(define* (output id #:key (type 'File) binding source (other '()))
   "Build and return an <output> object."
   (make-output id type binding source other))
 
