@@ -32,7 +32,7 @@
   (make-unspecified-default)
   unspecified-default?)
 
-(define* (input id #:key type label (default (make-unspecified-default)) (other '()))
+(define* (input id #:key (type 'File) label (default (make-unspecified-default)) (other '()))
   "Build and return an <input> object."
   ;; The user should not set source. Hence, do not expose it as a
   ;; parameter of this constructor.
