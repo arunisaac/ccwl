@@ -202,7 +202,12 @@ re-matched."
                interface-inputs
                outputs)))
 
-(define (pipeline id steps outputs)
+(define* (pipeline id steps
+                   #:optional
+                   (outputs
+                    (list (output (string-append id "_stdout")
+                                  #:source (string-append (step-id (last steps))
+                                                          "/stdout")))))
   ;; Error out if any step does not encapsulate a command.
   (cond
    ((find (lambda (step)
