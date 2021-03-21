@@ -19,6 +19,8 @@
             pipeline
             write-cwl))
 
+(define %cwl-version "v1.1")
+
 (define-immutable-record-type <input>
   (make-input id type label default source prefix other)
   input?
@@ -172,7 +174,7 @@ re-matched."
          ;; the outside world.
          (interface-inputs (remove input-source inputs)))
     (make-step id
-               `((cwlVersion . "v1.1")
+               `((cwl-version . ,%cwl-version)
                  (class . Workflow)
                  (requirements (Subworkflow-feature-requirement))
                  ,@other
@@ -242,7 +244,7 @@ re-matched."
     ,@(output-other output)))
 
 (define (command->cwl command)
-  `((cwl-version . "v1.1")
+  `((cwl-version . ,%cwl-version)
     (class . Command-line-tool)
     ,@(command-other command)
     (arguments . ,(list->vector (map (lambda (arg)
