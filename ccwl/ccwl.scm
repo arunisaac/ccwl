@@ -75,16 +75,6 @@
             (_ #t))
           alist))
 
-(define (input->tree input)
-  "Convert INPUT, an <input> object, to a tree."
-  `(,(input-id input)
-    ,@(filter-alist
-       `((type . ,(input-type input))
-         (label . ,(input-label input))
-         (default . ,(and (not (unspecified-default? (input-default input)))
-                          (input-default input)))))
-    ,@(input-other input)))
-
 (define-immutable-record-type <step>
   (make-step id run in out)
   step?
@@ -184,7 +174,15 @@ re-matched."
                  (class . Workflow)
                  (requirements (Subworkflow-feature-requirement))
                  ,@other
-                 (inputs . ,(map input->tree interface-inputs))
+                 (inputs . ,(map (lambda (input)
+                                   `(,(input-id input)
+                                     ,@(filter-alist
+                                        `((type . ,(input-type input))
+                                          (label . ,(input-label input))
+                                          (default . ,(and (not (unspecified-default? (input-default input)))
+                                                           (input-default input)))))
+                                     ,@(input-other input)))
+                                 interface-inputs))
                  (outputs . ,(map (lambda (output)
                                     `(,(output-id output)
                                       (type . ,(output-type output))
