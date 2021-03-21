@@ -100,9 +100,6 @@
   (stdin command-stdin set-command-stdin)
   (other command-other))
 
-(define append-command-inputs
-  (field-appender command-inputs set-command-inputs))
-
 (define append-command-outputs
   (field-appender command-outputs set-command-outputs))
 
