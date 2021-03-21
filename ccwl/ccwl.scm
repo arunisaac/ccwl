@@ -304,6 +304,15 @@ re-matched."
                                                                    (prefix . ,(input-prefix input)))))))
                                          ,@(input-other input)))))
                               elements)
+                  (map (lambda (input)
+                         `(,(input-id input)
+                           ,@(filter-alist
+                              `((type . ,(input-type input))
+                                (label . ,(input-label input))
+                                (default . ,(and (not (unspecified-default? (input-default input)))
+                                                 (input-default input)))))
+                           ,@(input-other input)))
+                       (command-additional-inputs command))
                   (let ((stdin (command-stdin command)))
                     (if stdin
                         (list `(,(input-id stdin)
