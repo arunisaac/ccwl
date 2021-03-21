@@ -13,20 +13,26 @@
   #:export (command
             workflow
             input
+            input-with-prefix
             output
             step
             pipeline
             write-cwl))
 
 (define-immutable-record-type <input>
-  (make-input id type label default source other)
+  (make-input id type label default source prefix other)
   input?
   (id input-id)
   (type input-type)
   (label input-label)
   (default input-default)
   (source input-source set-input-source)
+  (prefix input-prefix set-input-prefix)
   (other input-other))
+
+(define (input-with-prefix prefix input)
+  "Set PREFIX on INPUT object."
+  (set-input-prefix input prefix))
 
 (define-immutable-record-type <unspecified-default>
   (make-unspecified-default)
@@ -34,10 +40,12 @@
 
 (define* (input id #:key (type 'File) label (default (make-unspecified-default)) (other '()))
   "Build and return an <input> object."
-  ;; The user should not set source. Hence, do not expose it as a
-  ;; parameter of this constructor.
-  (let ((source #f))
-    (make-input id type label default source other)))
+  ;; The user should never set source, and should not set prefix
+  ;; directly during construction of the <input> object. Hence, do not
+  ;; expose it as a parameter of this constructor.
+  (let ((source #f)
+        (prefix #f))
+    (make-input id type label default source prefix other)))
 
 (define-immutable-record-type <output>
   (make-output id type binding source other)
