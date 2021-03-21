@@ -107,9 +107,8 @@
   (field-appender step-out set-step-out))
 
 (define-immutable-record-type <command>
-  (make-command inputs outputs args stdin other)
+  (make-command outputs args stdin other)
   command?
-  (inputs command-inputs set-command-inputs)
   (outputs command-outputs set-command-outputs)
   (args command-args)
   (stdin command-stdin set-command-stdin)
@@ -120,11 +119,13 @@
 
 (define* (command id arguments #:key (additional-inputs '()) (outputs '()) (other '()))
   (make-step id
-             (make-command (append (filter input? arguments)
-                                   additional-inputs)
-                           outputs arguments #f other)
-             (append (filter input? arguments)
-                     additional-inputs)
+             (make-command outputs arguments #f other)
+             ;; A command can use the same input multiple times. So,
+             ;; deduplicate.
+             (delete-duplicates
+              (append (filter input? arguments)
+                      additional-inputs)
+              input=?)
              outputs))
 
 (define (input=? input1 input2)
