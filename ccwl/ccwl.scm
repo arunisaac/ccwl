@@ -68,16 +68,21 @@
 (define %stdout
   (output "stdout" #:type 'stdout))
 
+(define (filter-alist alist)
+  "Filter ALIST removing entries with #f as the value."
+  (filter (match-lambda
+            ((_ . #f) #f)
+            (_ #t))
+          alist))
+
 (define (input->tree input)
   "Convert INPUT, an <input> object, to a tree."
   `(,(input-id input)
-    ,@(filter identity
-              (list (and (input-type input)
-                         (cons 'type (input-type input)))
-                    (and (input-label input)
-                         (cons 'label (input-label input)))
-                    (and (not (unspecified-default? (input-default input)))
-                         (cons 'default (input-default input)))))
+    ,@(filter-alist
+       `((type . ,(input-type input))
+         (label . ,(input-label input))
+         (default . ,(and (not (unspecified-default? (input-default input)))
+                          (input-default input)))))
     ,@(input-other input)))
 
 (define-immutable-record-type <step>
