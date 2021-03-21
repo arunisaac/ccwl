@@ -318,4 +318,8 @@ re-matched."
 
 (define (write-cwl step file)
   (call-with-output-file file
-    (cut scm->yaml (step-run step) <>)))
+    (cut scm->yaml (let ((run (step-run step)))
+                     (if (command? run)
+                         (command->cwl run)
+                         run))
+         <>)))
