@@ -253,25 +253,68 @@ re-matched."
                          (cons 'output-binding (output-binding output)))))
     ,@(output-other output)))
 
+(define-immutable-record-type <cli-element>
+  (make-cli-element argument position)
+  cli-element?
+  (argument cli-element-argument)
+  (position cli-element-position))
+
 (define (command->cwl command)
-  `((cwl-version . ,%cwl-version)
-    (class . Command-line-tool)
-    ,@(command-other command)
-    (arguments . ,(list->vector (map (lambda (arg)
-                                       (if (input? arg)
-                                           (string-append "$(inputs." (input-id arg) ")")
-                                           arg))
-                                     (command-args command))))
-    (inputs . ,(map input->tree (append (command-inputs command)
-                                        (if (command-stdin command)
-                                            (list (command-stdin command))
-                                            (list)))))
-    (outputs . ,(map output->cwl (command-outputs command)))
-    ,@(if (command-stdin command)
-          `((stdin . ,(string-append "$(inputs."
-                                     (input-id (command-stdin command))
-                                     ".path)")))
-          '())))
+  (let ((elements
+         ;; Add a position to all arguments, converting them to
+         ;; <cli-element> objects.
+         (map (lambda (arg position)
+                (make-cli-element
+                 ;; If duplicate input, convert it to an expression
+                 ;; referring to the input.
+                 (if (and (input? arg)
+                          (not (= (list-index (lambda (x)
+                                                (and (input? x)
+                                                     (input=? arg x)))
+                                              (command-args command))
+                                  position)))
+                     (string-append "$(inputs." (input-id arg) ")")
+                     arg)
+                 position))
+              (command-args command)
+              (iota (length (command-args command))))))
+    `((cwl-version . ,%cwl-version)
+      (class . Command-line-tool)
+      ,@(command-other command)
+      (arguments . ,(list->vector
+                     ;; Put string arguments into the arguments array.
+                     (filter-map (lambda (element)
+                                   (and (string? (cli-element-argument element))
+                                        `((position . ,(cli-element-position element))
+                                          (value-from . ,(cli-element-argument element)))))
+                                 elements)))
+      (inputs . ,(append
+                  ;; Put <input> arguments into the inputs array.
+                  (filter-map (lambda (element)
+                                (let ((input (cli-element-argument element)))
+                                  (and (input? input)
+                                       `(,(input-id input)
+                                         ,@(filter-alist
+                                            `((type . ,(input-type input))
+                                              (label . ,(input-label input))
+                                              (default . ,(and (not (unspecified-default? (input-default input)))
+                                                               (input-default input)))
+                                              (input-binding . ,(filter-alist
+                                                                 `((position . ,(cli-element-position element))
+                                                                   (prefix . ,(input-prefix input)))))))
+                                         ,@(input-other input)))))
+                              elements)
+                  (let ((stdin (command-stdin command)))
+                    (if stdin
+                        (list `(,(input-id stdin)
+                                (type . ,(input-type stdin))))
+                        (list)))))
+      (outputs . ,(map output->cwl (command-outputs command)))
+      ,@(if (command-stdin command)
+            `((stdin . ,(string-append "$(inputs."
+                                       (input-id (command-stdin command))
+                                       ".path)")))
+            '()))))
 
 (define (write-cwl step file)
   (call-with-output-file file
