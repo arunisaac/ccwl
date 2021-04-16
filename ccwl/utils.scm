@@ -5,7 +5,7 @@
   #:use-module (ice-9 match)
   #:export (group-arguments))
 
-(define (group-keyword-arguments args unary-keywords)
+(define* (group-keyword-arguments args #:optional (unary-keywords (list)))
   "Group ARGS, a list of keyword arguments of arbitrary arity. Return
 a list of unary keyword arguments. n-ary arguments are grouped
 together into lists. Keywords that are to be treated as having unit
