@@ -1,7 +1,31 @@
+;;; ccwl --- Concise Common Workflow Language
+;;; Copyright © 2021 Arun I <arunisaac@systemreboot.net>
+;;;
+;;; This file is part of ccwl.
+;;;
+;;; ccwl is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; ccwl is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This file implements a function scm->yaml to convert a scm tree to
+;; YAML. The inverse function yaml->scm is not implemented.
 ;;
-;; scm->yaml
-;;
-;; This file implements a library to convert a scm tree to yaml.
+;; If you are interested in writing a proper and complete YAML library
+;; with both a scm->yaml and a yaml->scm, please feel free (under the
+;; terms of the license mentioned earlier) to steal this code.
+
+;;; Code:
 
 (define-module (ccwl yaml)
   #:use-module (srfi srfi-26)
