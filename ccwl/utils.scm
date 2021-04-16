@@ -1,5 +1,6 @@
 (define-module (ccwl utils)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
   #:export (group-arguments))
@@ -39,3 +40,10 @@ arity are listed in UNARY-KEYWORDS."
   (let ((positional-arguments keyword-arguments (break keyword? args)))
     (append positional-arguments
             (group-keyword-arguments keyword-arguments unary-keywords))))
+(define (plist-ref plist key)
+  "Return the value from the first entry in PLIST with the given KEY,
+or #f if there is no such entry."
+  (match (find-tail (cut eq? key <>) plist)
+    ((_ value . _) value)
+    (#f #f)))
+
