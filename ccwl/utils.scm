@@ -3,7 +3,7 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
-  #:export (group-arguments))
+  #:export (lambda**))
 
 (define* (group-keyword-arguments args #:optional (unary-keywords (list)))
   "Group ARGS, a list of keyword arguments of arbitrary arity. Return
@@ -31,15 +31,6 @@ arity are listed in UNARY-KEYWORDS."
      (error "Invalid sequence of keywords arguments" args))
     (() '())))
 
-(define* (group-arguments args #:optional (unary-keywords '()))
-  "Group ARGS, a list of positional arguments followed by keyword
-arguments of arbitrary arity. Return a list of positional arguments
-followed by unary keyword arguments. n-ary arguments are grouped
-together into lists. Keywords that are to be treated as having unit
-arity are listed in UNARY-KEYWORDS."
-  (let ((positional-arguments keyword-arguments (break keyword? args)))
-    (append positional-arguments
-            (group-keyword-arguments keyword-arguments unary-keywords))))
 (define (plist-ref plist key)
   "Return the value from the first entry in PLIST with the given KEY,
 or #f if there is no such entry."
@@ -47,3 +38,42 @@ or #f if there is no such entry."
     ((_ value . _) value)
     (#f #f)))
 
+;; TODO: Implement a define** for lambda** in the spirit of define*
+;; for lambda*.
+(define-syntax lambda**
+  (lambda (x)
+    "Define a lambda function that can have positional arguments
+followed by unary and n-ary keyword arguments. Unary keyword arguments
+are prefixed by #:key. n-ary keyword arguments are prefixed by
+#:key*. For example:
+
+(lambda** (a b #:key foo #:key* bar)
+   (list a b foo bar))
+
+Here, a and b are positional arguments. foo is a unary keyword
+argument. bar is an n-ary keyword argument. The above function could,
+for example, be invoked as:
+
+((lambda** (a b #:key foo #:key* bar)
+   (list a b foo bar))
+ 1 2 #:foo 123 #:bar 1 2 3)
+
+=> (1 2 123 (1 2 3))"
+    (syntax-case x ()
+      ((_ args-spec body ...)
+       #`(lambda args
+           #,(let* ((positionals rest (break keyword? (syntax->datum #'args-spec)))
+                    (grouped-rest (group-keyword-arguments rest))
+                    (unary-arguments (or (plist-ref grouped-rest #:key)
+                                         (list)))
+                    (nary-arguments (or (plist-ref grouped-rest #:key*)
+                                        (list))))
+               #`(apply (lambda* #,(datum->syntax x (append positionals
+                                                            (cons #:key (append unary-arguments nary-arguments))))
+                          body ...)
+                        (let ((positionals rest (break keyword? args)))
+                          (append positionals
+                                  (group-keyword-arguments
+                                   rest (list #,@(map (compose (cut datum->syntax x <>)
+                                                               symbol->keyword)
+                                                      unary-arguments))))))))))))
