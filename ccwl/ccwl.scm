@@ -74,7 +74,7 @@
   (id output-id)
   (type output-type)
   (binding output-binding)
-  (source output-source)
+  (source output-source set-output-source)
   (other output-other))
 
 (define* (output id #:key (type 'File) binding source (other '()))
