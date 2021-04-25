@@ -28,6 +28,7 @@
   #:use-module (srfi srfi-9 gnu)
   #:use-module (srfi srfi-26)
   #:use-module (ice-9 match)
+  #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
   #:export (command
             workflow
@@ -127,104 +128,68 @@
 (define append-command-outputs
   (field-appender command-outputs set-command-outputs))
 
-(define* (command id arguments #:key (additional-inputs '()) (outputs '()) (other '()))
-  (make-step id
-             (make-command additional-inputs outputs arguments #f other)
-             ;; A command can use the same input multiple times. So,
-             ;; deduplicate.
-             (delete-duplicates
-              (append (filter input? arguments)
-                      additional-inputs)
-              input=?)
-             outputs))
+(define* (command #:key run (additional-inputs '()) (outputs '()) stdin (other '()))
+  (make-command additional-inputs outputs run stdin other))
 
 (define (input=? input1 input2)
   (string=? (input-id input1)
             (input-id input2)))
 
-(define (auto-connect steps)
-  "Auto-connect STEPS by matching inputs to outputs using their unique
-identifiers. If any inputs are already matched, they are not
-re-matched."
-  (map (lambda (step)
-         (set-step-in step
-                      (map (lambda (input)
-                             ;; If input is already connected, return
-                             ;; it unaltered. Else, try to connect it
-                             ;; to a source.
-                             (cond
-                              ((input-source input)
-                               input)
-                              ;; Input that should be connected to
-                              ;; some intermediate output
-                              ((find (lambda (step)
-                                       (member (input-id input)
-                                               (map output-id (step-out step))))
-                                     steps)
-                               => (lambda (source-step)
-                                    (set-input-source input
-                                                      (string-append (step-id source-step)
-                                                                     "/" (input-id input)))))
-                              ;; Non-internal input that should be
-                              ;; interfaced with the outside world
-                              (else input)))
-                           (step-in step))))
-       steps))
+(define (invoke-command step-id command . args)
+  (make-step step-id
+             command
+             (plist->alist args)
+             (command-outputs command)))
 
-(define* (workflow id steps outputs #:key (other '()))
+(define* (make-workflow steps outputs #:key (other '()))
   "Build a Workflow class CWL workflow."
-  (let* ((steps (auto-connect steps))
-         (inputs
-          ;; When the same input is used by multiple steps, there will
-          ;; be duplicates. So, deduplicate.
-          (delete-duplicates
-           (append (append-map step-in steps)
-                   ;; If an input is directly copied to the output, an
-                   ;; output-source will be an <input> object.
-                   (filter-map (lambda (output)
-                                 (and (input? (output-source output))
-                                      (output-source output)))
-                               outputs))
-           input=?))
-         ;; List of non-internal inputs that should be interfaced with
-         ;; the outside world.
-         (interface-inputs (remove input-source inputs)))
-    (make-step id
-               `((cwl-version . ,%cwl-version)
-                 (class . Workflow)
-                 (requirements (Subworkflow-feature-requirement))
-                 ,@other
-                 (inputs . ,(map (lambda (input)
-                                   `(,(input-id input)
-                                     ,@(filter-alist
-                                        `((type . ,(input-type input))
-                                          (label . ,(input-label input))
-                                          (default . ,(and (not (unspecified-default? (input-default input)))
-                                                           (input-default input)))))
-                                     ,@(input-other input)))
-                                 interface-inputs))
-                 (outputs . ,(map (lambda (output)
-                                    `(,(output-id output)
-                                      (type . ,(output-type output))
-                                      (output-source . ,(match (output-source output)
-                                                          ((? string? source) source)
-                                                          ((? input? input) (input-id input))))))
-                                  outputs))
-                 (steps . ,(map (lambda (step)
-                                  `(,(step-id step)
-                                    (in . ,(map (lambda (input)
-                                                  (cons (input-id input)
-                                                        (or (input-source input)
-                                                            (input-id input))))
-                                                (step-in step)))
-                                    (out . ,(list->vector (map output-id (step-out step))))
-                                    (run . ,(match (step-run step)
-                                              ((? command? command)
-                                               (command->cwl command))
-                                              (tree tree)))))
-                                steps)))
-               interface-inputs
-               outputs)))
+  `((cwl-version . ,%cwl-version)
+    (class . Workflow)
+    (requirements (Subworkflow-feature-requirement))
+    ,@other
+    (inputs . ,(map (lambda (input)
+                      `(,(input-id input)
+                        ,@(filter-alist
+                           `((type . ,(input-type input))
+                             (label . ,(input-label input))
+                             (default . ,(and (not (unspecified-default? (input-default input)))
+                                              (input-default input)))))
+                        ,@(input-other input)))
+                    ;; When the same input is used by multiple steps,
+                    ;; there will be duplicates. So, deduplicate.
+                    (delete-duplicates
+                     (append-map (lambda (step)
+                                   (filter-map (match-lambda
+                                                 ((_ . (? input? input))
+                                                  input)
+                                                 (_ #f))
+                                               (step-in step)))
+                                 steps)
+                     input=?)))
+    (outputs . ,(map (lambda (output)
+                       `(,(output-id output)
+                         (type . ,(match (output-type output)
+                                    ('stdout 'File)
+                                    (some-other-type some-other-type)))
+                         (output-source . ,(match (output-source output)
+                                             ((? string? source) source)
+                                             ((? input? input) (input-id input))))))
+                     outputs))
+    (steps . ,(map (lambda (step)
+                     `(,(step-id step)
+                       (in . ,(map (lambda (in)
+                                     (match in
+                                       ((id . (? string? source))
+                                        in)
+                                       ((id . (? input? input))
+                                        (cons id (input-id input)))))
+                                   (step-in step)))
+                       (out . ,(list->vector (map output-id (step-out step))))
+                       (run . ,(match (step-run step)
+                                 ((? command? command)
+                                  (command->cwl command))
+                                 (tree tree)))))
+                   steps))))
 
 (define* (pipeline id steps
                    #:optional
@@ -351,3 +316,35 @@ re-matched."
                          (command->cwl run)
                          run))
          <>)))
+
+(define (workflow-steps x)
+  (syntax-case x ()
+    ((command (step-id) args ...)
+     (cons #`(invoke-command
+              step-id command
+              #,@(append-map (lambda (pair)
+                               (syntax-case pair ()
+                                 ((key . (_ (id) _ ...))
+                                  (list #'key (string-append
+                                               (syntax->datum #'id)
+                                               "/" (symbol->string
+                                                    (keyword->symbol
+                                                     (syntax->datum #'key))))))
+                                 ((key . atom)
+                                  (list #'key #'atom))))
+                             (pairify #'(args ...))))
+           (append-map workflow-steps #'(args ...))))
+    (atom (list))))
+
+(define-syntax workflow
+  (lambda (x)
+    (syntax-case x ()
+      ((_ root)
+       #`(make-workflow
+          (list #,@(workflow-steps #'root))
+          #,(syntax-case x ()
+              ((_ (command (step-id) _ ...))
+               #'(map (lambda (output)
+                        (set-output-source
+                         output (string-append step-id "/" (output-id output))))
+                      (command-outputs command)))))))))
