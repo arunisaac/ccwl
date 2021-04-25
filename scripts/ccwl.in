@@ -1,4 +1,5 @@
-#! /run/current-system/profile/bin/guile -s
+#! @GUILE@ -s
+-*- scheme -*-
 !#
 ;;; ccwl --- Concise Common Workflow Language
 ;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
