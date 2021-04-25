@@ -27,7 +27,25 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
-  #:export (lambda**))
+  #:export (pairify
+            plist->alist
+            lambda**))
+
+(define (pairify lst)
+  "Return a list of pairs of successive elements of LST."
+  (match lst
+    (() '())
+    ((first second tail ...)
+     (cons (cons first second)
+           (pairify tail)))))
+
+(define (plist->alist plist)
+  "Convert the property list PLIST to an association list. A property
+list is a list of the form (#:key1 value1 #:key2 value2 ...)."
+  (map (match-lambda
+         ((key . value)
+          (cons (keyword->symbol key) value)))
+       (pairify plist)))
 
 (define* (group-keyword-arguments args #:optional (unary-keywords (list)))
   "Group ARGS, a list of keyword arguments of arbitrary arity. Return
