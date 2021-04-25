@@ -38,7 +38,7 @@
             pipeline
             write-cwl))
 
-(define %cwl-version "v1.1")
+(define %cwl-version "v1.2")
 
 (define-immutable-record-type <input>
   (make-input id type label default source prefix other)
