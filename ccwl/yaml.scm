@@ -54,9 +54,9 @@ ATOM is a symbol."
     ;; Escape string with double quotes if
     ;; - every character is a digit or period, and the unescaped
     ;; string can therefore be misinterpreted as a number
-    ;; - string contains the colon or hyphen characters
+    ;; - string contains the colon, hyphen or asterisk characters
     (if (or (string-every (char-set-union char-set:digit (char-set #\.)) atom)
-            (string-any (char-set #\: #\-) atom))
+            (string-any (char-set #\: #\- #\*) atom))
         (write atom port)
         (display atom port)))
    ((boolean? atom)

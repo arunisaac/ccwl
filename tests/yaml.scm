@@ -34,4 +34,9 @@ bar: {}
 "
   (scm->yaml-string #("-1")))
 
+(test-equal "strings with asterisk characters should be escaped"
+  "- \"*foo\"
+"
+  (scm->yaml-string #("*foo")))
+
 (test-end "yaml")
