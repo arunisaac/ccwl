@@ -1,0 +1,15 @@
+*.go
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+build-aux/install-sh
+build-aux/missing
+config.log
+config.status
+configure
+pre-inst-env
+scripts/ccwl
+test-suite.log
+tests/*.log
+tests/*.trs
