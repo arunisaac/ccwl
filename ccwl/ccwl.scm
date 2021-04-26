@@ -192,43 +192,6 @@
                                  (tree tree)))))
                    steps))))
 
-(define* (pipeline id steps
-                   #:optional
-                   (outputs
-                    (list (output (string-append id "_stdout")
-                                  #:source (string-append (step-id (last steps))
-                                                          "/stdout")))))
-  ;; Error out if any step does not encapsulate a command.
-  (cond
-   ((find (lambda (step)
-            (not (command? (step-run step))))
-          steps)
-    => (lambda (step)
-         (error "Step does not encapsulate command" step))))
-  (workflow id
-            (reverse
-             (fold (lambda (step result)
-                     (match result
-                       ((previous-step tail ...)
-                        (cons*
-                         ;; Add an stdin input that is connected to the stdout
-                         ;; of the previous step.
-                         (let ((stdin (set-input-source %stdin
-                                        (string-append (step-id previous-step) "/" (output-id %stdout)))))
-                           (append-step-in (modify-step-run step
-                                                            (cut set-command-stdin <> stdin))
-                                           stdin))
-                         previous-step
-                         tail))
-                       (() (list step))))
-                   (list)
-                   ;; Add an stdout output to all steps.
-                   (map (lambda (step)
-                          (append-step-out (modify-step-run step (cut append-command-outputs <> %stdout))
-                                           %stdout))
-                        steps)))
-            outputs))
-
 (define (output->cwl output)
   `(,(output-id output)
     ,@(filter identity
