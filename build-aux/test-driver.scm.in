@@ -1,0 +1,74 @@
+;;; ccwl --- Concise Common Workflow Language
+;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;;
+;;; This file is part of ccwl.
+;;;
+;;; ccwl is free software: you can redistribute it and/or modify it
+;;; under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; ccwl is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This is a better test driver for Guile's (srfi srfi-64).
+;;
+;; TODO: Improve Guile's test driver so this module won't be
+;; necessary.
+
+;;; Code:
+
+(use-modules (ice-9 format)
+             (ice-9 getopt-long)
+             (srfi srfi-26)
+             (srfi srfi-64))
+
+;; Currently, only log-file and trs-file are understood. Everything
+;; else is ignored.
+(define %options
+  '((test-name (value #t))
+    (log-file (value #t))
+    (trs-file (value #t))
+    (color-tests (value #t))
+    (expect-failure (value #t))
+    (enable-hard-errors (value #t))))
+
+(define (my-gnu-runner log-port trs-port)
+  (let ((runner (test-runner-simple)))
+    (test-runner-on-group-begin! runner
+      (lambda (runner suite-name count)
+        (format #t "%%%% Starting test ~a~%" suite-name)
+        (format log-port "%%%% Starting test ~a~%" suite-name)
+        ;; Set log-port in the aux-value field for use by other parts
+        ;; of test-runner-simple
+        (test-runner-aux-value! runner log-port)
+        (format #t "  (Writing full log to \"~a\")~%" (port-filename log-port))))
+    (test-runner-on-group-end! runner (const #f))
+    (test-runner-on-test-end! runner
+      (lambda (runner)
+        (let ((name (test-runner-test-name runner))
+              (result (string-upcase
+                       (symbol->string (test-result-kind runner)))))
+          (format trs-port ":test-result: ~a ~a~%" result name)
+          (format (current-error-port)
+                  "\x1b[~:[31~;32~]m~a\x1b[0m ~a~%"
+                  (eq? (test-result-kind runner) 'pass)
+                  result name))))
+    runner))
+
+(let ((opts (getopt-long (command-line) %options)))
+  (call-with-output-file (string-append "@abs_top_builddir@/"
+                                        (option-ref opts 'log-file #f))
+    (lambda (log-port)
+      (call-with-output-file (option-ref opts 'trs-file #f)
+        (lambda (trs-port)
+          (chdir "@abs_top_srcdir@")
+          (test-with-runner (my-gnu-runner log-port trs-port)
+            (load-from-path (option-ref opts 'test-name #f))))))))

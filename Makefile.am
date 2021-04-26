@@ -44,11 +44,20 @@ SOURCES =			\
   ccwl/yaml.scm		        \
   ccwl/utils.scm
 
+TEST_EXTENSIONS = .scm
+
+SCM_TESTS =			\
+  tests/ccwl.scm                \
+  tests/yaml.scm
+
+TESTS = $(SCM_TESTS)
+
 SCM_LOG_DRIVER =		\
   $(top_builddir)/pre-inst-env	\
   $(GUILE) --no-auto-compile -s \
   $(top_builddir)/build-aux/test-driver.scm
 
 EXTRA_DIST +=			\
+  $(TESTS)                      \
   COPYING			\
   README.org
