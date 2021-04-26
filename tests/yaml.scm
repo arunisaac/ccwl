@@ -29,4 +29,9 @@
 bar: {}
 ")
 
+(test-equal "strings with hyphen characters should be escaped"
+  "- \"-1\"
+"
+  (scm->yaml-string #("-1")))
+
 (test-end "yaml")
