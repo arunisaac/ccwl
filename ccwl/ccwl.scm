@@ -129,7 +129,7 @@
   (field-appender command-outputs set-command-outputs))
 
 (define command
-  (lambda** (#:key* run (additional-inputs '()) (outputs '()) stdin (other '()))
+  (lambda** (#:key stdin #:key* run (additional-inputs '()) (outputs '()) (other '()))
     (make-command additional-inputs outputs run stdin other)))
 
 (define (input=? input1 input2)
