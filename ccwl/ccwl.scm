@@ -142,7 +142,7 @@
              (plist->alist args)
              (command-outputs command)))
 
-(define* (make-workflow steps outputs #:key (other '()))
+(define* (make-workflow steps inputs outputs #:key (other '()))
   "Build a Workflow class CWL workflow."
   `((cwlVersion . ,%cwl-version)
     (class . Workflow)
@@ -156,17 +156,7 @@
                              (default . ,(and (not (unspecified-default? (input-default input)))
                                               (input-default input)))))
                         ,@(input-other input)))
-                    ;; When the same input is used by multiple steps,
-                    ;; there will be duplicates. So, deduplicate.
-                    (delete-duplicates
-                     (append-map (lambda (step)
-                                   (filter-map (match-lambda
-                                                 ((_ . (? input? input))
-                                                  input)
-                                                 (_ #f))
-                                               (step-in step)))
-                                 steps)
-                     input=?)))
+                    inputs))
     (outputs . ,(map (lambda (output)
                        `(,(output-id output)
                          (type . ,(match (output-type output)
