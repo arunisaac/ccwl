@@ -133,8 +133,8 @@
     (make-command additional-inputs outputs run stdin other)))
 
 (define (input=? input1 input2)
-  (string=? (input-id input1)
-            (input-id input2)))
+  (eq? (input-id input1)
+       (input-id input2)))
 
 (define (invoke-command step-id command . args)
   (make-step step-id
@@ -221,7 +221,7 @@
                                                      (input=? arg x)))
                                               (command-args command))
                                   position)))
-                     (string-append "$(inputs." (input-id arg) ")")
+                     (string-append "$(inputs." (symbol->string (input-id arg)) ")")
                      arg)
                  position))
               (command-args command)
@@ -269,7 +269,8 @@
       (outputs . ,(map output->cwl (command-outputs command)))
       ,@(if (command-stdin command)
             `((stdin . ,(string-append "$(inputs."
-                                       (input-id (command-stdin command))
+                                       (symbol->string
+                                        (input-id (command-stdin command)))
                                        ".path)")))
             '()))))
 
