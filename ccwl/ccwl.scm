@@ -274,6 +274,25 @@
 
 (define (workflow-steps x)
   (syntax-case x ()
+(define-immutable-record-type <key>
+  (make-key name step)
+  key?
+  (name key-name)
+  (step key-step))
+
+(define* (key name #:optional step)
+  "Build and return a <key> object."
+  (make-key name step))
+
+;; TODO: Add docstring.
+(define (cwl-key-address key)
+  (if (key-step key)
+      ;; Input/output of particular step
+      (string-append (symbol->string (key-step key))
+                     "/" (symbol->string (key-name key)))
+      ;; Global input/output
+      (symbol->string (key-name key))))
+
     ((command (step-id) args ...)
      (cons #`(invoke-command
               step-id command
