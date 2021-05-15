@@ -144,9 +144,9 @@
 
 (define* (make-workflow steps outputs #:key (other '()))
   "Build a Workflow class CWL workflow."
-  `((cwl-version . ,%cwl-version)
+  `((cwlVersion . ,%cwl-version)
     (class . Workflow)
-    (requirements (Subworkflow-feature-requirement))
+    (requirements (SubworkflowFeatureRequirement))
     ,@other
     (inputs . ,(map (lambda (input)
                       `(,(input-id input)
@@ -172,9 +172,9 @@
                          (type . ,(match (output-type output)
                                     ('stdout 'File)
                                     (some-other-type some-other-type)))
-                         (output-source . ,(match (output-source output)
-                                             ((? string? source) source)
-                                             ((? input? input) (input-id input))))))
+                         (outputSource . ,(match (output-source output)
+                                            ((? string? source) source)
+                                            ((? input? input) (input-id input))))))
                      outputs))
     (steps . ,(map (lambda (step)
                      `(,(step-id step)
@@ -198,7 +198,7 @@
               (list (and (output-type output)
                          (cons 'type (output-type output)))
                     (and (output-binding output)
-                         (cons 'output-binding (output-binding output)))))
+                         (cons 'outputBinding (output-binding output)))))
     ,@(output-other output)))
 
 (define-immutable-record-type <cli-element>
@@ -226,15 +226,15 @@
                  position))
               (command-args command)
               (iota (length (command-args command))))))
-    `((cwl-version . ,%cwl-version)
-      (class . Command-line-tool)
+    `((cwlVersion . ,%cwl-version)
+      (class . CommandLineTool)
       ,@(command-other command)
       (arguments . ,(list->vector
                      ;; Put string arguments into the arguments array.
                      (filter-map (lambda (element)
                                    (and (string? (cli-element-argument element))
                                         `((position . ,(cli-element-position element))
-                                          (value-from . ,(cli-element-argument element)))))
+                                          (valueFrom . ,(cli-element-argument element)))))
                                  elements)))
       (inputs . ,(append
                   ;; Put <input> arguments into the inputs array.
@@ -247,9 +247,9 @@
                                               (label . ,(input-label input))
                                               (default . ,(and (not (unspecified-default? (input-default input)))
                                                                (input-default input)))
-                                              (input-binding . ,(filter-alist
-                                                                 `((position . ,(cli-element-position element))
-                                                                   (prefix . ,(input-prefix input)))))))
+                                              (inputBinding . ,(filter-alist
+                                                                `((position . ,(cli-element-position element))
+                                                                  (prefix . ,(input-prefix input)))))))
                                          ,@(input-other input)))))
                               elements)
                   (map (lambda (input)

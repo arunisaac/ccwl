@@ -33,19 +33,11 @@
   #:export (scm->yaml
             scm->yaml-string))
 
-(define (kebab->camel string)
-  "Convert STRING from kebab case to CAMEL case."
-  (match (string-split string #\-)
-    ((head tail ...)
-     (string-concatenate
-      (cons head (map string-titlecase tail))))))
-
 (define (display-atom atom port)
-  "Display ATOM in PORT converting from kebab case to camel case if
-ATOM is a symbol."
+  "Display ATOM in PORT."
   (cond
    ((symbol? atom)
-    (display (string->symbol (kebab->camel (symbol->string atom))) port))
+    (display-atom (symbol->string atom) port))
    ((number? atom)
     (display atom port))
    ((string? atom)
