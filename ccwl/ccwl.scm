@@ -27,6 +27,7 @@
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-9 gnu)
   #:use-module (srfi srfi-26)
+  #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
   #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
@@ -272,8 +273,14 @@
                          run))
          <>)))
 
-(define (workflow-steps x)
-  (syntax-case x ()
+(define (command-input-keys command)
+  "Return the list of input keys accepted by COMMAND."
+  (map input-id
+       (append (filter input? (command-args command))
+               (command-additional-inputs command)
+               (cond ((command-stdin command) => list)
+                     (else (list))))))
+
 (define-immutable-record-type <key>
   (make-key name step)
   key?
@@ -293,32 +300,110 @@
       ;; Global input/output
       (symbol->string (key-name key))))
 
+(define (workflow-steps x input-keys)
+  "Traverse ccwl source X and return list of steps. INPUT-KEYS is a
+list of supplied input <key> objects."
+  (syntax-case x (pipe tee)
+    ;; pipe
+    ((pipe expressions ...)
+     (foldn (lambda (expression input-keys steps)
+              (let ((input-keys child-steps (workflow-steps expression input-keys)))
+                (values input-keys (append steps child-steps))))
+            #'(expressions ...)
+            input-keys
+            (list)))
+    ;; tee
+    ((tee expressions ...)
+     (append-mapn (cut workflow-steps <> input-keys)
+                  #'(expressions ...)))
     ((command (step-id) args ...)
-     (cons #`(invoke-command
-              step-id command
-              #,@(append-map (lambda (pair)
-                               (syntax-case pair ()
-                                 ((key . (_ (id) _ ...))
-                                  (list #'key (string-append
-                                               (syntax->datum #'id)
-                                               "/" (symbol->string
-                                                    (keyword->symbol
-                                                     (syntax->datum #'key))))))
-                                 ((key . atom)
-                                  (list #'key #'atom))))
-                             (pairify #'(args ...))))
-           (append-map workflow-steps #'(args ...))))
-    (atom (list))))
+     ;; Run a whole bunch of tests so that we can produce useful error
+     ;; messages.
+     (begin
+       ;; Test for undefined command.
+       (unless (module-variable (current-module)
+                                (syntax->datum #'command))
+         (error "Undefined ccwl command:" (syntax->datum #'command)))
+       (let ((input-key-symbols (map key-name input-keys))
+             (command-object (module-ref (current-module)
+                                         (syntax->datum #'command)))
+             (step-id (syntax->datum #'step-id)))
+         ;; Test for missing required parameters.
+         ;; TODO: Filter out optional parameters.
+         (match (lset-difference
+                 eq?
+                 (command-input-keys command-object)
+                 (map (match-lambda
+                        ((key . _) (keyword->symbol key)))
+                      (syntax->datum (pairify #'(args ...)))))
+           (() #t)
+           (missing-parameters
+            (scm-error 'misc-error
+                       #f
+                       "Step ~S missing required parameters ~S"
+                       (list step-id missing-parameters)
+                       #f)))
+         ;; Test for unknown keys.
+         (for-each (match-lambda
+                     ((arg . value)
+                      (unless (memq (keyword->symbol arg)
+                                    (command-input-keys command-object))
+                        (scm-error 'misc-error
+                                   #f
+                                   "ccwl command ~S does not accept input key ~S. Accepted keys are ~S."
+                                   (list (syntax->datum #'command)
+                                         arg
+                                         (command-input-keys command-object))
+                                   #f))
+                      (unless (memq value input-key-symbols)
+                        (scm-error 'misc-error
+                                   #f
+                                   "ccwl step ~S supplied with unknown key ~S. Known keys at this step are ~S."
+                                   (list step-id value input-key-symbols)
+                                   #f))))
+                   (syntax->datum (pairify #'(args ...))))
+         (values (map (lambda (output)
+                        (key (output-id output) step-id))
+                      (command-outputs command-object))
+                 (list (make-step step-id
+                                  command-object
+                                  (map (match-lambda
+                                         ((arg . value)
+                                          (cons (keyword->symbol arg)
+                                                (cwl-key-address
+                                                 (find (lambda (key)
+                                                         (eq? value (key-name key)))
+                                                       input-keys)))))
+                                       (pairify (syntax->datum #'(args ...))))
+                                  (command-outputs command-object)))))))
+    ;; any other unrecognized syntax
+    (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
 (define-syntax workflow
   (lambda (x)
     (syntax-case x ()
-      ((_ root)
-       #`(make-workflow
-          (list #,@(workflow-steps #'root))
-          #,(syntax-case x ()
-              ((_ (command (step-id) _ ...))
-               #'(map (lambda (output)
-                        (set-output-source
-                         output (string-append step-id "/" (output-id output))))
-                      (command-outputs command)))))))))
+      ((_ inputs tree)
+       (let* ((inputs (map (match-lambda
+                             ((id args ...)
+                              (apply input id args)))
+                           (syntax->datum #'inputs)))
+              (output-keys steps (workflow-steps #'tree
+                                                 (map (compose key input-id) inputs))))
+         ;; TODO: Error out on duplicated step IDs.
+         #`'#,(datum->syntax
+               x
+               (make-workflow steps
+                              inputs
+                              (map (lambda (key)
+                                     (set-output-source
+                                      (find (lambda (output)
+                                              (eq? (output-id output)
+                                                   (key-name key)))
+                                            (step-out (find (lambda (step)
+                                                              (eq? (step-id step)
+                                                                   (key-step key)))
+                                                            steps)))
+                                      (cwl-key-address key)))
+                                   output-keys)))))
+      (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
+                (syntax->datum #'x))))))
