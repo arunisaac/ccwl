@@ -29,7 +29,10 @@
   #:use-module (ice-9 match)
   #:export (pairify
             plist->alist
-            lambda**))
+            lambda**
+            mapn
+            append-mapn
+            foldn))
 
 (define (pairify lst)
   "Return a list of pairs of successive elements of LST."
@@ -119,3 +122,37 @@ for example, be invoked as:
                                    rest (list #,@(map (compose (cut datum->syntax x <>)
                                                                symbol->keyword)
                                                       unary-arguments))))))))))))
+
+(define (mapn proc lst)
+  "Map the procedure PROC over list LST and return a list containing
+the results. PROC can return multiple values, in which case, an equal
+number of lists are returned."
+  (apply values
+         (apply zip
+                (map (lambda (x)
+                       (call-with-values (cut proc x) list))
+                     lst))))
+
+(define (append-mapn proc lst)
+  "Map PROC over LST just as in mapn, but append the results
+together. PROC can return multiple values, in which case, an equal
+number of lists are returned."
+  (call-with-values (cut mapn proc lst)
+    (lambda lists
+      (apply values
+             (map (lambda (lst)
+                    (apply append lst))
+                  lists)))))
+
+(define (foldn proc lst . inits)
+  "Apply PROC to the elements of LST to build a result, and return
+that result. PROC can return multiple values, in which case, an equal
+number of values are returned. Each PROC call is (PROC ELEMENT
+PREVIOUS ...) where ELEMENT is an element of LST, and (PREVIOUS ...)
+is the return from the previous call to PROC or the given INITS for
+the first call."
+  (apply values
+         (fold (lambda (element results)
+                 (call-with-values (cut apply proc element results) list))
+               inits
+               lst)))
