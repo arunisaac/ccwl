@@ -377,6 +377,10 @@ list of supplied input <key> objects."
                                                        input-keys)))))
                                        (pairify (syntax->datum #'(args ...))))
                                   (command-outputs command-object)))))))
+    ;; commands with an implicit step identifier
+    ((command args ...)
+     (workflow-steps #'(command (command) args ...)
+                     input-keys))
     ;; any other unrecognized syntax
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
