@@ -319,6 +319,21 @@ list of supplied input <key> objects."
     ((tee expressions ...)
      (append-mapn (cut workflow-steps <> input-keys)
                   #'(expressions ...)))
+    ;; commands with only a single input and when only a single key is
+    ;; available at this step
+    ((command (step-id))
+     (and (command-variable #'command)
+          (= (length input-keys) 1)
+          (= (length (command-input-keys
+                      (command-syntax->object #'command)))
+             1))
+     (workflow-steps #`(command (step-id)
+                                #,(match (command-input-keys
+                                          (command-syntax->object #'command))
+                                    ((command-key) (symbol->keyword command-key)))
+                                #,(match input-keys
+                                    ((input-key) (key-name input-key))))
+                     input-keys))
     ((command (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
