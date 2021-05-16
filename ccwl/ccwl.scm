@@ -405,7 +405,8 @@ list of supplied input <key> objects."
       ((_ inputs tree)
        (let* ((inputs (map (match-lambda
                              ((id args ...)
-                              (apply input id args)))
+                              (apply input id args))
+                             (id (input id)))
                            (syntax->datum #'inputs)))
               (output-keys steps (workflow-steps #'tree
                                                  (map (compose key input-id) inputs))))
