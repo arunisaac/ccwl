@@ -83,12 +83,6 @@
   "Build and return an <output> object."
   (make-output id type binding source other))
 
-(define %stdin
-  (input "stdin" #:type 'File))
-
-(define %stdout
-  (output "stdout" #:type 'stdout))
-
 (define (filter-alist alist)
   "Filter ALIST removing entries with #f as the value."
   (filter (match-lambda
