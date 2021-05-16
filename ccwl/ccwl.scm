@@ -294,6 +294,15 @@
       ;; Global input/output
       (symbol->string (key-name key))))
 
+(define (command-variable command-syntax)
+  "Return the corresponding module variable if command described by
+COMMAND-SYNTAX is a valid defined ccwl command. Else, return #f."
+  (module-variable (current-module)
+                   (syntax->datum command-syntax)))
+
+(define (command-syntax->object command-syntax)
+  (variable-ref (command-variable command-syntax)))
+
 (define (workflow-steps x input-keys)
   "Traverse ccwl source X and return list of steps. INPUT-KEYS is a
 list of supplied input <key> objects."
@@ -315,12 +324,10 @@ list of supplied input <key> objects."
      ;; messages.
      (begin
        ;; Test for undefined command.
-       (unless (module-variable (current-module)
-                                (syntax->datum #'command))
+       (unless (command-variable #'command)
          (error "Undefined ccwl command:" (syntax->datum #'command)))
        (let ((input-key-symbols (map key-name input-keys))
-             (command-object (module-ref (current-module)
-                                         (syntax->datum #'command)))
+             (command-object (command-syntax->object #'command))
              (step-id (syntax->datum #'step-id)))
          ;; Test for missing required parameters.
          ;; TODO: Filter out optional parameters.
