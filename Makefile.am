@@ -39,6 +39,8 @@ SUFFIXES = .scm .go
 moddir = $(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir  = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
+info_TEXINFOS = doc/ccwl.texi
+
 SOURCES =			\
   ccwl/ccwl.scm 		\
   ccwl/yaml.scm		        \
