@@ -54,6 +54,7 @@ Guide}.
 @menu
 * Important concepts:: Static typing, multiple named inputs and outputs
 * First example:: Our first ccwl workflow
+* Capturing stdout:: Capturing the standard output stream of a command
 @end menu
 
 @node Important concepts
@@ -153,6 +154,54 @@ Hello World!
 [step echo] completed success
 [workflow ] completed success
 @{@}
+Final process status is success
+@end example
+
+@node Capturing stdout
+@section Capturing the standard output stream of a command
+
+Let us return to the ``Hello World'' example in the previous
+section. But now, let us capture the standard output of the @code{print}
+command in an output object. The ccwl code is the same as earlier with
+only the addition of an @code{stdout} type output object to the command
+definition.
+
+@lisp
+(define print
+  (command #:run "echo" (input 'message #:type 'string)
+           #:outputs (output 'printed-message #:type 'stdout)))
+
+(workflow ((message #:type string))
+  (print #:message message))
+@end lisp
+
+Let's write this code to a file @file{capture-stdout.scm}, generate CWL,
+write the generated CWL to @file{capture-stdout.cwl}, and run it using
+@code{cwltool}. We might expect something like the output below. Notice
+how the standard output of the @code{print} command has been captured in
+the file @file{51fe79d15e7790a9ded795304220d7a44aa84b48}.
+
+@example
+$ ccwl compile capture-stdout.scm > capture-stdout.cwl
+$ cwltool capture-stdout.cwl --message "Hello World!"
+[workflow ] start
+[workflow ] starting step print
+[step print] start
+[job print] /tmp/7zksx3xm$ echo \
+    'Hello World!' > /tmp/7zksx3xm/51fe79d15e7790a9ded795304220d7a44aa84b48
+[job print] completed success
+[step print] completed success
+[workflow ] completed success
+@{
+    "printed-message": @{
+        "location": "file:///home/manimekalai/51fe79d15e7790a9ded795304220d7a44aa84b48",
+        "basename": "51fe79d15e7790a9ded795304220d7a44aa84b48",
+        "class": "File",
+        "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
+        "size": 13,
+        "path": "/home/manimekalai/51fe79d15e7790a9ded795304220d7a44aa84b48"
+    @}
+@}
 Final process status is success
 @end example
 
