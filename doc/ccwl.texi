@@ -23,6 +23,7 @@ Workflow Language} workflows.
 
 @menu
 * Introduction:: What is ccwl?
+* Tutorial:: A quick tutorial to get started with ccwl
 * Contributing:: Contributing
 @end menu
 
@@ -41,6 +42,59 @@ minimalist dialect of the Lisp family of programming languages.
 ccwl is a compiler to generate CWL workflows from concise descriptions
 in ccwl. In the future, ccwl will also have a runtime whereby users can
 interactively execute workflows while developing them.
+
+@node Tutorial
+@chapter Tutorial
+
+This tutorial will introduce you to writing workflows in ccwl. Some
+knowledge of CWL is assumed. To learn about CWL, please see the
+@url{https://www.commonwl.org/user_guide/, Common Workflow Language User
+Guide}.
+
+@menu
+* Important concepts:: Static typing, multiple named inputs and outputs
+@end menu
+
+@node Important concepts
+@section The CWL and ccwl workflow languages
+
+The CWL and ccwl workflow languages are statically typed programming
+languages where functions accept multiple named inputs and return
+multiple named outputs. Let's break down what that means.
+
+@subsection Static typing
+
+In CWL, the type of arguments accepted by a function and the type of
+outputs returned by that function are specified explicitly by the
+programmer, and are known at compile time even before the code has been
+run. Hence, we say that it is statically typed.
+
+@subsection Positional arguments and named arguments
+
+In many languages, the order of arguments passed to a function is
+significant. The position of each argument determines which formal
+argument it gets mapped to. For example, passing positional arguments in
+Scheme looks like
+
+@lisp
+(foo 1 2)
+@end lisp
+
+In a language that supports named arguments, the order of arguments is
+not significant. Each argument explicitly names the formal argument it
+gets mapped to. For example, in Scheme, passing named arguments may look
+like
+
+@lisp
+(foo #:bar 1 #:baz 2)
+@end lisp
+
+@subsection Multiple function arguments and return values
+
+In most languages, functions accept multiple input arguments but only
+return a single output value. However, in CWL, a function can return
+multiple output values as well. These multiple outputs are unordered and
+are each addressed by a unique name.
 
 @node Contributing
 @chapter Contributing
