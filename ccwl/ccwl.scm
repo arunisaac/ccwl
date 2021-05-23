@@ -294,14 +294,14 @@
       ;; Global input/output
       (symbol->string (key-name key))))
 
-(define (command-variable command-syntax)
-  "Return the corresponding module variable if command described by
-COMMAND-SYNTAX is a valid defined ccwl command. Else, return #f."
-  (module-variable (current-module)
-                   (syntax->datum command-syntax)))
-
-(define (command-syntax->object command-syntax)
-  (variable-ref (command-variable command-syntax)))
+(define (command-object command-syntax)
+  "Return the command object described by COMMAND-SYNTAX. If such a
+command is not defined, return #f."
+  (let ((var (module-variable (current-module)
+                              (syntax->datum command-syntax))))
+    (and var
+         (command? (variable-ref var))
+         (variable-ref var))))
 
 (define (workflow-steps x input-keys)
   "Traverse ccwl source X and return list of steps. INPUT-KEYS is a
@@ -322,14 +322,14 @@ list of supplied input <key> objects."
     ;; commands with only a single input and when only a single key is
     ;; available at this step
     ((command (step-id))
-     (and (command-variable #'command)
+     (and (command-object #'command)
           (= (length input-keys) 1)
           (= (length (command-input-keys
-                      (command-syntax->object #'command)))
+                      (command-object #'command)))
              1))
      (workflow-steps #`(command (step-id)
                                 #,(match (command-input-keys
-                                          (command-syntax->object #'command))
+                                          (command-object #'command))
                                     ((command-key) (symbol->keyword command-key)))
                                 #,(match input-keys
                                     ((input-key) (key-name input-key))))
@@ -337,61 +337,60 @@ list of supplied input <key> objects."
     ((command (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
-     (begin
+     (let ((input-key-symbols (map key-name input-keys))
+           (command-object (command-object #'command))
+           (step-id (syntax->datum #'step-id)))
        ;; Test for undefined command.
-       (unless (command-variable #'command)
+       (unless command-object
          (error "Undefined ccwl command:" (syntax->datum #'command)))
-       (let ((input-key-symbols (map key-name input-keys))
-             (command-object (command-syntax->object #'command))
-             (step-id (syntax->datum #'step-id)))
-         ;; Test for missing required parameters.
-         ;; TODO: Filter out optional parameters.
-         (match (lset-difference
-                 eq?
-                 (command-input-keys command-object)
-                 (map (match-lambda
-                        ((key . _) (keyword->symbol key)))
-                      (syntax->datum (pairify #'(args ...)))))
-           (() #t)
-           (missing-parameters
-            (scm-error 'misc-error
-                       #f
-                       "Step ~S missing required parameters ~S"
-                       (list step-id missing-parameters)
-                       #f)))
-         ;; Test for unknown keys.
-         (for-each (match-lambda
-                     ((arg . value)
-                      (unless (memq (keyword->symbol arg)
-                                    (command-input-keys command-object))
-                        (scm-error 'misc-error
-                                   #f
-                                   "ccwl command ~S does not accept input key ~S. Accepted keys are ~S."
-                                   (list (syntax->datum #'command)
-                                         arg
-                                         (command-input-keys command-object))
-                                   #f))
-                      (unless (memq value input-key-symbols)
-                        (scm-error 'misc-error
-                                   #f
-                                   "ccwl step ~S supplied with unknown key ~S. Known keys at this step are ~S."
-                                   (list step-id value input-key-symbols)
-                                   #f))))
-                   (syntax->datum (pairify #'(args ...))))
-         (values (map (lambda (output)
-                        (key (output-id output) step-id))
-                      (command-outputs command-object))
-                 (list (make-step step-id
-                                  command-object
-                                  (map (match-lambda
-                                         ((arg . value)
-                                          (cons (keyword->symbol arg)
-                                                (cwl-key-address
-                                                 (find (lambda (key)
-                                                         (eq? value (key-name key)))
-                                                       input-keys)))))
-                                       (pairify (syntax->datum #'(args ...))))
-                                  (command-outputs command-object)))))))
+       ;; Test for missing required parameters.
+       ;; TODO: Filter out optional parameters.
+       (match (lset-difference
+               eq?
+               (command-input-keys command-object)
+               (map (match-lambda
+                      ((key . _) (keyword->symbol key)))
+                    (syntax->datum (pairify #'(args ...)))))
+         (() #t)
+         (missing-parameters
+          (scm-error 'misc-error
+                     #f
+                     "Step ~S missing required parameters ~S"
+                     (list step-id missing-parameters)
+                     #f)))
+       ;; Test for unknown keys.
+       (for-each (match-lambda
+                   ((arg . value)
+                    (unless (memq (keyword->symbol arg)
+                                  (command-input-keys command-object))
+                      (scm-error 'misc-error
+                                 #f
+                                 "ccwl command ~S does not accept input key ~S. Accepted keys are ~S."
+                                 (list (syntax->datum #'command)
+                                       arg
+                                       (command-input-keys command-object))
+                                 #f))
+                    (unless (memq value input-key-symbols)
+                      (scm-error 'misc-error
+                                 #f
+                                 "ccwl step ~S supplied with unknown key ~S. Known keys at this step are ~S."
+                                 (list step-id value input-key-symbols)
+                                 #f))))
+                 (syntax->datum (pairify #'(args ...))))
+       (values (map (lambda (output)
+                      (key (output-id output) step-id))
+                    (command-outputs command-object))
+               (list (make-step step-id
+                                command-object
+                                (map (match-lambda
+                                       ((arg . value)
+                                        (cons (keyword->symbol arg)
+                                              (cwl-key-address
+                                               (find (lambda (key)
+                                                       (eq? value (key-name key)))
+                                                     input-keys)))))
+                                     (pairify (syntax->datum #'(args ...))))
+                                (command-outputs command-object))))))
     ;; commands with an implicit step identifier
     ((command args ...)
      (workflow-steps #'(command (command) args ...)
