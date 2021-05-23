@@ -55,6 +55,7 @@ Guide}.
 * Important concepts:: Static typing, multiple named inputs and outputs
 * First example:: Our first ccwl workflow
 * Capturing stdout:: Capturing the standard output stream of a command
+* Capturing output files:: Capturing output files produced by a command
 @end menu
 
 @node Important concepts
@@ -200,6 +201,117 @@ $ cwltool capture-stdout.cwl --message "Hello World!"
         "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
         "size": 13,
         "path": "/home/manimekalai/51fe79d15e7790a9ded795304220d7a44aa84b48"
+    @}
+@}
+Final process status is success
+@end example
+
+@node Capturing output files
+@section Capturing output files
+
+In the previous section, we captured the standard output stream of a
+command. But, how do we capture any output files created by a command?
+Let us see.
+
+Consider a tar archive @file{hello.tar} containing a file
+@file{hello.txt}.
+
+@example
+$ tar --list --file hello.tar
+hello.txt
+@end example
+
+Let us write a workflow to extract the file @file{hello.txt} from the
+archive. Everything in the following workflow except the
+@code{#:binding} parameter will already be familiar to you. The
+@code{#:binding} parameter sets the @code{outputBinding} field in the
+generated CWL. In the example below, we set the @code{glob} field to
+look for a file named @file{hello.txt}.
+
+@lisp
+(define extract
+  (command #:run "tar" "--extract" "--file" (input 'archive #:type 'File)
+           #:outputs (output 'extracted-file
+                             #:type 'File
+                             #:binding '((glob . "hello.txt")))))
+
+(workflow ((archive #:type File))
+  (extract #:archive archive))
+@end lisp
+
+Writing this workflow to @file{capture-output-file.scm}, compiling and
+running it gives us the following output. Notice that the file
+@file{hello.txt} has been captured and is now present in our current
+working directory.
+
+@example
+$ ccwl compile capture-output-file.scm > capture-output-file.cwl
+$ cwltool capture-output-file.cwl --archive hello.tar
+[workflow ] start
+[workflow ] starting step extract
+[step extract] start
+[job extract] /tmp/nrolttex$ tar \
+    --extract \
+    --file \
+    /tmp/z7pp7qwh/stg3ac272aa-3459-4f20-a033-86f53ba72caf/hello.tar
+[job extract] completed success
+[step extract] completed success
+[workflow ] completed success
+@{
+    "extracted-file": @{
+        "location": "file:///home/manimekalai/hello.txt",
+        "basename": "hello.txt",
+        "class": "File",
+        "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
+        "size": 13,
+        "path": "/home/manimekalai/hello.txt"
+    @}
+@}
+Final process status is success
+@end example
+
+The above workflow is not awfully flexible. The name of the file to
+extract is hardcoded into the workflow. Let us modify the workflow to
+accept the name of the file to extract. We introduce @code{extractfile},
+a @code{string} type input that is passed to @command{tar} and is
+referenced in the @code{glob} field.
+
+@lisp
+(define extract-specific-file
+  (command #:run "tar" "--extract" "--file" (input 'archive #:type 'File)
+                                            (input 'extractfile #:type 'string)
+           #:outputs (output 'extracted-file
+                             #:type 'File
+                             #:binding '((glob . "$(inputs.extractfile)")))))
+
+(workflow ((archive #:type File) (extractfile #:type string))
+  (extract-specific-file #:archive archive #:extractfile extractfile))
+@end lisp
+
+Compiling and running this workflow gives us the following output.
+
+@example
+$ ccwl compile capture-output-file.scm > capture-output-file.cwl
+$ cwltool capture-output-file.cwl --archive hello.tar --extractfile hello.txt
+[workflow ] start
+[workflow ] starting step extract-specific-file
+[step extract-specific-file] start
+[job extract-specific-file] /tmp/751nydd1$ tar \
+    --extract \
+    --file \
+    /tmp/1zzw2n6m/stgc851e003-b5bd-437e-844b-311f6f66a7f1/hello.tar \
+    hello.txt
+[job extract-specific-file] completed success
+[step extract-specific-file] completed success
+[workflow ] completed success
+@{
+    "extracted-file": @{
+        "location": "file:///home/manimekalai/hello.txt",
+        "basename": "hello.txt",
+        "class": "File",
+        "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
+        "size": 13,
+        "path": "/home/manimekalai/hello.txt"
     @}
 @}
 Final process status is success
