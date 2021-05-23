@@ -53,6 +53,7 @@ Guide}.
 
 @menu
 * Important concepts:: Static typing, multiple named inputs and outputs
+* First example:: Our first ccwl workflow
 @end menu
 
 @node Important concepts
@@ -95,6 +96,65 @@ In most languages, functions accept multiple input arguments but only
 return a single output value. However, in CWL, a function can return
 multiple output values as well. These multiple outputs are unordered and
 are each addressed by a unique name.
+
+@node First example
+@section First example
+
+As is tradition, let us start with a simple ``Hello World'' workflow in
+ccwl. This workflow accepts a string input and prints that string.
+
+@lisp
+(define print
+  (command #:run "echo" (input 'message #:type 'string)))
+
+(workflow ((message #:type string))
+  (print #:message message))
+@end lisp
+
+The first form in this code defines the @code{print} command. This form
+is the equivalent of defining a @code{CommandLineTool} class workflow in
+CWL. All arguments after @code{#:run} specify the command that will be
+run. One of those arguments @code{(input 'message #:type 'string)}
+refers to a @code{string} type input named @code{message}. Notice how
+the command definition is very close to a shell command, only that it is
+slightly annotated with inputs and their types.
+
+The second form describes the actual workflow and is the equivalent of
+defining a @code{Workflow} class workflow in CWL. The form
+@code{((message #:type string))} specifies the inputs of the
+workflow. In this case, there is only one input---@code{message} of type
+@code{string}. The body of the workflow specifies the commands that will
+be executed. The body of this workflow executes only a single
+command---the @code{print} command---passing the @code{message} input of
+the workflow as the @code{message} input to the @code{print} command.
+
+If this workflow is written to a file @file{hello-world.scm}, we may
+compile it to CWL by running
+
+@example
+$ ccwl compile hello-world.scm
+@end example
+
+This prints a big chunk of generated CWL to standard output. We have
+achieved quite a lot of concision already! We write the generated CWL to
+a file and execute it using @code{cwltool} as follows. The expected
+output is also shown.
+
+@example
+$ ccwl compile hello-world.scm > hello-world.cwl
+$ cwltool hello-world.cwl --message "Hello World!"
+[workflow ] start
+[workflow ] starting step echo
+[step echo] start
+[job echo] /tmp/zprgn3x0$ echo \
+    'Hello World!'
+Hello World!
+[job echo] completed success
+[step echo] completed success
+[workflow ] completed success
+@{@}
+Final process status is success
+@end example
 
 @node Contributing
 @chapter Contributing
