@@ -1,6 +1,6 @@
-#+TITLE: Concise Common Workflow Language (CCWL)
+#+TITLE: Concise Common Workflow Language (ccwl)
 
-This is the Concise Common Workflow Language (CCWL), an attempt to
+This is the Concise Common Workflow Language (ccwl), an attempt to
 improve the [[https://www.commonwl.org/][Common Workflow Language (CWL)]] and reduce its verbosity by
 auto-generating CWL YAML specifications.
 
@@ -8,6 +8,6 @@ Stay tuned!
 
 * License
 
-CCWL is free software released under the terms of the [[https://www.gnu.org/licenses/gpl.html][GNU General
+ccwl is free software released under the terms of the [[https://www.gnu.org/licenses/gpl.html][GNU General
 Public License]], either version 3 of the License, or (at your option)
 any later version.
