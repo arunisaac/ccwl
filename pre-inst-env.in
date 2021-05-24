@@ -30,5 +30,5 @@
 (prepend-path-env! "PATH" "@abs_top_builddir@/scripts")
 
 (match (command-line)
-  ((pre-inst-env command args ...)
+  ((_ command args ...)
    (apply execlp command command args)))
