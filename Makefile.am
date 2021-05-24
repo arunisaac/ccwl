@@ -32,8 +32,7 @@ $(guile_install_go_files): install-nobase_modDATA
 CLEANFILES = $(GOBJECTS)
 EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
-SUFFIXES = .scm .go
-.scm.go:
+%.go: %.scm
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILD) compile $(GUILE_WARNINGS) -o "$@" "$<"
 
 moddir = $(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
