@@ -1,10 +1,14 @@
 #+TITLE: Concise Common Workflow Language (ccwl)
 
-This is the Concise Common Workflow Language (ccwl), an attempt to
-improve the [[https://www.commonwl.org/][Common Workflow Language (CWL)]] and reduce its verbosity by
-auto-generating CWL YAML specifications.
+The Concise Common Workflow Language (ccwl) is a concise syntax to
+express CWL workflows. It is implemented as an Embedded Domain
+Specific Language (EDSL) in the Scheme programming language, a
+minimalist dialect of the Lisp family of programming languages.
 
-Stay tuned!
+ccwl is a compiler to generate CWL workflows from concise descriptions
+in ccwl. In the future, ccwl will also have a runtime whereby users
+can interactively execute workflows while developing them.
+
 
 * Contributing
 
