@@ -27,6 +27,7 @@
 
 (prepend-path-env! "GUILE_LOAD_PATH" "@abs_top_builddir@" "@abs_top_srcdir@")
 (prepend-path-env! "GUILE_LOAD_COMPILED_PATH" "@abs_top_builddir@")
+(prepend-path-env! "PATH" "@abs_top_builddir@/scripts")
 
 (match (command-line)
   ((pre-inst-env command args ...)
