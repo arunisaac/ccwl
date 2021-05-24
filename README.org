@@ -6,6 +6,12 @@ auto-generating CWL YAML specifications.
 
 Stay tuned!
 
+* Contributing
+
+Feedback, suggestions, feature requests, bug reports and pull requests
+are all welcome. Unclear and unspecific error messages are considered
+a bug. Do report them!
+
 * License
 
 ccwl is free software released under the terms of the [[https://www.gnu.org/licenses/gpl.html][GNU General
