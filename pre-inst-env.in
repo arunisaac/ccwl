@@ -1,4 +1,4 @@
-#! @GUILE@ -s
+#! @GUILE@
 -*- scheme -*-
 !#
 ;;; ccwl --- Concise Common Workflow Language
