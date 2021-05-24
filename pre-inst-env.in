@@ -1,4 +1,4 @@
-#! @GUILE@
+#! @GUILE@ --no-auto-compile
 -*- scheme -*-
 !#
 ;;; ccwl --- Concise Common Workflow Language
