@@ -56,6 +56,7 @@ Guide}.
 * First example:: Our first ccwl workflow
 * Capturing stdout:: Capturing the standard output stream of a command
 * Capturing output files:: Capturing output files produced by a command
+* Workflow with multiple steps:: Connecting steps together in a graph
 @end menu
 
 @node Important concepts
@@ -316,6 +317,190 @@ $ cwltool capture-output-file.cwl --archive hello.tar --extractfile hello.txt
 @}
 Final process status is success
 @end example
+
+@node Workflow with multiple steps
+@section Workflow with multiple steps
+
+Till now, we have only written trivial workflows with a single
+command. If we were only interested in executing single commands, we
+would hardly need a workflow language! So, in this section, let us write
+our first multi-step workflow and learn how to connect steps together in
+an arbitrary topology.
+
+@subsection pipe
+
+First, the simplest of topologies---a linear chain representing
+sequential execution of steps. The following workflow decompresses a
+compressed C source file, compiles and then executes it.
+
+@lisp
+(define decompress
+  (command #:run "gzip" "--stdout" "--decompress" (input 'compressed #:type 'File)
+           #:outputs (output 'decompressed #:type 'stdout)))
+
+(define compile
+  (command #:run "gcc" "-x" "c" (input 'source #:type 'File)
+           #:outputs (output 'executable
+                             #:type 'File
+                             #:binding '((glob . "a.out")))))
+
+(define run
+  (command #:run (input 'executable)
+           #:outputs (output 'stdout #:type 'stdout)))
+
+(workflow ((compressed-source #:type File))
+  (pipe (decompress #:compressed compressed-source)
+        (compile #:source decompressed)
+        (run #:executable executable)))
+@end lisp
+
+Notice the @code{pipe} form in the body of the workflow. The @code{pipe}
+form specifies a list of steps to be executed sequentially. The workflow
+inputs coming into @code{pipe} are passed into the first
+step. Thereafter, the outputs of each step are passed as inputs into the
+next. Note that this has nothing to do with the Unix pipe. The
+inputs/outputs passed between steps are general CWL inputs/outputs. They
+need not be the standard stdin and stdout streams.
+
+@c TODO: Add workflow graph.
+
+Writing this worklow to @file{decompress-compile-run.scm}, compiling and
+running it with the compressed C source file @file{hello.c.gz} gives us
+the following output.
+
+@example
+$ ccwl compile decompress-compile-run.scm > decompress-compile-run.cwl
+$ cwltool decompress-compile-run.cwl --compressed-source hello.c.gz
+[workflow ] start
+[workflow ] starting step decompress
+[step decompress] start
+[job decompress] /tmp/3bsk5yfm$ gzip \
+    --stdout \
+    --decompress \
+    /tmp/yn4wh0j8/stg1e0bc56d-f845-4a28-a685-1faf96129eac/hello.c.gz > /tmp/3bsk5yfm/eae8fb860f3b6eaf6ae2b9d9285b5c07cc457e90
+[job decompress] completed success
+[step decompress] completed success
+[workflow ] starting step compile
+[step compile] start
+[job compile] /tmp/lnjz1vik$ gcc \
+    -x \
+    c \
+    /tmp/rpf9g_lj/stg1be6bb98-7101-4f46-9885-fe0a985dee73/eae8fb860f3b6eaf6ae2b9d9285b5c07cc457e90
+[job compile] completed success
+[step compile] completed success
+[workflow ] starting step run
+[step run] start
+[job run] /tmp/fftn945x$ /tmp/favjw7d5/stg2576ae91-5240-4731-b98d-dee0f8ef7703/a.out > /tmp/fftn945x/c32c587f7afbdf87cf991c14a43edecf09cd93bf
+[job run] completed success
+[step run] completed success
+[workflow ] completed success
+@{
+    "stdout": @{
+        "location": "file:///home/manimekalai/c32c587f7afbdf87cf991c14a43edecf09cd93bf",
+        "basename": "c32c587f7afbdf87cf991c14a43edecf09cd93bf",
+        "class": "File",
+        "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
+        "size": 13,
+        "path": "/home/manimekalai/c32c587f7afbdf87cf991c14a43edecf09cd93bf"
+    @}
+@}
+Final process status is success
+@end example
+
+The steps run in succession, and the stdout of the compiled executable
+is in @file{c32c587f7afbdf87cf991c14a43edecf09cd93bf}. Success!
+
+@subsection tee
+
+Next, the tee topology. The following workflow computes three different
+checksums of a given input file.
+
+@lisp
+(define md5sum
+  (command #:run "md5sum" (input 'file #:type 'File)
+           #:outputs (output 'md5 #:type 'stdout)))
+
+(define sha1sum
+  (command #:run "sha1sum" (input 'file #:type 'File)
+           #:outputs (output 'sha1 #:type 'stdout)))
+
+(define sha256sum
+  (command #:run "sha256sum" (input 'file #:type 'File)
+           #:outputs (output 'sha256 #:type 'stdout)))
+
+(workflow ((file #:type File))
+  (tee (md5sum #:file file)
+       (sha1sum #:file file)
+       (sha256sum #:file file)))
+@end lisp
+
+Notice the @code{tee} form in the body of the workflow. The @code{tee}
+form specifies a list of steps that are independent of each other. The
+workflow inputs coming into @code{tee} are passed into every step
+contained in the body of the @code{tee}. The outputs of each step are
+collected together and unioned as the output of the @code{tee}.
+
+@c TODO: Add workflow graph.
+
+Writing this workflow to @file{checksum.scm}, compiling and running it
+with some file @file{hello.txt} gives us the following output.
+
+@example
+$ ccwl compile checksum.scm > checksum.cwl
+$ cwltool checksum.cwl --file hello.txt
+[workflow ] start
+[workflow ] starting step sha256sum
+[step sha256sum] start
+[job sha256sum] /tmp/rjbcjppq$ sha256sum \
+    /tmp/pc2bbl6o/stg2f7cdda0-9d89-47b7-96b6-fa377cc61c49/hello.txt > /tmp/rjbcjppq/0d2eaa5619c14b43326101200d0f27b0d8a1a4b1
+[job sha256sum] completed success
+[step sha256sum] completed success
+[workflow ] starting step sha1sum
+[step sha1sum] start
+[job sha1sum] /tmp/1cjtot5q$ sha1sum \
+    /tmp/wliybbsp/stg993b2838-c803-4527-89d6-6a0cd7a0587a/hello.txt > /tmp/1cjtot5q/d2f19c786fcd3feb329004c8747803fba581a02d
+[job sha1sum] completed success
+[step sha1sum] completed success
+[workflow ] starting step md5sum
+[step md5sum] start
+[job md5sum] /tmp/z7fe89c7$ md5sum \
+    /tmp/41nnygw9/stgebdc428b-ec84-4283-88ae-682c7f4628ac/hello.txt > /tmp/z7fe89c7/112be1054505027982e64d56b0879049c12737c6
+[job md5sum] completed success
+[step md5sum] completed success
+[workflow ] completed success
+@{
+    "md5": @{
+        "location": "file:///home/manimekalai/112be1054505027982e64d56b0879049c12737c6",
+        "basename": "112be1054505027982e64d56b0879049c12737c6",
+        "class": "File",
+        "checksum": "sha1$dd2e54f3bd22a8bb4ffbf543151050ee9645baf2",
+        "size": 98,
+        "path": "/home/manimekalai/112be1054505027982e64d56b0879049c12737c6"
+    @},
+    "sha1": @{
+        "location": "file:///home/manimekalai/d2f19c786fcd3feb329004c8747803fba581a02d",
+        "basename": "d2f19c786fcd3feb329004c8747803fba581a02d",
+        "class": "File",
+        "checksum": "sha1$f4112d33f41bc98a114b35759c26eec9a9f4256c",
+        "size": 106,
+        "path": "/home/manimekalai/d2f19c786fcd3feb329004c8747803fba581a02d"
+    @},
+    "sha256": @{
+        "location": "file:///home/manimekalai/0d2eaa5619c14b43326101200d0f27b0d8a1a4b1",
+        "basename": "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1",
+        "class": "File",
+        "checksum": "sha1$868ce04a610122b1c1f2846e5e9f9fc7a289d120",
+        "size": 130,
+        "path": "/home/manimekalai/0d2eaa5619c14b43326101200d0f27b0d8a1a4b1"
+    @}
+@}
+Final process status is success
+@end example
+
+The MD5, SHA1 and SHA256 checksums are in the files
+@file{112be1054505027982e64d56b0879049c12737c6},
+@file{d2f19c786fcd3feb329004c8747803fba581a02d} and
+@file{0d2eaa5619c14b43326101200d0f27b0d8a1a4b1} respectively.
 
 @node Contributing
 @chapter Contributing
