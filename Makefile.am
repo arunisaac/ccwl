@@ -66,11 +66,15 @@ EXTRA_DIST +=			\
 
 # Build website
 
-website: website/index.html
+website: website/index.html website/style.css
 
 website/index.html: README.org
 	mkdir -p $(dir $@)
 	emacs -Q --script build-aux/build-home-page.el
+
+website/style.css: style.css
+	mkdir -p $(dir $@)
+	cp -v $< $@
 
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website built by the website target.
