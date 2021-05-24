@@ -66,7 +66,9 @@ EXTRA_DIST +=			\
 
 # Build website
 
-website: website/index.html website/style.css
+AM_MAKEINFOHTMLFLAGS = --css-ref=/style.css
+
+website: website/index.html website/style.css website/manual/dev/en
 
 website/index.html: README.org
 	mkdir -p $(dir $@)
@@ -75,6 +77,11 @@ website/index.html: README.org
 website/style.css: style.css
 	mkdir -p $(dir $@)
 	cp -v $< $@
+
+website/manual/dev/en: doc/ccwl.html
+	rm -rf $@
+	mkdir -p $(dir $@)
+	cp -vr doc/ccwl.html $@
 
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website built by the website target.
