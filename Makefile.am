@@ -63,3 +63,16 @@ EXTRA_DIST +=			\
   $(TESTS)                      \
   COPYING			\
   README.org
+
+# Build website
+
+website: website/index.html
+
+website/index.html: README.org
+	mkdir -p $(dir $@)
+	emacs -Q --script build-aux/build-home-page.el
+
+# The clean target depends on clean-local. We use clean-local to clean
+# up the website built by the website target.
+clean-local:
+	rm -rf website
