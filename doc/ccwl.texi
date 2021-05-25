@@ -1,6 +1,8 @@
 \input texinfo
 @settitle Concise Common Workflow Language
 
+@include version.texi
+
 @copying
 Copyright @copyright{} 2021 Arun Isaac@*
 
@@ -17,9 +19,9 @@ Documentation License''.
 @top Concise Common Workflow Language
 @end ifnottex
 
-This manual documents the development version of @abbr{ccwl, Concise
-Common Workflow Language}, a concise syntax to express @abbr{CWL, Common
-Workflow Language} workflows.
+This manual documents @abbr{ccwl, Concise Common Workflow Language}
+version @value{VERSION}. ccwl is a concise syntax to express @abbr{CWL,
+Common Workflow Language} workflows.
 
 @menu
 * Introduction:: What is ccwl?
