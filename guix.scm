@@ -35,6 +35,7 @@
              (gnu packages autotools)
              (gnu packages guile)
              (gnu packages pkg-config)
+             (gnu packages texinfo)
              (guix build utils)
              (guix build-system gnu)
              (guix gexp)
@@ -74,7 +75,8 @@
   (native-inputs
    `(("autoconf" ,autoconf)
      ("automake" ,automake)
-     ("pkg-config" ,pkg-config)))
+     ("pkg-config" ,pkg-config)
+     ("texinfo" ,texinfo)))
   (home-page "https://git.systemreboot.net/ccwl")
   (synopsis "Concise common workflow language")
   (description "Concise common workflow language")
