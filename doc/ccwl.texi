@@ -26,6 +26,8 @@ Edition @value{EDITION} @*
 @insertcopying
 @end titlepage
 
+@contents
+
 @ifnottex
 @node Top
 @top Concise Common Workflow Language
