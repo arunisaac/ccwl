@@ -14,6 +14,18 @@ copy of the license is included in the section entitled ``GNU Free
 Documentation License''.
 @end copying
 
+@titlepage
+@title Concise Common Workflow Language
+@subtitle Writing Common Workflow Language workflows using ccwl
+@author The ccwl authors
+
+@page
+@vskip 0pt plus 1filll
+Edition @value{EDITION} @*
+@value{UPDATED} @*
+@insertcopying
+@end titlepage
+
 @ifnottex
 @node Top
 @top Concise Common Workflow Language
