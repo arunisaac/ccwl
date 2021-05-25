@@ -17,11 +17,11 @@ Documentation License''.
 @ifnottex
 @node Top
 @top Concise Common Workflow Language
-@end ifnottex
 
 This manual documents @abbr{ccwl, Concise Common Workflow Language}
 version @value{VERSION}. ccwl is a concise syntax to express @abbr{CWL,
 Common Workflow Language} workflows.
+@end ifnottex
 
 @menu
 * Introduction:: What is ccwl?
