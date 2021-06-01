@@ -116,22 +116,22 @@ for example, be invoked as:
 
 => (1 2 123 (1 2 3))"
     (syntax-case x ()
-      ((_ args-spec body ...)
+      ((_ (args-spec ...) body ...)
        #`(lambda args
-           #,(let* ((positionals rest (break keyword? (syntax->datum #'args-spec)))
+           #,(let* ((args-spec (unsyntax-keywords #'(args-spec ...)))
+                    (positionals rest (break keyword? args-spec))
                     (grouped-rest (group-keyword-arguments rest))
                     (unary-arguments (or (plist-ref grouped-rest #:key)
                                          (list)))
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
                                         (list))))
-               #`(apply (lambda* #,(datum->syntax x (append positionals
-                                                            (cons #:key (append unary-arguments nary-arguments))))
+               #`(apply (lambda* #,(append positionals
+                                           (cons #:key (append unary-arguments nary-arguments)))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
                           (append positionals
                                   (group-keyword-arguments
-                                   rest (list #,@(map (compose (cut datum->syntax x <>)
-                                                               symbol->keyword)
+                                   rest (list #,@(map (compose symbol->keyword syntax->datum)
                                                       unary-arguments))))))))))))
 
 (define (mapn proc lst)
