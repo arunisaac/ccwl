@@ -33,7 +33,8 @@
             syntax-lambda**
             mapn
             append-mapn
-            foldn))
+            foldn
+            filter-mapi))
 
 (define (pairify lst)
   "Return a list of pairs of successive elements of LST."
@@ -144,6 +145,15 @@ macros that accept keyword arguments."
              (syntax-case x ()
                ((_ args :::)
                 (unsyntax-keywords #'(args :::))))))))
+
+(define (filter-mapi proc lst)
+  "Indexed filter-map. Like filter-map, but PROC calls are (proc item
+index) where ITEM is an element of list and INDEX is the index of that
+element."
+  (filter-map (lambda (item index)
+                (proc item index))
+              lst
+              (iota (length lst))))
 
 (define (mapn proc lst)
   "Map the procedure PROC over list LST and return a list containing
