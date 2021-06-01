@@ -83,6 +83,17 @@ or #f if there is no such entry."
     ((_ value . _) value)
     (#f #f)))
 
+(define (unsyntax-keywords lst)
+  "Unsyntax keywords in LST, a list of syntax objects. For example:
+
+(unsyntax-keywords (list #'#:ham #'1 #'#:eggs #'2))
+=> (#:ham #'1 #:eggs 2)"
+  (map (lambda (element)
+         (if (keyword? (syntax->datum element))
+             (syntax->datum element)
+             element))
+       lst))
+
 ;; TODO: Implement a define** for lambda** in the spirit of define*
 ;; for lambda*.
 (define-syntax lambda**
