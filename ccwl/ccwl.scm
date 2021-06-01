@@ -33,8 +33,6 @@
   #:use-module (ccwl yaml)
   #:export (command
             workflow
-            input
-            output
             step
             pipeline
             write-cwl))
@@ -42,13 +40,13 @@
 (define %cwl-version "v1.2")
 
 (define-immutable-record-type <input>
-  (make-input id type label default source prefix other)
+  (make-input id type label default position prefix other)
   input?
   (id input-id)
   (type input-type)
   (label input-label)
   (default input-default)
-  (source input-source set-input-source)
+  (position input-position)
   (prefix input-prefix)
   (other input-other))
 
@@ -56,14 +54,10 @@
   (make-unspecified-default)
   unspecified-default?)
 
-(define* (input id #:key (type 'File) label (default (make-unspecified-default)) (other '()))
+(define* (input id #:key (type 'File) label (default (make-unspecified-default)) position prefix (other '()))
   "Build and return an <input> object."
-  ;; The user should never set source, and should not set prefix
-  ;; directly during construction of the <input> object. Hence, do not
-  ;; expose it as a parameter of this constructor.
-  (let ((source #f)
-        (prefix #f))
-    (make-input id type label default source prefix other)))
+  (make-input id type label default position prefix other))
+
 
 (define-immutable-record-type <output>
   (make-output id type binding source other)
@@ -94,17 +88,85 @@
   (out step-out))
 
 (define-immutable-record-type <command>
-  (make-command additional-inputs outputs args stdin other)
+  (make-command inputs outputs args stdin other)
   command?
-  (additional-inputs command-additional-inputs)
-  (outputs command-outputs set-command-outputs)
+  (inputs command-inputs)
+  (outputs command-outputs)
   (args command-args)
-  (stdin command-stdin set-command-stdin)
+  (stdin command-stdin)
   (other command-other))
 
-(define command
-  (lambda** (#:key stdin #:key* run (additional-inputs '()) (outputs '()) (other '()))
-    (make-command additional-inputs outputs run stdin other)))
+;; TODO: Add fine-grained syntax checking.
+(define-syntax command
+  (lambda (x)
+    ((syntax-lambda** (#:key stdin #:key* (inputs '()) (outputs '()) run (other '()))
+       (let ((inputs
+              ;; Canonicalize inputs.
+              (map (lambda (x)
+                     (syntax-case x ()
+                       ((id args ...) (identifier? #'id)
+                        #'(id args ...))
+                       (id (identifier? #'id) #'(id))
+                       (_ (error "Invalid input:" (syntax->datum x)))))
+                   inputs)))
+         (unless run
+           (error "#:run key required in command definition" (syntax->datum x)))
+         #`(make-command
+            (list #,@(map (lambda (x)
+                            (syntax-case x ()
+                              ((id args ...)
+                               ;; Instantiate <input> object with
+                               ;; position and prefix.
+                               #`(input 'id
+                                        #:position #,(list-index (lambda (x)
+                                                                   (syntax-case x ()
+                                                                     (input (identifier? #'input)
+                                                                      (eq? (syntax->datum #'id)
+                                                                           (syntax->datum #'input)))
+                                                                     ((_ input)
+                                                                      (eq? (syntax->datum #'id)
+                                                                           (syntax->datum #'input)))
+                                                                     (_ #f)))
+                                                                 run)
+                                        #:prefix #,(any (lambda (x)
+                                                          (syntax-case x ()
+                                                            ((prefix input)
+                                                             (and (eq? (syntax->datum #'id)
+                                                                       (syntax->datum #'input))
+                                                                  #'prefix))
+                                                            (_ #f)))
+                                                        run)
+                                        args ...))))
+                          inputs))
+            (list #,@(map (lambda (x)
+                            ;; Instantiate <output> object.
+                            (syntax-case x ()
+                              ((id args ...) (identifier? #'id)
+                               #'(output 'id args ...))
+                              (id (identifier? #'id) #'(output 'id))
+                              (_ (error "Invalid output:"
+                                        (syntax->datum x)))))
+                          outputs))
+            (list #,@(map (lambda (x)
+                            (syntax-case x ()
+                              ;; Replace input symbol with quoted symbol.
+                              (input (identifier? #'input)
+                               #''input)
+                              ;; Leave string as is.
+                              (string-arg (string? (syntax->datum #'string-arg))
+                               #'string-arg)
+                              ;; Replace prefixed input symbol with
+                              ;; quoted symbol.
+                              ((prefix input) (and (string? (syntax->datum #'prefix))
+                                                   (identifier? #'input))
+                               #''input)
+                              (_ (error "Invalid command element:"
+                                        (syntax->datum x)))))
+                          run))
+            #,(and stdin #`'#,stdin)
+            (list #,@other))))
+     x)))
+
 
 (define (input=? input1 input2)
   (eq? (input-id input1)
@@ -165,78 +227,38 @@
                          (cons 'outputBinding (output-binding output)))))
     ,@(output-other output)))
 
-(define-immutable-record-type <cli-element>
-  (make-cli-element argument position)
-  cli-element?
-  (argument cli-element-argument)
-  (position cli-element-position))
 
 (define (command->cwl command)
-  (let ((elements
-         ;; Add a position to all arguments, converting them to
-         ;; <cli-element> objects.
-         (map (lambda (arg position)
-                (make-cli-element
-                 ;; If duplicate input, convert it to an expression
-                 ;; referring to the input.
-                 (if (and (input? arg)
-                          (not (= (list-index (lambda (x)
-                                                (and (input? x)
-                                                     (input=? arg x)))
-                                              (command-args command))
-                                  position)))
-                     (string-append "$(inputs." (symbol->string (input-id arg)) ")")
-                     arg)
-                 position))
-              (command-args command)
-              (iota (length (command-args command))))))
-    `((cwlVersion . ,%cwl-version)
-      (class . CommandLineTool)
-      ,@(command-other command)
-      (arguments . ,(list->vector
-                     ;; Put string arguments into the arguments array.
-                     (filter-map (lambda (element)
-                                   (and (string? (cli-element-argument element))
-                                        `((position . ,(cli-element-position element))
-                                          (valueFrom . ,(cli-element-argument element)))))
-                                 elements)))
-      (inputs . ,(append
-                  ;; Put <input> arguments into the inputs array.
-                  (filter-map (lambda (element)
-                                (let ((input (cli-element-argument element)))
-                                  (and (input? input)
-                                       `(,(input-id input)
-                                         ,@(filter-alist
-                                            `((type . ,(input-type input))
-                                              (label . ,(input-label input))
-                                              (default . ,(and (not (unspecified-default? (input-default input)))
-                                                               (input-default input)))
-                                              (inputBinding . ,(filter-alist
-                                                                `((position . ,(cli-element-position element))
-                                                                  (prefix . ,(input-prefix input)))))))
-                                         ,@(input-other input)))))
-                              elements)
-                  (map (lambda (input)
-                         `(,(input-id input)
-                           ,@(filter-alist
-                              `((type . ,(input-type input))
-                                (label . ,(input-label input))
-                                (default . ,(and (not (unspecified-default? (input-default input)))
-                                                 (input-default input)))))
-                           ,@(input-other input)))
-                       (command-additional-inputs command))
-                  (let ((stdin (command-stdin command)))
-                    (if stdin
-                        (list `(,(input-id stdin)
-                                (type . ,(input-type stdin))))
-                        (list)))))
-      (outputs . ,(map output->cwl (command-outputs command)))
-      ,@(if (command-stdin command)
-            `((stdin . ,(string-append "$(inputs."
-                                       (symbol->string
-                                        (input-id (command-stdin command)))
-                                       ".path)")))
-            '()))))
+  `((cwlVersion . ,%cwl-version)
+    (class . CommandLineTool)
+    ,@(command-other command)
+    (arguments . ,(list->vector
+                   ;; Put string arguments into the arguments array.
+                   (filter-mapi (lambda (arg index)
+                                  (and (string? arg)
+                                       `((position . ,index)
+                                         (valueFrom . ,arg))))
+                                (command-args command))))
+    (inputs . ,(map (lambda (input)
+                      `(,(input-id input)
+                        ,@(filter-alist
+                           `((type . ,(input-type input))
+                             (label . ,(input-label input))
+                             (default . ,(and (not (unspecified-default? (input-default input)))
+                                              (input-default input)))
+                             ;; FIXME: inputBinding can be an empty dictionary.
+                             (inputBinding . ,(filter-alist
+                                               `((position . ,(input-position input))
+                                                 (prefix . ,(input-prefix input)))))))
+                        ,@(input-other input)))
+                    (command-inputs command)))
+    (outputs . ,(map output->cwl (command-outputs command)))
+    ,@(if (command-stdin command)
+          `((stdin . ,(string-append "$(inputs."
+                                     (symbol->string
+                                      (command-stdin command))
+                                     ".path)")))
+          '())))
 
 (define (write-cwl step file)
   (call-with-output-file file
@@ -248,11 +270,7 @@
 
 (define (command-input-keys command)
   "Return the list of input keys accepted by COMMAND."
-  (map input-id
-       (append (filter input? (command-args command))
-               (command-additional-inputs command)
-               (cond ((command-stdin command) => list)
-                     (else (list))))))
+  (map input-id (command-inputs command)))
 
 (define-immutable-record-type <key>
   (make-key name step)
