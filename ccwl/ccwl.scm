@@ -398,6 +398,20 @@ list of supplied input <key> objects."
     ;; any other unrecognized syntax
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
+(define (key->output key steps)
+  "Return the <output> object corresponding to KEY, a <key> object, in
+STEPS, a list of <step> objects. If no such <output> object is found,
+return #f."
+  (and-let* ((step-with-output (find (lambda (step)
+                                       (eq? (step-id step)
+                                            (key-step key)))
+                                     steps))
+             (output (find (lambda (output)
+                             (eq? (output-id output)
+                                  (key-name key)))
+                           (step-out step-with-output))))
+    (set-output-source output (cwl-key-address key))))
+
 (define-syntax workflow
   (lambda (x)
     (syntax-case x ()
@@ -414,16 +428,10 @@ list of supplied input <key> objects."
                x
                (make-workflow steps
                               inputs
-                              (map (lambda (key)
-                                     (set-output-source
-                                      (find (lambda (output)
-                                              (eq? (output-id output)
-                                                   (key-name key)))
-                                            (step-out (find (lambda (step)
-                                                              (eq? (step-id step)
-                                                                   (key-step key)))
-                                                            steps)))
-                                      (cwl-key-address key)))
-                                   output-keys)))))
+                              ;; Find the output object for each
+                              ;; output key. Filter out global
+                              ;; workflow inputs.
+                              (filter-map (cut key->output <> steps)
+                                          output-keys)))))
       (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
                 (syntax->datum #'x))))))
