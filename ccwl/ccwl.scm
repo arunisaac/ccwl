@@ -34,7 +34,6 @@
   #:export (command
             workflow
             input
-            input-with-prefix
             output
             step
             pipeline
@@ -50,12 +49,8 @@
   (label input-label)
   (default input-default)
   (source input-source set-input-source)
-  (prefix input-prefix set-input-prefix)
+  (prefix input-prefix)
   (other input-other))
-
-(define (input-with-prefix prefix input)
-  "Set PREFIX on INPUT object."
-  (set-input-prefix input prefix))
 
 (define-immutable-record-type <unspecified-default>
   (make-unspecified-default)
@@ -94,22 +89,9 @@
   (make-step id run in out)
   step?
   (id step-id)
-  (run step-run set-step-run)
-  (in step-in set-step-in)
-  (out step-out set-step-out))
-
-(define (field-appender getter setter)
-  (lambda (object element)
-    (setter object (cons element (getter object)))))
-
-(define (modify-step-run step proc)
-  (set-step-run step (proc (step-run step))))
-
-(define append-step-in
-  (field-appender step-in set-step-in))
-
-(define append-step-out
-  (field-appender step-out set-step-out))
+  (run step-run)
+  (in step-in)
+  (out step-out))
 
 (define-immutable-record-type <command>
   (make-command additional-inputs outputs args stdin other)
@@ -119,9 +101,6 @@
   (args command-args)
   (stdin command-stdin set-command-stdin)
   (other command-other))
-
-(define append-command-outputs
-  (field-appender command-outputs set-command-outputs))
 
 (define command
   (lambda** (#:key stdin #:key* run (additional-inputs '()) (outputs '()) (other '()))
