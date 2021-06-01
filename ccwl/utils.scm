@@ -30,6 +30,7 @@
   #:export (pairify
             plist->alist
             lambda**
+            syntax-lambda**
             mapn
             append-mapn
             foldn))
@@ -133,6 +134,16 @@ for example, be invoked as:
                                   (group-keyword-arguments
                                    rest (list #,@(map (compose symbol->keyword syntax->datum)
                                                       unary-arguments))))))))))))
+
+(define-syntax-rule (syntax-lambda** formal-args body ...)
+  "Like lambda**, but for syntax objects. This is useful for writing
+macros that accept keyword arguments."
+  (lambda (x)
+    (apply (lambda** formal-args body ...)
+           (with-ellipsis :::
+             (syntax-case x ()
+               ((_ args :::)
+                (unsyntax-keywords #'(args :::))))))))
 
 (define (mapn proc lst)
   "Map the procedure PROC over list LST and return a list containing
