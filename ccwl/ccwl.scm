@@ -33,8 +33,6 @@
   #:use-module (ccwl yaml)
   #:export (command
             workflow
-            step
-            pipeline
             write-cwl))
 
 (define %cwl-version "v1.2")
