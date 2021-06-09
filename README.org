@@ -1,4 +1,7 @@
 #+TITLE: Concise Common Workflow Language (ccwl)
+#+MACRO: ci-badge [[https://ci.systemreboot.net/jobs/$1][https://ci.systemreboot.net/badge/$1.svg]]
+
+{{{ci-badge(ccwl-with-guile-3.0)}}} {{{ci-badge(ccwl-with-guile-3.0-latest)}}} {{{ci-badge(ccwl-website)}}}
 
 The Concise Common Workflow Language (ccwl) is a concise syntax to
 express CWL workflows. It is implemented as an Embedded Domain
