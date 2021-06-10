@@ -22,8 +22,11 @@
 (import (ice-9 match))
 
 (define (prepend-path-env! name . values)
-  (setenv name (string-append (string-join values ":" 'suffix)
-                              (getenv name))))
+  (setenv name (string-join (append values
+                                    (if (getenv name)
+                                        (string-split (getenv name) #\:)
+                                        '()))
+                            ":")))
 
 (prepend-path-env! "GUILE_LOAD_PATH" "@abs_top_builddir@" "@abs_top_srcdir@")
 (prepend-path-env! "GUILE_LOAD_COMPILED_PATH" "@abs_top_builddir@")
