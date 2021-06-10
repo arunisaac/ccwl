@@ -33,19 +33,5 @@
       org-html-head-include-scripts nil
       org-html-postamble nil)
 
-;; Override org-html--svg-image to export svg using an img tag instead
-;; of an object tag.
-(defun org-html--svg-image (source attributes info)
-  "Return \"object\" embedding svg file SOURCE with given ATTRIBUTES.
-INFO is a plist used as a communication channel."
-  (let ((attrs (org-html--make-attribute-string
-                (org-combine-plists
-                 ;; Remove fallback attribute, which is not meant to
-                 ;; appear directly in the attributes string, and
-                 ;; provide a default class if none is set.
-                 '(:class "org-svg") attributes '(:fallback nil)))))
-    (org-html-close-tag
-     "img" (format "src=\"%s\" %s" source attrs) info)))
-
 (with-current-buffer (find-file "README.org")
   (org-export-to-file 'html "website/index.html"))
