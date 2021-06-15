@@ -76,7 +76,7 @@
    `(("autoconf" ,autoconf)
      ("automake" ,automake)
      ("pkg-config" ,pkg-config)
-     ("texinfo" ,texinfo)))
+     ("skribilo" ,skribilo)))
   (home-page "https://git.systemreboot.net/ccwl")
   (synopsis "Concise common workflow language")
   (description "Concise common workflow language")

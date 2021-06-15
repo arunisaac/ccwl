@@ -39,7 +39,6 @@ moddir = $(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir  = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
 bin_SCRIPTS = scripts/ccwl
-info_TEXINFOS = doc/ccwl.texi
 
 SOURCES =			\
   ccwl/ccwl.scm 		\
@@ -64,9 +63,38 @@ EXTRA_DIST +=			\
   COPYING			\
   README.org
 
-# Build website
+# Build documentation
 
-AM_MAKEINFOHTMLFLAGS = --css-ref=/style.css
+SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
+
+# The info and html targets depend on the info-local and html-local
+# targets respectively. So, we use them to extend the info and html
+# targets.
+info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
+html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
+
+$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb
+	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $^ -o $@
+
+$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb
+	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $^ -o $@
+
+install-data-local: install-info-local
+
+install-info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
+	$(MKDIR_P) $(DESTDIR)$(infodir)
+	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.info $(DESTDIR)$(infodir)
+
+install-html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
+	$(MKDIR_P) $(DESTDIR)$(htmldir)
+	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.html $(DESTDIR)$(htmldir)
+
+uninstall-local:
+	rm -f $(DESTDIR)$(infodir)/ccwl.info $(DESTDIR)$(htmldir)/ccwl.html
+
+# Build website
 
 website: website/index.html website/style.css website/manual/dev/en
 
@@ -78,12 +106,11 @@ website/style.css: style.css
 	mkdir -p $(dir $@)
 	cp -v $< $@
 
-website/manual/dev/en: doc/ccwl.html
-	rm -rf $@
-	mkdir -p $(dir $@)
-	cp -vr doc/ccwl.html $@
+website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
+	$(MKDIR_P) $@
+	cp -v $< $@/index.html
 
 # The clean target depends on clean-local. We use clean-local to clean
-# up the website built by the website target.
+# up the website and the skribilo build directory.
 clean-local:
-	rm -rf website
+	rm -rf website $(SKRIBILO_BUILD_DIR)

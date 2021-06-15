@@ -1,0 +1,13 @@
+$ ccwl compile hello-world.scm > hello-world.cwl
+$ cwltool hello-world.cwl --message "Hello World!"
+[workflow ] start
+[workflow ] starting step echo
+[step echo] start
+[job echo] /tmp/zprgn3x0$ echo \
+    'Hello World!'
+Hello World!
+[job echo] completed success
+[step echo] completed success
+[workflow ] completed success
+{}
+Final process status is success

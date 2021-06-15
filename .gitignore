@@ -8,11 +8,9 @@ build-aux/missing
 config.log
 config.status
 configure
-doc/*.html
-doc/*.info
 doc/.dirstamp
+doc/skribilo
 doc/stamp-vti
-doc/version.texi
 pre-inst-env
 scripts/ccwl
 test-suite.log

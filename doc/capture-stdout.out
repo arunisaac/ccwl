@@ -1,0 +1,21 @@
+$ ccwl compile capture-stdout.scm > capture-stdout.cwl
+$ cwltool capture-stdout.cwl --message "Hello World!"
+[workflow ] start
+[workflow ] starting step print
+[step print] start
+[job print] /tmp/7zksx3xm$ echo \
+    'Hello World!' > /tmp/7zksx3xm/51fe79d15e7790a9ded795304220d7a44aa84b48
+[job print] completed success
+[step print] completed success
+[workflow ] completed success
+{
+    "printed-message": {
+        "location": "file:///home/manimekalai/51fe79d15e7790a9ded795304220d7a44aa84b48",
+        "basename": "51fe79d15e7790a9ded795304220d7a44aa84b48",
+        "class": "File",
+        "checksum": "sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b",
+        "size": 13,
+        "path": "/home/manimekalai/51fe79d15e7790a9ded795304220d7a44aa84b48"
+    }
+}
+Final process status is success

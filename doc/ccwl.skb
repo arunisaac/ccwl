@@ -1,0 +1,216 @@
+(use-modules (skribilo lib)
+             (ccwl skribilo))
+
+(document :title [Concise Common Workflow Language]
+  (chapter :title [Introduction]
+    (p [,(abbr :short "CWL" :long "Common Workflow
+Language") is an open standard for describing analysis workflows and
+tools in a way that makes them portable and scalable across a variety
+of software and hardware environments.])
+    (p [,(abbr :short "ccwl" :long "Concise Common
+Workflow Language") is a concise syntax to express CWL workflows. It
+is implemented as an ,(abbr :short "EDSL" :long "Embedded Domain
+Specific Language") in the Scheme programming language, a minimalist
+dialect of the Lisp family of programming languages.])
+    (p [ccwl is a compiler to generate CWL workflows
+from concise descriptions in ccwl. In the future, ccwl will also have
+a runtime whereby users can interactively execute workflows while
+developing them.]))
+  (chapter :title [Tutorial]
+    (p [This tutorial will introduce you to writing
+workflows in ccwl. Some knowledge of CWL is assumed. To learn about
+CWL, please see the ,(ref :url "https://www.commonwl.org/user_guide/"
+:text "Common Workflow Language User Guide")])
+
+    (section :title [Important concepts]
+      (p [The CWL and ccwl workflow languages
+are statically typed programming languages where functions accept
+multiple named inputs and return multiple named outputs. Let 's break
+down what that means.])
+      (subsection :title [Static typing]
+        (p [In CWL ,the type of arguments accepted by a function and
+the type of outputs returned by that function are specified explicitly
+by the programmer ,and are known at compile time even before the code
+has been run. Hence ,we say that it is statically typed.]))
+      (subsection :title [Positional arguments and named arguments]
+        (p [In many languages ,the order of arguments passed to a
+function is significant. The position of each argument determines
+which formal argument it gets mapped to. For example ,passing
+positional arguments in Scheme looks like])
+        (prog :line #f [(foo 1 2)])
+        (p [In a language that supports named arguments ,the order of
+arguments is not significant. Each argument explicitly names the
+formal argument it gets mapped to. For example , in Scheme ,passing
+named arguments may look like]
+           (prog :line #f [(foo #:bar 1 #:baz 2)])))
+      (subsection :title [Multiple function arguments and return values]
+        (p [In most languages, functions accept multiple input
+arguments but only return a single output value. However, in CWL, a
+function can return multiple output values as well. These multiple
+outputs are unordered and are each addressed by a unique name.])))
+
+    (section :title [First example]
+      (p [As is tradition, let us start with a simple "Hello World"
+workflow in ccwl. This workflow accepts a string input and prints that
+string.])
+
+      (scheme-source "doc/hello-world.scm")
+
+      (p [The first form in this code defines the ,(code "print")
+command. This form is the equivalent of defining a
+,(code "CommandLineTool") class workflow in CWL. All arguments after
+,(code "#:run") specify the command that will be run. One of those
+arguments ,(code "(input 'message #:type 'string)") refers to a
+,(code "string") type input named ,(code "message"). Notice how the
+command definition is very close to a shell command, only that it is
+slightly annotated with inputs and their types.])
+
+      (p [The second form describes the actual workflow and is the
+equivalent of defining a ,(code "Workflow") class workflow in CWL. The
+form ,(code "((message #:type string))") specifies the inputs of the
+workflow. In this case, there is only one input---,(code "message") of
+type ,(code "string"). The body of the workflow specifies the commands
+that will be executed. The body of this workflow executes only a
+single command---the ,(code "print") command---passing the
+,(code "message") input of the workflow as the ,(code "message") input
+to the ,(code "print") command.])
+
+      (p [If this workflow is written to a file
+,(file "hello-world.scm"), we may compile it to CWL by running])
+
+      (prog :line #f [$ ccwl compile hello-world.scm])
+
+      (p [This prints a big chunk of generated CWL to standard
+output. We have achieved quite a lot of concision already! We write
+the generated CWL to a file and execute it using (command "cwltool")
+as follows. The expected output is also shown.])
+
+      (prog :line #f (source :file "doc/hello-world.out")))
+
+    (section :title [Capturing the standard output stream of a command]
+      (p [Let us return to the “Hello World” example in the previous
+section. But now ,let us capture the standard output of the
+,(code "print") command in an output object. The ccwl code is the same
+as earlier with only the addition of an ,(code "stdout") type output
+object to the command definition.])
+
+      (scheme-source "doc/capture-stdout.scm")
+
+      (p [Let's write this code to a file
+,(file "capture-stdout.scm"), generate CWL, write the generated CWL to
+,(file "capture-stdout.cwl"), and run it using ,(code "cwltool"). We
+might expect something like the output below. Notice how the standard
+output of the ,(code "print") command has been captured in the file
+,(file "51fe79d15e7790a9ded795304220d7a44aa84b48").])
+
+      (prog :line #f (source :file "doc/capture-stdout.out")))
+
+    (section :title [Capturing output files]
+      (p [In the previous section ,we captured the standard output
+stream of a command. But ,how do we capture any output files created
+by a command?  Let us see.])
+
+      (p [Consider a tar archive ,(file "hello.tar") containing a file
+,(file "hello.txt").])
+
+      (prog :line #f (source :file "doc/hello.tar.out"))
+
+      (p [Let us write a workflow to extract the file
+,(file "hello.txt") from the archive. Everything in the following
+workflow except the ,(code "#:binding") parameter will already be
+familiar to you. The ,(code "#:binding") parameter sets the
+,(code "outputBinding") field in the generated CWL. In the example
+below, we set the ,(code "glob") field to look for a file named
+,(file "hello.txt").])
+
+      (scheme-source "doc/capture-output-file.scm")
+
+      (p [Writing this workflow to ,(file "capture-output-file.scm"),
+compiling and running it gives us the following output. Notice that
+the file ,(file "hello.txt") has been captured and is now present in
+our current working directory.])
+
+      (prog :line #f (source :file "doc/capture-output-file.out"))
+
+      (p [The above workflow is not awfully flexible. The name of the
+file to extract is hardcoded into the workflow. Let us modify the
+workflow to accept the name of the file to extract. We introduce
+,(code "extractfile"), a ,(code "string") type input that is passed to
+,(command "tar") and is referenced in the ,(code "glob") field.])
+
+      (scheme-source "doc/capture-output-file-with-parameter-reference.scm")
+
+      (p [Compiling and running this workflow gives us the following
+output.])
+
+      (prog :line #f (source :file "doc/capture-output-file-with-parameter-reference.out")))
+
+    (section :title [Workflow with multiple steps]
+      (p [Till now, we have only written trivial workflows with a
+single command. If we were only interested in executing single
+commands, we would hardly need a workflow language! So, in this
+section, let us write our first multi-step workflow and learn how to
+connect steps together in an arbitrary topology.])
+
+      (subsection :title [pipe]
+        (p [First ,the simplest of topologies---a linear chain
+representing sequential execution of steps. The following workflow
+decompresses a compressed C source file ,compiles and then executes
+it.])
+
+        (scheme-source "doc/decompress-compile-run.scm")
+
+        (p [Notice the ,(code "pipe") form in the body of the
+workflow. The ,(code "pipe") form specifies a list of steps to be
+executed sequentially. The workflow inputs coming into ,(code "pipe")
+are passed into the first step. Thereafter, the outputs of each step
+are passed as inputs into the next. Note that this has nothing to do
+with the Unix pipe. The inputs/outputs passed between steps are
+general CWL inputs/outputs. They need not be the standard stdin and
+stdout streams.])
+
+        ;; TODO: Add workflow graph
+
+        (p [Writing this worklow to
+,(file "decompress-compile-run.scm"), compiling and running it with
+the compressed C source file ,(file "hello.c.gz") gives us the
+following output.])
+
+        (prog :line #f (source :file "doc/decompress-compile-run.out"))
+
+        (p [The steps run in succession, and the stdout of the
+compiled executable is in
+,(file "c32c587f7afbdf87cf991c14a43edecf09cd93bf"). Success!]))
+
+      (subsection :title [tee]
+        (p [Next, the tee topology. The following workflow computes
+three different checksums of a given input file.])
+
+        (scheme-source "doc/checksum.scm")
+
+        (p [Notice the ,(code "tee") form in the body of the
+workflow. The ,(code "tee") form specifies a list of steps that are
+independent of each other. The workflow inputs coming into
+,(code "tee") are passed into every step contained in the body of the
+,(code "tee"). The outputs of each step are collected together and
+unioned as the output of the ,(code "tee").])
+
+        ;; TODO: Add workflow graph
+
+        (p [Writing this workflow to ,(file "checksum.scm"), compiling
+and running it with some file ,(file "hello.txt") gives us the
+following output.])
+
+        (prog :line #f (source :file "doc/checksum.out"))
+
+        (p [The MD5, SHA1 and SHA256 checksums are in the files
+,(file "112be1054505027982e64d56b0879049c12737c6"),
+,(file "d2f19c786fcd3feb329004c8747803fba581a02d") and
+,(file "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1") respectively.]))))
+
+  (chapter :title [Contributing]
+    (p [ccwl is developed on GitHub at ,(ref
+:url "https://github.com/arunisaac/ccwl"). Feedback, suggestions,
+feature requests, bug reports and pull requests are all
+welcome. Unclear and unspecific error messages are considered a
+bug. Do report them!])))
