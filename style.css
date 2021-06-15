@@ -10,3 +10,8 @@ body {
 h1, h2, h3 {
     line-height: 1.2;
 }
+
+/* Make the svg badges clickable. */
+object {
+    pointer-events: none;
+}
