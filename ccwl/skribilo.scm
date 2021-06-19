@@ -23,6 +23,10 @@
 ;;; Code:
 
 (define-module (ccwl skribilo)
+  #:use-module (rnrs io ports)
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 regex)
+  #:use-module (srfi srfi-171)
   #:use-module (skribilo ast)
   #:use-module (skribilo engine)
   #:use-module (skribilo lib)
@@ -30,7 +34,14 @@
   #:use-module (skribilo source lisp)
   #:use-module (skribilo utils keywords)
   #:use-module (skribilo writer)
-  #:export (command file scheme-source))
+  #:export (command
+            file
+            scheme-source
+            source-ref))
+
+;; Constants
+(define %source-uri-base
+  "https://github.com/arunisaac/ccwl/blob/main/")
 
 ;; Aliases
 (define file samp)
@@ -54,6 +65,31 @@
 		  (#:long ,long)
 		  ,@(the-options opts #:ident #:class #:short #:long)))
        (body (the-body opts))))
+
+;; Source links
+(define (source-ref file regexp text)
+  (call-with-input-file file
+    (lambda (port)
+      (ref #:url (call-with-input-file file
+                   (lambda (port)
+                     (match (port-transduce (compose (tenumerate 1)
+                                                     (tfilter-map
+                                                      (match-lambda
+                                                        ((line-number . line)
+                                                         (and (string-match regexp line)
+                                                              line-number)))))
+                                            rcons
+                                            get-line
+                                            port)
+                       ((line-number)
+                        (string-append %source-uri-base
+                                       file
+                                       "#L"
+                                       (number->string line-number)))
+                       ((line-numbers ...)
+                        (error "source-ref: regexp found on multiple lines"
+                               regexp line-numbers)))))
+           #:text text))))
 
 ;; HTML engine customizations
 (let ((html-engine (find-engine 'html)))
