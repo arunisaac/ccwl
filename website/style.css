@@ -16,6 +16,10 @@ pre {
     padding: 1em;
 }
 
+code {
+    font-style: italic;
+}
+
 /* Make the svg badges clickable. */
 object {
     pointer-events: none;
