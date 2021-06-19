@@ -99,7 +99,7 @@ uninstall-local:
 website: website/index.html website/manual/dev/en
 
 website/index.html: README.org
-	mkdir -p $(dir $@)
+	$(MKDIR_P) $(dir $@)
 	emacs -Q --script build-aux/build-home-page.el
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
