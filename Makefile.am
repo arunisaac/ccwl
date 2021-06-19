@@ -96,15 +96,11 @@ uninstall-local:
 
 # Build website
 
-website: website/index.html website/style.css website/manual/dev/en
+website: website/index.html website/manual/dev/en
 
 website/index.html: README.org
 	mkdir -p $(dir $@)
 	emacs -Q --script build-aux/build-home-page.el
-
-website/style.css: style.css
-	mkdir -p $(dir $@)
-	cp -v $< $@
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	$(MKDIR_P) $@
@@ -113,4 +109,4 @@ website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website and the skribilo build directory.
 clean-local:
-	rm -rf website $(SKRIBILO_BUILD_DIR)
+	rm -rf website/index.html website/manual/dev/en $(SKRIBILO_BUILD_DIR)
