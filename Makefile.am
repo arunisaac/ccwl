@@ -103,6 +103,7 @@ website/index.html: README.org
 	emacs -Q --script build-aux/build-home-page.el
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
+	rm -rf $@
 	$(MKDIR_P) $@
 	cp -v $< $@/index.html
 
