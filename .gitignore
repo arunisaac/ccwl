@@ -5,6 +5,7 @@ aclocal.m4
 autom4te.cache
 build-aux/install-sh
 build-aux/missing
+build-aux/test-driver.scm
 config.log
 config.status
 configure
@@ -16,3 +17,4 @@ scripts/ccwl
 test-suite.log
 tests/*.log
 tests/*.trs
+website
