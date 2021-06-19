@@ -15,7 +15,7 @@ can interactively execute workflows while developing them.
 
 [[https://ccwl.systemreboot.net/manual/dev/en/][Documentation for ccwl]] is available online. If ccwl is installed on
 your machine, you may also read the manual using your info
-browser. The [[http://ccwl.systemreboot.net/manual/dev/en/Tutorial.html][Tutorial section]] of the manual provides a gentle
+browser. The Tutorial section of the manual provides a gentle
 introduction to ccwl.
 
 * Contributing
