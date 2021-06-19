@@ -23,6 +23,7 @@ AM_SILENT_RULES([yes])
 
 GUILE_PKG([3.0 2.2])
 GUILE_PROGS
+AC_PATH_PROG([EMACS], [emacs])
 AC_PATH_PROG([SKRIBILO], [skribilo])
 
 AC_CONFIG_FILES([Makefile])
