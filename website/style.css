@@ -11,6 +11,11 @@ h1, h2, h3 {
     line-height: 1.2;
 }
 
+pre {
+    background-color: #f0f0f0;
+    padding: 1em;
+}
+
 /* Make the svg badges clickable. */
 object {
     pointer-events: none;
