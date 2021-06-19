@@ -160,8 +160,9 @@ it.])
 
         (scheme-source "doc/decompress-compile-run.scm")
 
-        (p [Notice the ,(code "pipe") form in the body of the
-workflow. The ,(code "pipe") form specifies a list of steps to be
+        (p [Notice the
+,(source-ref "ccwl/ccwl.scm" "\\(\\(pipe" (code "pipe")) form in the body of
+the workflow. The ,(code "pipe") form specifies a list of steps to be
 executed sequentially. The workflow inputs coming into ,(code "pipe")
 are passed into the first step. Thereafter, the outputs of each step
 are passed as inputs into the next. Note that this has nothing to do
@@ -188,9 +189,10 @@ three different checksums of a given input file.])
 
         (scheme-source "doc/checksum.scm")
 
-        (p [Notice the ,(code "tee") form in the body of the
-workflow. The ,(code "tee") form specifies a list of steps that are
-independent of each other. The workflow inputs coming into
+        (p [Notice the
+,(source-ref "ccwl/ccwl.scm" "\\(\\(tee" (code "tee")) form in the
+body of the workflow. The ,(code "tee") form specifies a list of steps
+that are independent of each other. The workflow inputs coming into
 ,(code "tee") are passed into every step contained in the body of the
 ,(code "tee"). The outputs of each step are collected together and
 unioned as the output of the ,(code "tee").])
