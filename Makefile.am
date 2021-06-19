@@ -73,13 +73,13 @@ SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
 info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
 html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 
-$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb
+$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $^ -o $@
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb
+$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $^ -o $@
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@
 
 install-data-local: install-info-local
 
