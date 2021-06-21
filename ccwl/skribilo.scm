@@ -66,29 +66,63 @@
 		  ,@(the-options opts #:ident #:class #:short #:long)))
        (body (the-body opts))))
 
-;; Source links
+;; S-exp source links
+(define (sexp-position str regexp)
+  "Return (START . END) where START is the start of the match to
+REGEXP in STR and END is the end of the sexp beginning at START. START
+and END are character positions indexed from 0. If multiple matches
+are found, error out."
+  (cond
+   ((string-match regexp str)
+    => (lambda (match-struct)
+         (let ((start (match:start match-struct)))
+           (if (string-match regexp (substring str (1+ start)))
+               (error "source-ref: regexp found on multiple lines" regexp)
+               (cons start
+                     (1- (- (string-length str)
+                            (string-length
+                             (call-with-input-string (substring str start)
+                               (lambda (port)
+                                 (read port)
+                                 (get-string-all port)))))))))))
+   (else
+    (error "source-sexp-ref: regexp not found" regexp))))
+
+(define (position->line-number str position)
+  "Return the line number in STR corresponding to POSITION."
+  (string-fold (lambda (c result)
+                 (if (char=? c #\newline)
+                     (1+ result)
+                     result))
+               1
+               (substring str 0 position)))
+
+(define (sexp-file-lines file regexp)
+    "Return (START . END) where START is the start of the match to
+REGEXP in STR and END is the end of the sexp beginning at START. START
+and END are line numbers indexed from 1."
+    (let ((str (call-with-input-file file get-string-all)))
+      (match (sexp-position str regexp)
+        ((start . end)
+         (cons (position->line-number str start)
+               (position->line-number str end))))))
+
 (define (source-ref file regexp text)
   (call-with-input-file file
     (lambda (port)
-      (ref #:url (call-with-input-file file
-                   (lambda (port)
-                     (match (port-transduce (compose (tenumerate 1)
-                                                     (tfilter-map
-                                                      (match-lambda
-                                                        ((line-number . line)
-                                                         (and (string-match regexp line)
-                                                              line-number)))))
-                                            rcons
-                                            get-line
-                                            port)
-                       ((line-number)
+      (ref #:url (match (sexp-file-lines file regexp)
+                   ((start-line . end-line)
+                    (if (= start-line end-line)
                         (string-append %source-uri-base
                                        file
                                        "#L"
-                                       (number->string line-number)))
-                       ((line-numbers ...)
-                        (error "source-ref: regexp found on multiple lines"
-                               regexp line-numbers)))))
+                                       (number->string start-line))
+                        (string-append %source-uri-base
+                                       file
+                                       "#L"
+                                       (number->string start-line)
+                                       "-L"
+                                       (number->string end-line)))))
            #:text text))))
 
 ;; HTML engine customizations
