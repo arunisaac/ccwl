@@ -161,14 +161,14 @@ it.])
         (scheme-source "doc/decompress-compile-run.scm")
 
         (p [Notice the
-,(source-ref "ccwl/ccwl.scm" "\\(\\(pipe" (code "pipe")) form in the body of
-the workflow. The ,(code "pipe") form specifies a list of steps to be
-executed sequentially. The workflow inputs coming into ,(code "pipe")
-are passed into the first step. Thereafter, the outputs of each step
-are passed as inputs into the next. Note that this has nothing to do
-with the Unix pipe. The inputs/outputs passed between steps are
-general CWL inputs/outputs. They need not be the standard stdin and
-stdout streams.])
+,(source-ref "ccwl/ccwl.scm" "\\(\\(pipe" (code "pipe")) form in the
+body of the workflow. The ,(code "pipe") form specifies a list of
+steps to be executed sequentially. The workflow inputs coming into
+,(code "pipe") are passed into the first step. Thereafter, the outputs
+of each step are passed as inputs into the next. Note that this has
+nothing to do with the Unix pipe. The inputs/outputs passed between
+steps are general CWL inputs/outputs. They need not be the standard
+stdin and stdout streams.])
 
         ;; TODO: Add workflow graph
 
