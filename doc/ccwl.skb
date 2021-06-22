@@ -28,19 +28,19 @@ are statically typed programming languages where functions accept
 multiple named inputs and return multiple named outputs. Let 's break
 down what that means.])
       (subsection :title [Static typing]
-        (p [In CWL ,the type of arguments accepted by a function and
+        (p [In CWL, the type of arguments accepted by a function and
 the type of outputs returned by that function are specified explicitly
-by the programmer ,and are known at compile time even before the code
-has been run. Hence ,we say that it is statically typed.]))
+by the programmer, and are known at compile time even before the code
+has been run. Hence, we say that it is statically typed.]))
       (subsection :title [Positional arguments and named arguments]
-        (p [In many languages ,the order of arguments passed to a
+        (p [In many languages, the order of arguments passed to a
 function is significant. The position of each argument determines
-which formal argument it gets mapped to. For example ,passing
+which formal argument it gets mapped to. For example, passing
 positional arguments in Scheme looks like])
         (prog :line #f [(foo 1 2)])
-        (p [In a language that supports named arguments ,the order of
+        (p [In a language that supports named arguments, the order of
 arguments is not significant. Each argument explicitly names the
-formal argument it gets mapped to. For example , in Scheme ,passing
+formal argument it gets mapped to. For example, in Scheme, passing
 named arguments may look like]
            (prog :line #f [(foo #:bar 1 #:baz 2)])))
       (subsection :title [Multiple function arguments and return values]
@@ -89,7 +89,7 @@ as follows. The expected output is also shown.])
 
     (section :title [Capturing the standard output stream of a command]
       (p [Let us return to the “Hello World” example in the previous
-section. But now ,let us capture the standard output of the
+section. But now, let us capture the standard output of the
 ,(code "print") command in an output object. The ccwl code is the same
 as earlier with only the addition of an ,(code "stdout") type output
 object to the command definition.])
@@ -106,8 +106,8 @@ output of the ,(code "print") command has been captured in the file
       (prog :line #f (source :file "doc/capture-stdout.out")))
 
     (section :title [Capturing output files]
-      (p [In the previous section ,we captured the standard output
-stream of a command. But ,how do we capture any output files created
+      (p [In the previous section, we captured the standard output
+stream of a command. But, how do we capture any output files created
 by a command?  Let us see.])
 
       (p [Consider a tar archive ,(file "hello.tar") containing a file
@@ -153,9 +153,9 @@ section, let us write our first multi-step workflow and learn how to
 connect steps together in an arbitrary topology.])
 
       (subsection :title [pipe]
-        (p [First ,the simplest of topologies---a linear chain
+        (p [First, the simplest of topologies---a linear chain
 representing sequential execution of steps. The following workflow
-decompresses a compressed C source file ,compiles and then executes
+decompresses a compressed C source file, compiles and then executes
 it.])
 
         (scheme-source "doc/decompress-compile-run.scm")
