@@ -58,12 +58,16 @@ string.])
 
       (p [The first form in this code defines the ,(code "print")
 command. This form is the equivalent of defining a
-,(code "CommandLineTool") class workflow in CWL. All arguments after
-,(code "#:run") specify the command that will be run. One of those
-arguments ,(code "(input 'message #:type 'string)") refers to a
-,(code "string") type input named ,(code "message"). Notice how the
-command definition is very close to a shell command, only that it is
-slightly annotated with inputs and their types.])
+,(code "CommandLineTool") class workflow in CWL. The arguments after
+,(code "#:inputs") define the inputs to the workflow. The arguments
+after ,(code "#:run") specify the command that will be run. The input
+,(code "(message #:type 'string)") defines a ,(code "string") type
+input named ,(code "message"). The command defined in the
+,(code "#:run") argument is the command itself followed by a list of
+command arguments. One of the arguments references the input
+,(code "message"). Notice how the command definition is very close to
+a shell command, only that it is slightly annotated with inputs and
+their types.])
 
       (p [The second form describes the actual workflow and is the
 equivalent of defining a ,(code "Workflow") class workflow in CWL. The

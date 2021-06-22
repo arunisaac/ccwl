@@ -1,14 +1,17 @@
 (define md5sum
-  (command #:run "md5sum" (input 'file #:type 'File)
-           #:outputs (output 'md5 #:type 'stdout)))
+  (command #:inputs (file #:type 'File)
+           #:run "md5sum" file
+           #:outputs (md5 #:type 'stdout)))
 
 (define sha1sum
-  (command #:run "sha1sum" (input 'file #:type 'File)
-           #:outputs (output 'sha1 #:type 'stdout)))
+  (command #:inputs (file #:type 'File)
+           #:run "sha1sum" file
+           #:outputs (sha1 #:type 'stdout)))
 
 (define sha256sum
-  (command #:run "sha256sum" (input 'file #:type 'File)
-           #:outputs (output 'sha256 #:type 'stdout)))
+  (command #:inputs (file #:type 'File)
+           #:run "sha256sum" file
+           #:outputs (sha256 #:type 'stdout)))
 
 (workflow ((file #:type File))
   (tee (md5sum #:file file)
