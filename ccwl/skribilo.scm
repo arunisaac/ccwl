@@ -98,14 +98,14 @@ are found, error out."
                (substring str 0 position)))
 
 (define (sexp-file-lines file regexp)
-    "Return (START . END) where START is the start of the match to
+  "Return (START . END) where START is the start of the match to
 REGEXP in STR and END is the end of the sexp beginning at START. START
 and END are line numbers indexed from 1."
-    (let ((str (call-with-input-file file get-string-all)))
-      (match (sexp-position str regexp)
-        ((start . end)
-         (cons (position->line-number str start)
-               (position->line-number str end))))))
+  (let ((str (call-with-input-file file get-string-all)))
+    (match (sexp-position str regexp)
+      ((start . end)
+       (cons (position->line-number str start)
+             (position->line-number str end))))))
 
 (define (source-ref file regexp text)
   (call-with-input-file file
