@@ -121,9 +121,10 @@ website/index.html: README.org
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	rm -rf $@
+	$(MKDIR_P) $(dir $@)
 	cp -vr $< $@
 
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website and the skribilo build directory.
 clean-local:
-	rm -rf website/index.html website/manual/dev/en $(SKRIBILO_BUILD_DIR)
+	rm -rf website/index.html website/manual $(SKRIBILO_BUILD_DIR)
