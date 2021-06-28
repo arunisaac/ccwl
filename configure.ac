@@ -23,6 +23,9 @@ AM_SILENT_RULES([yes])
 
 GUILE_PKG([3.0 2.2])
 GUILE_PROGS
+AC_PROG_SED
+AC_PATH_PROG([DOT], [dot])
+AC_PATH_PROG([CWLTOOL], [cwltool])
 AC_PATH_PROG([EMACS], [emacs])
 AC_PATH_PROG([SKRIBILO], [skribilo])
 

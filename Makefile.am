@@ -66,6 +66,19 @@ EXTRA_DIST +=			\
 # Build documentation
 
 SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
+DOC_IMAGES = $(addprefix $(SKRIBILO_BUILD_DIR)/,)
+
+$(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
+	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env ccwl compile $< > $@
+
+# Print out graph for graphviz's dot, but remove file path prefix from
+# workflow step identifiers.
+%.dot: %.cwl
+	$(CWLTOOL) --print-dot $< | $(SED) 's/file:[^#]*#//g' > $@
+
+%.svg: %.dot
+	$(DOT) -Tsvg -o$@ $<
 
 # The info and html targets depend on the info-local and html-local
 # targets respectively. So, we use them to extend the info and html
@@ -73,13 +86,15 @@ SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
 info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
 html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 
-$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm
+$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES)
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm
-	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@
+$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES)
+	rm -rf $@
+	$(MKDIR_P) $@
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
+	cp -vr $(DOC_IMAGES) $@
 
 install-data-local: install-info-local
 
@@ -104,8 +119,7 @@ website/index.html: README.org
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	rm -rf $@
-	$(MKDIR_P) $@
-	cp -v $< $@/index.html
+	cp -vr $< $@
 
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website and the skribilo build directory.
