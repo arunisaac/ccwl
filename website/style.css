@@ -23,3 +23,7 @@ code {
 object {
     pointer-events: none;
 }
+
+img {
+    max-width: 100%;
+}
