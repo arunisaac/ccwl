@@ -174,7 +174,7 @@ nothing to do with the Unix pipe. The inputs/outputs passed between
 steps are general CWL inputs/outputs. They need not be the standard
 stdin and stdout streams.])
 
-        ;; TODO: Add workflow graph
+        (image :file "doc/skribilo/decompress-compile-run.svg")
 
         (p [Writing this worklow to
 ,(file "decompress-compile-run.scm"), compiling and running it with
@@ -201,7 +201,7 @@ that are independent of each other. The workflow inputs coming into
 ,(code "tee"). The outputs of each step are collected together and
 unioned as the output of the ,(code "tee").])
 
-        ;; TODO: Add workflow graph
+        (image :file "doc/skribilo/checksum.svg")
 
         (p [Writing this workflow to ,(file "checksum.scm"), compiling
 and running it with some file ,(file "hello.txt") gives us the

@@ -66,7 +66,9 @@ EXTRA_DIST +=			\
 # Build documentation
 
 SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
-DOC_IMAGES = $(addprefix $(SKRIBILO_BUILD_DIR)/,)
+DOC_IMAGES = $(addprefix $(SKRIBILO_BUILD_DIR)/, \
+  checksum.svg \
+  decompress-compile-run.svg)
 
 $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
