@@ -72,11 +72,15 @@
   (make-output id type binding source other))
 
 (define (filter-alist alist)
-  "Filter ALIST removing entries with #f as the value."
-  (filter (match-lambda
-            ((_ . #f) #f)
-            (_ #t))
-          alist))
+  "Filter ALIST removing entries with #f as the value. If the
+resulting association list is empty, return #f. Else, return that
+association list."
+  (match (filter (match-lambda
+                   ((_ . #f) #f)
+                   (_ #t))
+                 alist)
+    (() #f)
+    (result result)))
 
 (define-immutable-record-type <step>
   (make-step id run in out)
@@ -245,7 +249,6 @@
                              (label . ,(input-label input))
                              (default . ,(and (not (unspecified-default? (input-default input)))
                                               (input-default input)))
-                             ;; FIXME: inputBinding can be an empty dictionary.
                              (inputBinding . ,(filter-alist
                                                `((position . ,(input-position input))
                                                  (prefix . ,(input-prefix input)))))))
