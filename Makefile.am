@@ -66,9 +66,13 @@ EXTRA_DIST +=			\
 # Build documentation
 
 SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
-DOC_IMAGES = $(addprefix $(SKRIBILO_BUILD_DIR)/, \
-  checksum.svg \
-  decompress-compile-run.svg)
+
+.depends: build-aux/find-dependencies.scm doc/ccwl.skb
+	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile $< > $@
+
+# We prefix with - so that automake does not fail when .depends is
+# missing.
+-include .depends
 
 $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
@@ -88,11 +92,11 @@ $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
 html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 
-$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES)
+$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES)
+$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
@@ -127,4 +131,4 @@ website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 # The clean target depends on clean-local. We use clean-local to clean
 # up the website and the skribilo build directory.
 clean-local:
-	rm -rf website/index.html website/manual $(SKRIBILO_BUILD_DIR)
+	rm -rf .depends website/index.html website/manual $(SKRIBILO_BUILD_DIR)

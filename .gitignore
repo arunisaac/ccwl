@@ -1,4 +1,5 @@
 *.go
+.depends
 Makefile
 Makefile.in
 aclocal.m4
