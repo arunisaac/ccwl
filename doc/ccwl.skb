@@ -149,6 +149,21 @@ output.])
 
       (prog :line #f (source :file "doc/capture-output-file-with-parameter-reference.out")))
 
+    (section :title [Passing input into the standard input stream of a command]
+      (p [Some commands read input from their standard input
+stream. Let us do that from ccwl. The workflow below reports the size
+of a file by passing it into the standard input of
+,(command "wc"). Notice the additional ,(code "#:stdin") keyword that
+references the input ,(code "file").])
+
+      (scheme-source "doc/pass-stdin.scm")
+
+      (p [Compiling and running this workflow gives us the following
+output. Notice the file ,(file "foo") passed into the standard input
+of ,(command "wc"), and the file size reported in bytes.])
+
+      (prog :line #f (source :file "doc/pass-stdin.out")))
+
     (section :title [Workflow with multiple steps]
       (p [Till now, we have only written trivial workflows with a
 single command. If we were only interested in executing single

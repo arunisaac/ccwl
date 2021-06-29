@@ -1,0 +1,13 @@
+$ ccwl compile pass-stdin.scm > pass-stdin.cwl
+$ cwltool pass-stdin.cwl --file foo
+     [workflow ] start
+     [workflow ] starting step count-bytes
+     [step count-bytes] start
+     [job count-bytes] /tmp/wxi6_9jz$ wc \
+    -c < /tmp/siden6hu/stg51eaae41-52a5-4e69-a78e-caefd84f7af5/foo
+37
+     [job count-bytes] completed success
+     [step count-bytes] completed success
+     [workflow ] completed success
+{}
+     Final process status is success
