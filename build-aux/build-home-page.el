@@ -25,7 +25,8 @@
 
 (require 'ox-html)
 
-(setq org-export-with-section-numbers nil
+(setq make-backup-files nil
+      org-export-with-section-numbers nil
       org-export-with-sub-superscripts nil
       org-export-with-toc nil
       org-html-head "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />"
