@@ -4,8 +4,5 @@
 ((nil
   (indent-tabs-mode))
  (scheme-mode
-  (eval put 'set-input-source 'scheme-indent-function nil)
-  (eval put 'set-output-source 'scheme-indent-function nil)
-  (eval put 'set-step-in 'scheme-indent-function nil)
   (eval put 'lambda** 'scheme-indent-function 1)
   (eval put 'workflow 'scheme-indent-function 1)))
