@@ -5,4 +5,5 @@
   (indent-tabs-mode))
  (scheme-mode
   (eval put 'lambda** 'scheme-indent-function 1)
+  (eval put 'syntax-lambda** 'scheme-indent-function 1)
   (eval put 'workflow 'scheme-indent-function 1)))
