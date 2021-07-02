@@ -16,10 +16,22 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (srfi srfi-64))
+(use-modules (srfi srfi-64)
+             (ccwl ccwl))
 
 (test-begin "ccwl")
 
-;; Add tests here when relevant.
+(test-assert "stdin input should not have inputBinding"
+  (not (assoc-ref
+      (assoc-ref
+       (assoc-ref
+        ((module-ref (resolve-module '(ccwl ccwl))
+                     'command->cwl)
+         (command #:inputs (file #:type 'File)
+                  #:run "wc" "-c"
+                  #:stdin file))
+        'inputs)
+       'file)
+      'inputBinding)))
 
 (test-end "ccwl")
