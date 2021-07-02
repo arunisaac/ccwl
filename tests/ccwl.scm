@@ -16,8 +16,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (srfi srfi-71)
-             (srfi srfi-64))
+(use-modules (srfi srfi-64))
 
 (test-begin "ccwl")
 
