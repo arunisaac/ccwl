@@ -92,11 +92,11 @@ $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
 html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 
-$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
+$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb ccwl/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
+$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
@@ -136,7 +136,7 @@ website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	$(MKDIR_P) $(dir $@)
 	cp -vr $< $@
 
-# The clean target depends on clean-local. We use clean-local to clean
-# up the website and the skribilo build directory.
+# The clean target depends on clean-local. Use clean-local to clean
+# up several artifacts not handled automatically by automake.
 clean-local:
-	rm -rf .depends website/index.html website/manual $(SKRIBILO_BUILD_DIR)
+	rm -rf .depends ccwl/skribilo.go website/index.html website/manual $(SKRIBILO_BUILD_DIR)
