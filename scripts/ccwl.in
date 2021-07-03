@@ -31,6 +31,9 @@
 
 (match (command-line)
   ((_ "compile" input-file)
+   ;; FIXME: Compiling ccwl files fails since the workflow macro is
+   ;; unable to access command definitions.
+   (set! %load-should-auto-compile #f)
    (scm->yaml (load (canonicalize-path input-file))
               (current-output-port)))
   ((program _ ...)
