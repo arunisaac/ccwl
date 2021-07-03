@@ -35,6 +35,7 @@
              (gnu packages autotools)
              (gnu packages guile)
              (gnu packages pkg-config)
+             (gnu packages skribilo)
              (gnu packages texinfo)
              (guix build utils)
              (guix build-system gnu)
