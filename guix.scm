@@ -33,6 +33,8 @@
              (ice-9 popen)
              (ice-9 rdelim)
              (gnu packages autotools)
+             (gnu packages bioinformatics)
+             (gnu packages graphviz)
              (gnu packages guile)
              (gnu packages pkg-config)
              (gnu packages skribilo)
@@ -77,6 +79,9 @@
    `(("autoconf" ,autoconf)
      ("automake" ,automake)
      ("pkg-config" ,pkg-config)
+     ;; To build documentation
+     ("cwltool" ,cwltool)
+     ("graphviz" ,graphviz)
      ("skribilo" ,skribilo)))
   (home-page "https://git.systemreboot.net/ccwl")
   (synopsis "Concise common workflow language")
