@@ -16,6 +16,38 @@
 # You should have received a copy of the GNU General Public License
 # along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
+# Prefix variables for silencing various commands. See "(automake)
+# Automake Silent Rules" for details.
+CCWL_GEN = $(CCWL_GEN_$(V))
+CCWL_GEN_ = $(CCWL_GEN_$(AM_DEFAULT_VERBOSITY))
+CCWL_GEN_0 = @echo "  CCWL" $@;
+CCWL_GEN_1 =
+
+CWLTOOL_GEN = $(CWLTOOL_GEN_$(V))
+CWLTOOL_GEN_ = $(CWLTOOL_GEN_$(AM_DEFAULT_VERBOSITY))
+CWLTOOL_GEN_0 = @echo "  CWLTOOL" $@;
+CWLTOOL_GEN_1 =
+
+DOT_GEN = $(DOT_GEN_$(V))
+DOT_GEN_ = $(DOT_GEN_$(AM_DEFAULT_VERBOSITY))
+DOT_GEN_0 = @echo "  DOT" $@;
+DOT_GEN_1 =
+
+EMACS_GEN = $(EMACS_GEN_$(V))
+EMACS_GEN_ = $(EMACS_GEN_$(AM_DEFAULT_VERBOSITY))
+EMACS_GEN_0 = @echo "  EMACS" $@;
+EMACS_GEN_1 =
+
+GUILD_GEN = $(GUILD_GEN_$(V))
+GUILD_GEN_ = $(GUILD_GEN_$(AM_DEFAULT_VERBOSITY))
+GUILD_GEN_0 = @echo "  GUILD" $@;
+GUILD_GEN_1 =
+
+SKRIBILO_GEN = $(SKRIBILO_GEN_$(V))
+SKRIBILO_GEN_ = $(SKRIBILO_GEN_$(AM_DEFAULT_VERBOSITY))
+SKRIBILO_GEN_0 = @echo "  SKRIBILO" $@;
+SKRIBILO_GEN_1 =
+
 GOBJECTS = $(SOURCES:%.scm=%.go)
 
 nobase_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES)
@@ -33,7 +65,7 @@ CLEANFILES = $(GOBJECTS)
 EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 %.go: %.scm
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILD) compile $(GUILE_WARNINGS) -o "$@" "$<"
+	$(GUILD_GEN)$(top_builddir)/pre-inst-env $(GUILD) compile $(GUILE_WARNINGS) -o "$@" "$<"
 
 moddir = $(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir  = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
@@ -76,15 +108,15 @@ SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
 
 $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env ccwl compile $< > $@
+	$(CCWL_GEN)$(top_builddir)/pre-inst-env ccwl compile $< > $@
 
 # Print out graph for graphviz's dot, but remove file path prefix from
 # workflow step identifiers.
 %.dot: %.cwl
-	$(CWLTOOL) --print-dot $< | $(SED) 's/file:[^#]*#//g' > $@
+	$(CWLTOOL_GEN)$(CWLTOOL) --print-dot $< | $(SED) 's/file:[^#]*#//g' > $@
 
 %.svg: %.dot
-	$(DOT) -Tsvg -o$@ $<
+	$(DOT_GEN)$(DOT) -Tsvg -o$@ $<
 
 # The info and html targets depend on the info-local and html-local
 # targets respectively. So, we use them to extend the info and html
@@ -94,12 +126,12 @@ html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 
 $(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
+	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
 $(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	rm -rf $@
 	$(MKDIR_P) $@
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
+	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
 	cp -vr $(DOC_IMAGES) $@
 
 # The install target depends on the install-data target, which in turn
@@ -129,7 +161,7 @@ website: website/index.html website/manual/dev/en
 
 website/index.html: README.org
 	$(MKDIR_P) $(dir $@)
-	$(EMACS) -Q --script build-aux/build-home-page.el
+	$(EMACS_GEN)$(EMACS) -Q --script build-aux/build-home-page.el
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	rm -rf $@
