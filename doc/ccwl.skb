@@ -130,7 +130,7 @@ output of the ,(code "print") command has been captured in the file
     (section :title [Capturing output files]
       (p [In the previous section, we captured the standard output
 stream of a command. But, how do we capture any output files created
-by a command?  Let us see.])
+by a command? Let us see.])
 
       (p [Consider a tar archive ,(file "hello.tar") containing a file
 ,(file "hello.txt").])
