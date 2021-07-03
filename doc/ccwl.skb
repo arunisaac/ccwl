@@ -68,9 +68,9 @@ function can return multiple output values as well. These multiple
 outputs are unordered and are each addressed by a unique name.])))
 
     (section :title [First example]
-      (p [As is tradition, let us start with a simple "Hello World"
-workflow in ccwl. This workflow accepts a string input and prints that
-string.])
+      (p [As is tradition, let us start with a simple ,(emph "Hello
+World") workflow in ccwl. This workflow accepts a string input and
+prints that string.])
 
       (scheme-source "doc/hello-world.scm")
 
@@ -110,8 +110,8 @@ as follows. The expected output is also shown.])
       (prog :line #f (source :file "doc/hello-world.out")))
 
     (section :title [Capturing the standard output stream of a command]
-      (p [Let us return to the “Hello World” example in the previous
-section. But now, let us capture the standard output of the
+      (p [Let us return to the ,(emph "Hello World") example in the
+previous section. But now, let us capture the standard output of the
 ,(code "print") command in an output object. The ccwl code is the same
 as earlier with only the addition of an ,(code "stdout") type output
 object to the command definition.])
