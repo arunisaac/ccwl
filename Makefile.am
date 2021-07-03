@@ -102,8 +102,14 @@ $(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb ccwl/skribilo.scm $(DOC_IMAGES) $(
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
 	cp -vr $(DOC_IMAGES) $@
 
+# The install target depends on the install-data target, which in turn
+# depends on the install-data-local target. Use the install-data-local
+# target to install info documentation by default on `make install'.
 install-data-local: install-info-local
 
+# The install-info and install-html targets depend on the
+# install-info-local and install-html-local targets respectively. Use
+# them to install the skribilo generated info and html documentation.
 install-info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
 	$(MKDIR_P) $(DESTDIR)$(infodir)
 	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.info $(DESTDIR)$(infodir)
@@ -112,6 +118,8 @@ install-html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
 	$(MKDIR_P) $(DESTDIR)$(htmldir)
 	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.html $(DESTDIR)$(htmldir)
 
+# The uninstall target depends on the uninstall-local target. Use it
+# to uninstall the installed info and html documentation.
 uninstall-local:
 	rm -f $(DESTDIR)$(infodir)/ccwl.info $(DESTDIR)$(htmldir)/ccwl.html
 
