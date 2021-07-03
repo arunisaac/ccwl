@@ -160,7 +160,6 @@ uninstall-local:
 website: website/index.html website/manual/dev/en
 
 website/index.html: README.org
-	$(MKDIR_P) $(dir $@)
 	$(EMACS_GEN)$(EMACS) -Q --script build-aux/build-home-page.el
 
 website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
