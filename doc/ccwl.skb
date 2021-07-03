@@ -17,7 +17,7 @@
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
 (use-modules (skribilo lib)
-             (ccwl skribilo))
+             (doc skribilo))
 
 (document :title [Concise Common Workflow Language]
   (chapter :title [Introduction]

@@ -22,7 +22,7 @@
 
 ;;; Code:
 
-(define-module (ccwl skribilo)
+(define-module (doc skribilo)
   #:use-module (rnrs io ports)
   #:use-module (ice-9 match)
   #:use-module (ice-9 regex)
