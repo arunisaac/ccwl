@@ -56,11 +56,14 @@ function is significant. The position of each argument determines
 which formal argument it gets mapped to. For example, passing
 positional arguments in Scheme looks like])
         (prog :line #f [(foo 1 2)])
-        (p [In a language that supports named arguments, the order of
-arguments is not significant. Each argument explicitly names the
-formal argument it gets mapped to. For example, in Scheme, passing
-named arguments may look like]
-           (prog :line #f [(foo #:bar 1 #:baz 2)])))
+        (p [However, in a language that supports named arguments (say,
+Scheme or Python), the order of arguments is not significant. Each
+argument explicitly names the formal argument it gets mapped to. For
+example, in Scheme, passing named arguments may look like ,(code "(foo
+#:bar 1 #:baz 2)") and is equivalent to ,(code "(foo #:baz 2 #:bar
+1)"). Likewise, in Python, passing named arguments looks like
+,(code "foo(bar=1, baz=2)") and is equivalent to ,(code "foo(baz=2,
+bar=1)").]))
       (subsection :title [Multiple function arguments and return values]
         (p [In most languages, functions accept multiple input
 arguments but only return a single output value. However, in CWL, a
