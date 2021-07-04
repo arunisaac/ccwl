@@ -10,8 +10,11 @@ build-aux/test-driver.scm
 config.log
 config.status
 configure
+doc/*.cwl
+doc/*.html
+doc/*.info
+doc/*.svg
 doc/.dirstamp
-doc/skribilo
 doc/stamp-vti
 pre-inst-env
 scripts/ccwl

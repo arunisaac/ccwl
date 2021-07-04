@@ -89,7 +89,6 @@ EXTRA_DIST +=			\
 
 # Build documentation
 
-SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
 
 .depends: build-aux/find-dependencies.scm doc/ccwl.skb
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile $< > $@
@@ -97,10 +96,10 @@ SKRIBILO_BUILD_DIR = $(srcdir)/doc/skribilo
 # We prefix with - so that automake does not fail when .depends is
 # missing.
 -include .depends
+CLEANFILES += doc/*.cwl doc/%.dot doc/*.svg
 
-$(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
-	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
-	$(CCWL_GEN)$(top_builddir)/pre-inst-env ccwl compile $< > $@
+%.cwl: %.scm
+	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile $< > $@
 
 # Print out graph for graphviz's dot, but remove file path prefix from
 # workflow step identifiers.
@@ -113,14 +112,15 @@ $(SKRIBILO_BUILD_DIR)/%.cwl: doc/%.scm
 # The info and html targets depend on the info-local and html-local
 # targets respectively. So, we use them to extend the info and html
 # targets.
-info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
-html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
+info-local: doc/ccwl.info
+html-local: doc/ccwl.html
 
-$(SKRIBILO_BUILD_DIR)/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
-	$(MKDIR_P) $(SKRIBILO_BUILD_DIR)
+CLEANFILES += doc/ccwl.info doc/skribilo.go
+
+doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-$(SKRIBILO_BUILD_DIR)/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
+doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
@@ -134,13 +134,13 @@ install-data-local: install-info-local
 # The install-info and install-html targets depend on the
 # install-info-local and install-html-local targets respectively. Use
 # them to install the skribilo generated info and html documentation.
-install-info-local: $(SKRIBILO_BUILD_DIR)/ccwl.info
+install-info-local: doc/ccwl.info
 	$(MKDIR_P) $(DESTDIR)$(infodir)
-	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.info $(DESTDIR)$(infodir)
+	$(INSTALL_DATA) $< $(DESTDIR)$(infodir)
 
-install-html-local: $(SKRIBILO_BUILD_DIR)/ccwl.html
+install-html-local: doc/ccwl.html
 	$(MKDIR_P) $(DESTDIR)$(htmldir)
-	$(INSTALL_DATA) $(SKRIBILO_BUILD_DIR)/ccwl.html $(DESTDIR)$(htmldir)
+	$(INSTALL_DATA) $< $(DESTDIR)$(htmldir)
 
 # The uninstall target depends on the uninstall-local target. Use it
 # to uninstall the installed info and html documentation.
@@ -154,7 +154,7 @@ website: website/index.html website/manual/dev/en
 website/index.html: README.org
 	$(EMACS_GEN)$(EMACS) -Q --script build-aux/build-home-page.el
 
-website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
+website/manual/dev/en: doc/ccwl.html
 	rm -rf $@
 	$(MKDIR_P) $(dir $@)
 	cp -vr $< $@
@@ -162,4 +162,4 @@ website/manual/dev/en: $(SKRIBILO_BUILD_DIR)/ccwl.html
 # The clean target depends on clean-local. Use clean-local to clean
 # up several artifacts not handled automatically by automake.
 clean-local:
-	rm -rf .depends doc/skribilo.go website/index.html website/manual $(SKRIBILO_BUILD_DIR)
+	rm -rf .depends website/index.html website/manual
