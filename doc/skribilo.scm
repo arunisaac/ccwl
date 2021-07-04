@@ -129,8 +129,6 @@ and END are line numbers indexed from 1."
 (let ((html-engine (find-engine 'html)))
   (engine-custom-set! html-engine 'css "/style.css")
   (engine-custom-set! html-engine 'charset "UTF-8")
-  (engine-custom-set! html-engine 'image-format
-                      (list "svg" "png" "gif" "jpg" "jpeg"))
   (markup-writer 'abbr html-engine
                  #:options '(#:short #:long)
                  #:action (lambda (markup engine)

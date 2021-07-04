@@ -13,7 +13,7 @@ configure
 doc/*.cwl
 doc/*.html
 doc/*.info
-doc/*.svg
+doc/*.png
 doc/.dirstamp
 doc/stamp-vti
 pre-inst-env

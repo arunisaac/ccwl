@@ -94,7 +94,7 @@ EXTRA_DIST +=			\
 
 include .depends
 
-CLEANFILES += doc/*.cwl doc/%.dot doc/*.svg
+CLEANFILES += doc/*.cwl doc/%.dot doc/*.png
 
 %.cwl: %.scm
 	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile $< > $@
@@ -104,8 +104,8 @@ CLEANFILES += doc/*.cwl doc/%.dot doc/*.svg
 %.dot: %.cwl
 	$(CWLTOOL_GEN)$(CWLTOOL) --print-dot $< | $(SED) 's/file:[^#]*#//g' > $@
 
-%.svg: %.dot
-	$(DOT_GEN)$(DOT) -Tsvg -o$@ $<
+%.png: %.dot
+	$(DOT_GEN)$(DOT) -Tpng -o$@ $<
 
 # The info and html targets depend on the info-local and html-local
 # targets respectively. So, we use them to extend the info and html
