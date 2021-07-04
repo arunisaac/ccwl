@@ -84,6 +84,9 @@ SCM_LOG_DRIVER =		\
 
 EXTRA_DIST +=			\
   $(TESTS)                      \
+  doc/skribilo.scm              \
+  doc/ccwl.skb                  \
+  $(DOC_OTHER)                  \
   COPYING			\
   README.org
 
