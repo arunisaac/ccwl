@@ -65,7 +65,7 @@ CLEANFILES = $(GOBJECTS)
 EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
 GUILE_WARNINGS = -Wunbound-variable -Warity-mismatch -Wformat
 %.go: %.scm
-	$(GUILD_GEN)$(top_builddir)/pre-inst-env $(GUILD) compile $(GUILE_WARNINGS) -o "$@" "$<"
+	$(GUILD_GEN)$(builddir)/pre-inst-env $(GUILD) compile $(GUILE_WARNINGS) -o "$@" "$<"
 
 moddir = $(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir  = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
@@ -78,9 +78,9 @@ SCM_TESTS = tests/ccwl.scm tests/yaml.scm
 TESTS = $(SCM_TESTS)
 
 SCM_LOG_DRIVER =		\
-  $(top_builddir)/pre-inst-env	\
+  $(builddir)/pre-inst-env	\
   $(GUILE) --no-auto-compile -s \
-  $(top_builddir)/build-aux/test-driver.scm
+  $(builddir)/build-aux/test-driver.scm
 
 EXTRA_DIST +=			\
   $(TESTS)                      \
@@ -118,12 +118,12 @@ CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES = doc/ccwl.html
 
 doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
-	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
+	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
 
 doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
 	rm -rf $@
 	$(MKDIR_P) $@
-	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html
+	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html
 	cp -vr $(DOC_IMAGES) $@
 
 # The install target depends on the install-data target, which in turn
