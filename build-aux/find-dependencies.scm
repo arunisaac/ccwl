@@ -69,7 +69,7 @@ dependency is of the form (tag . file). tag may either be the symbol
                                      (_ #f))
                                    dependencies)
                        " "))
-  (format #t "DOC_OTHER_DEPENDENCIES = ~a~%"
+  (format #t "DOC_OTHER = ~a~%"
           (string-join (filter-map (match-lambda
                                      (('other . file) file)
                                      (_ #f))

@@ -89,14 +89,8 @@ EXTRA_DIST +=			\
 
 # Build documentation
 
-CLEANFILES += .depends
+include .depends
 
-.depends: build-aux/find-dependencies.scm doc/ccwl.skb
-	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile $< > $@
-
-# We prefix with - so that automake does not fail when .depends is
-# missing.
--include .depends
 CLEANFILES += doc/*.cwl doc/%.dot doc/*.svg
 
 %.cwl: %.scm
@@ -119,10 +113,10 @@ html-local: doc/ccwl.html
 CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES = doc/ccwl.html
 
-doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
+doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
 	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
 
-doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
+doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html

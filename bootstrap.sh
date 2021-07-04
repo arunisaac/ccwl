@@ -18,4 +18,5 @@
 # You should have received a copy of the GNU General Public License
 # along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
+guile --no-auto-compile build-aux/find-dependencies.scm > .depends
 autoreconf --verbose --install --force
