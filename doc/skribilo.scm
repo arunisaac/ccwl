@@ -31,6 +31,7 @@
   #:use-module (skribilo engine)
   #:use-module (skribilo lib)
   #:use-module (skribilo package base)
+  #:use-module (skribilo parameters)
   #:use-module (skribilo source lisp)
   #:use-module (skribilo utils keywords)
   #:use-module (skribilo writer)
@@ -108,7 +109,8 @@ and END are line numbers indexed from 1."
              (position->line-number str end))))))
 
 (define (source-ref file regexp text)
-  (ref #:url (match (sexp-file-lines file regexp)
+  (ref #:url (match (sexp-file-lines (search-path (*source-path*) file)
+                                     regexp)
                ((start-line . end-line)
                 (if (= start-line end-line)
                     (string-append %source-uri-base
