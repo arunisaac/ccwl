@@ -113,7 +113,7 @@ CLEANFILES += doc/*.cwl doc/%.dot doc/*.png
 info-local: doc/ccwl.info
 html-local: doc/ccwl.html
 
-SKRIBILO_FLAGS = --source-path=$(srcdir)
+SKRIBILO_FLAGS = --source-path=$(srcdir) --image-path=$(builddir)
 CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES = doc/ccwl.html
 
