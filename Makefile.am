@@ -89,6 +89,7 @@ EXTRA_DIST +=			\
 
 # Build documentation
 
+CLEANFILES += .depends
 
 .depends: build-aux/find-dependencies.scm doc/ccwl.skb
 	$(AM_V_GEN)$(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile $< > $@
@@ -116,6 +117,7 @@ info-local: doc/ccwl.info
 html-local: doc/ccwl.html
 
 CLEANFILES += doc/ccwl.info doc/skribilo.go
+CLEAN_DIRECTORIES = doc/ccwl.html
 
 doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER_DEPENDENCIES)
 	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
@@ -151,6 +153,8 @@ uninstall-local:
 
 website: website/index.html website/manual/dev/en
 
+CLEANFILES += website/index.html
+CLEAN_DIRECTORIES += website/manual
 website/index.html: README.org
 	$(EMACS_GEN)$(EMACS) -Q --script build-aux/build-home-page.el
 
@@ -159,7 +163,7 @@ website/manual/dev/en: doc/ccwl.html
 	$(MKDIR_P) $(dir $@)
 	cp -vr $< $@
 
-# The clean target depends on clean-local. Use clean-local to clean
-# up several artifacts not handled automatically by automake.
+# The clean target depends on clean-local. Use clean-local to clean up
+# several directories. Directories cannot be specified in CLEANFILES.
 clean-local:
-	rm -rf .depends website/index.html website/manual
+	rm -rf $(CLEAN_DIRECTORIES)
