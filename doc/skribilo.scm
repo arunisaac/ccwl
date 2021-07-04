@@ -108,22 +108,20 @@ and END are line numbers indexed from 1."
              (position->line-number str end))))))
 
 (define (source-ref file regexp text)
-  (call-with-input-file file
-    (lambda (port)
-      (ref #:url (match (sexp-file-lines file regexp)
-                   ((start-line . end-line)
-                    (if (= start-line end-line)
-                        (string-append %source-uri-base
-                                       file
-                                       "#L"
-                                       (number->string start-line))
-                        (string-append %source-uri-base
-                                       file
-                                       "#L"
-                                       (number->string start-line)
-                                       "-L"
-                                       (number->string end-line)))))
-           #:text text))))
+  (ref #:url (match (sexp-file-lines file regexp)
+               ((start-line . end-line)
+                (if (= start-line end-line)
+                    (string-append %source-uri-base
+                                   file
+                                   "#L"
+                                   (number->string start-line))
+                    (string-append %source-uri-base
+                                   file
+                                   "#L"
+                                   (number->string start-line)
+                                   "-L"
+                                   (number->string end-line)))))
+       #:text text))
 
 ;; HTML engine customizations
 (let ((html-engine (find-engine 'html)))
