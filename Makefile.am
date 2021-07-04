@@ -113,16 +113,17 @@ CLEANFILES += doc/*.cwl doc/%.dot doc/*.svg
 info-local: doc/ccwl.info
 html-local: doc/ccwl.html
 
+SKRIBILO_FLAGS = --source-path=$(srcdir)
 CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES = doc/ccwl.html
 
 doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
-	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t info $< -o $@
+	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
 
 doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
 	rm -rf $@
 	$(MKDIR_P) $@
-	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) -t html $< -o $@/index.html
+	$(SKRIBILO_GEN)$(top_builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html
 	cp -vr $(DOC_IMAGES) $@
 
 # The install target depends on the install-data target, which in turn
