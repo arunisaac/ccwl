@@ -57,7 +57,6 @@
   "Build and return an <input> object."
   (make-input id type label default position prefix other))
 
-
 (define-immutable-record-type <output>
   (make-output id type binding source other)
   output?
@@ -170,7 +169,6 @@ association list."
             (list #,@other))))
      x)))
 
-
 (define (input=? input1 input2)
   (eq? (input-id input1)
        (input-id input2)))
@@ -229,7 +227,6 @@ association list."
                     (and (output-binding output)
                          (cons 'outputBinding (output-binding output)))))
     ,@(output-other output)))
-
 
 (define (command->cwl command)
   `((cwlVersion . ,%cwl-version)
