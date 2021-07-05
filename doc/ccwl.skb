@@ -54,9 +54,8 @@ has been run. Hence, we say that it is statically typed.]))
         (p [In many languages, the order of arguments passed to a
 function is significant. The position of each argument determines
 which formal argument it gets mapped to. For example, passing
-positional arguments in Scheme looks like])
-        (prog :line #f [(foo 1 2)])
-        (p [However, in a language that supports named arguments (say,
+positional arguments in Scheme looks like ,(code "(foo 1
+2)"). However, in a language that supports named arguments (say,
 Scheme or Python), the order of arguments is not significant. Each
 argument explicitly names the formal argument it gets mapped to. For
 example, in Scheme, passing named arguments may look like ,(code "(foo
