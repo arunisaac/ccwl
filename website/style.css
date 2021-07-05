@@ -10,13 +10,17 @@ h1, h2, h3 {
     line-height: 1.2;
 }
 
-pre {
+pre, code {
     background-color: #f0f0f0;
+}
+
+pre {
     padding: 1em;
 }
 
 code {
-    font-style: italic;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
 }
 
 /* Make the svg badges clickable. */
