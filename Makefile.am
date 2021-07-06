@@ -161,6 +161,18 @@ website/manual/dev/en: doc/ccwl.html
 	$(MKDIR_P) $(dir $@)
 	cp -vr $< $@
 
+# Make release
+
+CURRENT_RELEASE = website/releases/$(firstword $(DIST_ARCHIVES))
+.PHONY: release
+release: $(CURRENT_RELEASE) $(CURRENT_RELEASE).asc
+
+$(CURRENT_RELEASE): dist distcheck
+	cp $(notdir $@) $@
+
+%.asc: %
+	gpg --detach-sign --armor $<
+
 # The clean target depends on clean-local. Use clean-local to clean up
 # several directories. Directories cannot be specified in CLEANFILES.
 clean-local:
