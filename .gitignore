@@ -21,4 +21,5 @@ scripts/ccwl
 test-suite.log
 tests/*.log
 tests/*.trs
-website
+website/index.html
+website/manual
