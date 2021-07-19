@@ -40,6 +40,12 @@
     (expect-failure (value #t))
     (enable-hard-errors (value #t))))
 
+(define (color code str)
+  (format #f "~a[~am~a~a[0m" #\esc code str #\esc))
+
+(define red (cut color 31 <>))
+(define green (cut color 32 <>))
+
 (define (my-gnu-runner log-port trs-port)
   (let ((runner (test-runner-null)))
     (test-runner-on-group-begin! runner
@@ -55,9 +61,11 @@
                        (symbol->string (test-result-kind runner))))
               (result-alist (test-result-alist runner)))
           (format trs-port ":test-result: ~a ~a~%" result name)
-          (format #t "\x1b[~:[31~;32~]m~a\x1b[0m ~a~%"
-                  (eq? (test-result-kind runner) 'pass)
-                  result name)
+          (format #t "~a ~a~%"
+                  (case (test-result-kind runner)
+                    ((pass) (green result))
+                    (else (red result)))
+                  name)
           (format log-port "~a ~a~%" result name)
           ;; If test did not pass, print details.
           (unless (eq? (test-result-kind runner) 'pass)
