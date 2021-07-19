@@ -23,15 +23,15 @@
 
 (test-assert "stdin input should not have inputBinding"
   (not (assoc-ref
-      (assoc-ref
-       (assoc-ref
-        ((module-ref (resolve-module '(ccwl ccwl))
-                     'command->cwl)
-         (command #:inputs (file #:type 'File)
-                  #:run "wc" "-c"
-                  #:stdin file))
-        'inputs)
-       'file)
-      'inputBinding)))
+        (assoc-ref
+         (assoc-ref
+          ((module-ref (resolve-module '(ccwl ccwl))
+                       'command->cwl)
+           (command #:inputs (file #:type 'File)
+                    #:run "wc" "-c"
+                    #:stdin file))
+          'inputs)
+         'file)
+        'inputBinding)))
 
 (test-end "ccwl")
