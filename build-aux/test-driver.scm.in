@@ -45,12 +45,13 @@
 
 (define red (cut color 31 <>))
 (define green (cut color 32 <>))
+(define magenta (cut color 35 <>))
 
 (define (my-gnu-runner log-port trs-port)
   (let ((runner (test-runner-null)))
     (test-runner-on-group-begin! runner
       (lambda (runner suite-name count)
-        (format #t "%%%% ~a~%" suite-name)))
+        (format #t (magenta "%%%% ~a~%") suite-name)))
     (test-runner-on-group-end! runner
       (lambda _
         (newline)))
