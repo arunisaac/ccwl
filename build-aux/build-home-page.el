@@ -34,5 +34,6 @@
       org-html-head-include-scripts nil
       org-html-postamble nil)
 
-(with-current-buffer (find-file "README.org")
-  (org-export-to-file 'html "website/index.html"))
+(defun build-website ()
+  (with-current-buffer (find-file "README.org")
+    (org-export-to-file 'html "website/index.html")))
