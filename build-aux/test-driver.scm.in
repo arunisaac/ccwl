@@ -40,18 +40,20 @@
     (expect-failure (value #t))
     (enable-hard-errors (value #t))))
 
-(define (color code str)
-  (format #f "~a[~am~a~a[0m" #\esc code str #\esc))
+(define (color code str color?)
+  (if color?
+      (format #f "~a[~am~a~a[0m" #\esc code str #\esc)
+      str))
 
-(define red (cut color 31 <>))
-(define green (cut color 32 <>))
-(define magenta (cut color 35 <>))
+(define red (cut color 31 <> <>))
+(define green (cut color 32 <> <>))
+(define magenta (cut color 35 <> <>))
 
-(define (my-gnu-runner log-port trs-port)
+(define (my-gnu-runner log-port trs-port color?)
   (let ((runner (test-runner-null)))
     (test-runner-on-group-begin! runner
       (lambda (runner suite-name count)
-        (format #t (magenta "%%%% ~a~%") suite-name)))
+        (format #t (magenta "%%%% ~a~%" color?) suite-name)))
     (test-runner-on-group-end! runner
       (lambda _
         (newline)))
@@ -64,8 +66,8 @@
           (format trs-port ":test-result: ~a ~a~%" result name)
           (format #t "~a ~a~%"
                   (case (test-result-kind runner)
-                    ((pass) (green result))
-                    (else (red result)))
+                    ((pass) (green result color?))
+                    (else (red result color?)))
                   name)
           (format log-port "~a ~a~%" result name)
           ;; If test did not pass, print details.
@@ -87,5 +89,7 @@
       (call-with-output-file (option-ref opts 'trs-file #f)
         (lambda (trs-port)
           (chdir "@abs_top_srcdir@")
-          (test-with-runner (my-gnu-runner log-port trs-port)
+          (test-with-runner (my-gnu-runner log-port trs-port
+                                           (string=? (option-ref opts 'color-tests "yes")
+                                                     "yes"))
             (load-from-path (option-ref opts 'test-name #f))))))))
