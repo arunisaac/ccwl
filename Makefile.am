@@ -74,7 +74,7 @@ bin_SCRIPTS = scripts/ccwl
 
 SOURCES = ccwl/ccwl.scm ccwl/yaml.scm ccwl/utils.scm
 TEST_EXTENSIONS = .scm
-SCM_TESTS = tests/ccwl.scm tests/yaml.scm
+SCM_TESTS = tests/ccwl.scm tests/utils.scm tests/yaml.scm
 TESTS = $(SCM_TESTS)
 
 SCM_LOG_DRIVER =		\
