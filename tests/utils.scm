@@ -76,6 +76,12 @@
              (list a b foo bar))
            #'(foo 1 2 #:foo 123 #:bar 1 2 3))))
 
+(test-assert "syntax-lambda** with default values"
+  (equal? (list #'1 #'2 #'123 9 #'(321 456) '(7) '(3 2 1))
+          ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
+             (list foo aal vale pal naal irandu sol))
+           #'(bar 1 2 #:vale 123 #:naal 321 456))))
+
 (test-equal "filter-mapi"
   '(1 3 5 7 9)
   (filter-mapi (lambda (item index)

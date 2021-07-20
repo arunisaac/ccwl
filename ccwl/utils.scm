@@ -183,7 +183,15 @@ writing macros that accept keyword arguments. For example,
 ((syntax-lambda** (a b #:key foo #:key* bar)
    (list a b foo bar))
  #'(foo 1 2 #:foo 123 #:bar 1 2 3))
-=> (#'1 #'2 #'123 (#'1 #'2 #'3))"
+=> (#'1 #'2 #'123 (#'1 #'2 #'3))
+
+Just like lambda**, syntax-lambda** also supports default values for
+arguments. For example,
+
+((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
+             (list foo aal vale pal naal irandu sol))
+ #'(bar 1 2 #:vale 123 #:naal 321 456))
+=> (#'1 #'2 #'123 9 (#'321 #'456) (7) (3 2 1))"
   (lambda (x)
     (apply (lambda** formal-args body ...)
            (with-ellipsis :::
