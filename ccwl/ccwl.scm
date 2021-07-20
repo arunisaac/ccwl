@@ -101,7 +101,7 @@ association list."
 ;; TODO: Add fine-grained syntax checking.
 (define-syntax command
   (lambda (x)
-    ((syntax-lambda** (#:key stdin #:key* (inputs '()) (outputs '()) run (other '()))
+    ((syntax-lambda** (#:key stdin #:key* inputs outputs run other)
        (let ((inputs
               ;; Canonicalize inputs.
               (map (lambda (x)
