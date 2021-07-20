@@ -135,7 +135,15 @@ for example, be invoked as:
    (list a b foo bar))
  1 2 #:foo 123 #:bar 1 2 3)
 
-=> (1 2 123 (1 2 3))"
+=> (1 2 123 (1 2 3))
+
+lambda** also supports default values for both unary and n-ary keyword
+arguments. For example,
+
+((lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
+     (list foo aal vale pal naal irandu sol))
+   1 2 #:vale 123 #:naal 321 456)
+=> (1 2 123 9 (321 456) (7) (3 2 1))"
     (syntax-case x ()
       ((_ (args-spec ...) body ...)
        #`(lambda args
@@ -147,12 +155,23 @@ for example, be invoked as:
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
                                         (list))))
                #`(apply (lambda* #,(append positionals
-                                           (cons #:key (append unary-arguments nary-arguments)))
+                                           (cons #:key unary-arguments)
+                                           (map (lambda (x)
+                                                  (syntax-case x ()
+                                                    ((arg defaults ...)
+                                                     #'(arg (list defaults ...)))
+                                                    (arg #'arg)))
+                                                nary-arguments))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
                           (append positionals
                                   (group-keyword-arguments
-                                   rest (list #,@(map (compose symbol->keyword syntax->datum)
+                                   rest (list #,@(map (lambda (x)
+                                                        (symbol->keyword
+                                                         (syntax->datum
+                                                          (syntax-case x ()
+                                                            ((arg default) #'arg)
+                                                            (arg #'arg)))))
                                                       unary-arguments))))))))))))
 
 (define-syntax-rule (syntax-lambda** formal-args body ...)

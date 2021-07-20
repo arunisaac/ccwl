@@ -64,6 +64,12 @@
      (list a b foo bar))
    1 2 #:foo 123 #:bar 1 2 3))
 
+(test-equal "lambda** with default values"
+  '(1 2 123 9 (321 456) (7) (3 2 1))
+  ((lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
+     (list foo aal vale pal naal irandu sol))
+   1 2 #:vale 123 #:naal 321 456))
+
 (test-assert "syntax-lambda**"
   (equal? (list #'1 #'2 #'123 (list #'1 #'2 #'3))
           ((syntax-lambda** (a b #:key foo #:key* bar)
