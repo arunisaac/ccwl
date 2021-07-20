@@ -37,7 +37,10 @@
             filter-mapi))
 
 (define (pairify lst)
-  "Return a list of pairs of successive elements of LST."
+  "Return a list of pairs of successive elements of LST. For example,
+
+(pairify (list 1 2 3 4 5 6))
+=> ((1 . 2) (3 . 4) (5 . 6))"
   (match lst
     (() '())
     ((first second tail ...)
@@ -46,7 +49,11 @@
 
 (define (plist->alist plist)
   "Convert the property list PLIST to an association list. A property
-list is a list of the form (#:key1 value1 #:key2 value2 ...)."
+list is a list of the form (#:key1 value1 #:key2 value2 ...). For
+example,
+
+(plist->alist (list #:spam 1 #:ham 2 #:eggs 3))
+=> ((spam . 1) (ham . 2) (eggs . 3))"
   (map (match-lambda
          ((key . value)
           (cons (keyword->symbol key) value)))
@@ -56,7 +63,11 @@ list is a list of the form (#:key1 value1 #:key2 value2 ...)."
   "Group ARGS, a list of keyword arguments of arbitrary arity. Return
 a list of unary keyword arguments. n-ary arguments are grouped
 together into lists. Keywords that are to be treated as having unit
-arity are listed in UNARY-KEYWORDS."
+arity are listed in UNARY-KEYWORDS. For example,
+
+(group-keyword-arguments (list #:spam 1 #:ham 1 2 3 #:eggs 0)
+                         (list #:spam))
+=> (#:spam 1 #:ham (1 2 3) #:eggs (0))"
   (match args
     (((? (lambda (keyword)
            (and (keyword? keyword)
@@ -80,7 +91,15 @@ arity are listed in UNARY-KEYWORDS."
 
 (define (plist-ref plist key)
   "Return the value from the first entry in PLIST with the given KEY,
-or #f if there is no such entry."
+or #f if there is no such entry. For example,
+
+(plist-ref (list #:spam 1 #:ham 2 #:eggs 3)
+           #:ham)
+=> 2
+
+(plist-ref (list #:spam 1 #:ham 2 #:eggs 3)
+           #:foo)
+=> #f"
   (match (find-tail (cut eq? key <>) plist)
     ((_ value . _) value)
     (#f #f)))
@@ -138,7 +157,12 @@ for example, be invoked as:
 
 (define-syntax-rule (syntax-lambda** formal-args body ...)
   "Like lambda**, but for syntax objects. This is useful for writing
-macros that accept keyword arguments."
+macros that accept keyword arguments. For example,
+
+((syntax-lambda** (a b #:key foo #:key* bar)
+   (list a b foo bar))
+ #'(foo 1 2 #:foo 123 #:bar 1 2 3))
+=> (#'1 #'2 #'123 (#'1 #'2 #'3))"
   (lambda (x)
     (apply (lambda** formal-args body ...)
            (with-ellipsis :::
@@ -149,7 +173,13 @@ macros that accept keyword arguments."
 (define (filter-mapi proc lst)
   "Indexed filter-map. Like filter-map, but PROC calls are (proc item
 index) where ITEM is an element of list and INDEX is the index of that
-element."
+element. For example,
+
+(filter-mapi (lambda (item index)
+               (and (even? index)
+                    (1+ item)))
+             (iota 10))
+=> (1 3 5 7 9)"
   (filter-map (lambda (item index)
                 (proc item index))
               lst
@@ -158,7 +188,14 @@ element."
 (define (mapn proc lst)
   "Map the procedure PROC over list LST and return a list containing
 the results. PROC can return multiple values, in which case, an equal
-number of lists are returned."
+number of lists are returned. For example,
+
+(mapn (lambda (n)
+        (values (expt n 2)
+                (expt n 3)))
+      (iota 5))
+=> (0 1 4 9 16)
+=> (0 1 8 27 64)"
   (apply values
          (apply zip
                 (map (lambda (x)
@@ -168,7 +205,14 @@ number of lists are returned."
 (define (append-mapn proc lst)
   "Map PROC over LST just as in mapn, but append the results
 together. PROC can return multiple values, in which case, an equal
-number of lists are returned."
+number of lists are returned.
+
+(append-mapn (lambda (n)
+               (values (list n (expt n 2))
+                       (list n (expt n 3))))
+      (iota 5))
+=> (0 0 1 1 2 4 3 9 4 16)
+=> (0 0 1 1 2 8 3 27 4 64)"
   (call-with-values (cut mapn proc lst)
     (lambda lists
       (apply values
@@ -182,7 +226,15 @@ that result. PROC can return multiple values, in which case, an equal
 number of values are returned. Each PROC call is (PROC ELEMENT
 PREVIOUS ...) where ELEMENT is an element of LST, and (PREVIOUS ...)
 is the return from the previous call to PROC or the given INITS for
-the first call."
+the first call. For example,
+
+(foldn (lambda (n sum sum-of-squares)
+         (values (+ sum n)
+                 (+ sum-of-squares (expt n 2))))
+       (iota 10)
+       0 0)
+=> 45
+=> 285"
   (apply values
          (fold (lambda (element results)
                  (call-with-values (cut apply proc element results) list))
