@@ -70,6 +70,16 @@
      (list foo aal vale pal naal irandu sol))
    1 2 #:vale 123 #:naal 321 456))
 
+(test-equal "default value of lambda** unary argument should be #f"
+  #f
+  ((lambda** (#:key foo)
+     foo)))
+
+(test-equal "default value of lambda** n-ary argument should be the empty list"
+  '()
+  ((lambda** (#:key* foo)
+     foo)))
+
 (test-assert "syntax-lambda**"
   (equal? (list #'1 #'2 #'123 (list #'1 #'2 #'3))
           ((syntax-lambda** (a b #:key foo #:key* bar)

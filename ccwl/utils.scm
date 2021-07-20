@@ -138,12 +138,13 @@ for example, be invoked as:
 => (1 2 123 (1 2 3))
 
 lambda** also supports default values for both unary and n-ary keyword
-arguments. For example,
+arguments. Note that the default value for unary arguments is #f,
+while that for n-ary arguments is the empty list. For example,
 
-((lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
-     (list foo aal vale pal naal irandu sol))
+((lambda** (foo bar #:key aal vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1) uruthi)
+     (list foo bar aal vale pal naal irandu sol uruthi))
    1 2 #:vale 123 #:naal 321 456)
-=> (1 2 123 9 (321 456) (7) (3 2 1))"
+=> (1 2 #f 123 9 (321 456) (7) (3 2 1) ())"
     (syntax-case x ()
       ((_ (args-spec ...) body ...)
        #`(lambda args
@@ -160,7 +161,7 @@ arguments. For example,
                                                   (syntax-case x ()
                                                     ((arg defaults ...)
                                                      #'(arg (list defaults ...)))
-                                                    (arg #'arg)))
+                                                    (arg #'(arg '()))))
                                                 nary-arguments))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
