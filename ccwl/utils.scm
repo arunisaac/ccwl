@@ -175,8 +175,10 @@ arguments. For example,
                                                       unary-arguments))))))))))))
 
 (define-syntax-rule (syntax-lambda** formal-args body ...)
-  "Like lambda**, but for syntax objects. This is useful for writing
-macros that accept keyword arguments. For example,
+  "Like lambda**, but for syntax objects. syntax-lambda** varies
+slightly from lambda** in that the first identifier (or argument)
+passed to the resulting function is ignored. This is useful for
+writing macros that accept keyword arguments. For example,
 
 ((syntax-lambda** (a b #:key foo #:key* bar)
    (list a b foo bar))
