@@ -27,6 +27,7 @@
 
 (use-modules (ice-9 format)
              (ice-9 getopt-long)
+             (ice-9 match)
              (srfi srfi-26)
              (srfi srfi-64))
 
@@ -72,12 +73,15 @@
           (format log-port "~a ~a~%" result name)
           ;; If test did not pass, print details.
           (unless (eq? (test-result-kind runner) 'pass)
-            (let ((log-output
-                   (format #f "~a:~a~%expected: ~s~%actual: ~s~%"
-                           (assq-ref result-alist 'source-file)
-                           (assq-ref result-alist 'source-line)
-                           (assq-ref result-alist 'expected-value)
-                           (assq-ref result-alist 'actual-value))))
+            (let* ((expected-value (match (assq-ref result-alist 'source-form)
+                                     (('test-assert _ ...) #t)
+                                     (_ (assq-ref result-alist 'expected-value))))
+                   (log-output
+                    (format #f "~a:~a~%expected: ~s~%actual: ~s~%"
+                            (assq-ref result-alist 'source-file)
+                            (assq-ref result-alist 'source-line)
+                            expected-value
+                            (assq-ref result-alist 'actual-value))))
               (display log-output log-port)
               (display log-output (current-error-port)))))))
     runner))
