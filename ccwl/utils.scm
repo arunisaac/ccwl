@@ -176,29 +176,23 @@ while that for n-ary arguments is the empty list. For example,
                                                       unary-arguments))))))))))))
 
 (define-syntax-rule (syntax-lambda** formal-args body ...)
-  "Like lambda**, but for syntax objects. syntax-lambda** varies
-slightly from lambda** in that the first identifier (or argument)
-passed to the resulting function is ignored. This is useful for
-writing macros that accept keyword arguments. For example,
+  "Like lambda**, but for syntax objects. For example,
 
 ((syntax-lambda** (a b #:key foo #:key* bar)
    (list a b foo bar))
- #'(foo 1 2 #:foo 123 #:bar 1 2 3))
+ #'1 #'2 #'#:foo #'123 #'#:bar #'1 #'2 #'3)
 => (#'1 #'2 #'123 (#'1 #'2 #'3))
 
 Just like lambda**, syntax-lambda** also supports default values for
 arguments. For example,
 
 ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
-             (list foo aal vale pal naal irandu sol))
- #'(bar 1 2 #:vale 123 #:naal 321 456))
+   (list foo aal vale pal naal irandu sol))
+ #'1 #'2 #'#:vale #'123 #'#:naal #'321 #'456)
 => (#'1 #'2 #'123 9 (#'321 #'456) (7) (3 2 1))"
-  (lambda (x)
+  (lambda args
     (apply (lambda** formal-args body ...)
-           (with-ellipsis :::
-             (syntax-case x ()
-               ((_ args :::)
-                (unsyntax-keywords #'(args :::))))))))
+           (unsyntax-keywords args))))
 
 (define (filter-mapi proc lst)
   "Indexed filter-map. Like filter-map, but PROC calls are (proc item

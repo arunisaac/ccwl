@@ -101,73 +101,75 @@ association list."
 ;; TODO: Add fine-grained syntax checking.
 (define-syntax command
   (lambda (x)
-    ((syntax-lambda** (#:key stdin #:key* inputs outputs run other)
-       (let ((inputs
-              ;; Canonicalize inputs.
-              (map (lambda (x)
-                     (syntax-case x ()
-                       ((id args ...) (identifier? #'id)
-                        #'(id args ...))
-                       (id (identifier? #'id) #'(id))
-                       (_ (error "Invalid input:" (syntax->datum x)))))
-                   inputs)))
-         (unless run
-           (error "#:run key required in command definition" (syntax->datum x)))
-         #`(make-command
-            (list #,@(map (lambda (x)
-                            (syntax-case x ()
-                              ((id args ...)
-                               ;; Instantiate <input> object with
-                               ;; position and prefix.
-                               #`(input 'id
-                                        #:position #,(list-index (lambda (x)
+    (syntax-case x ()
+      ((_ args ...)
+       (apply (syntax-lambda** (#:key stdin #:key* inputs outputs run other)
+                (let ((inputs
+                       ;; Canonicalize inputs.
+                       (map (lambda (x)
+                              (syntax-case x ()
+                                ((id args ...) (identifier? #'id)
+                                 #'(id args ...))
+                                (id (identifier? #'id) #'(id))
+                                (_ (error "Invalid input:" (syntax->datum x)))))
+                            inputs)))
+                  (unless run
+                    (error "#:run key required in command definition" (syntax->datum x)))
+                  #`(make-command
+                     (list #,@(map (lambda (x)
+                                     (syntax-case x ()
+                                       ((id args ...)
+                                        ;; Instantiate <input> object with
+                                        ;; position and prefix.
+                                        #`(input 'id
+                                                 #:position #,(list-index (lambda (x)
+                                                                            (syntax-case x ()
+                                                                              (input (identifier? #'input)
+                                                                               (eq? (syntax->datum #'id)
+                                                                                    (syntax->datum #'input)))
+                                                                              ((_ input)
+                                                                               (eq? (syntax->datum #'id)
+                                                                                    (syntax->datum #'input)))
+                                                                              (_ #f)))
+                                                                          run)
+                                                 #:prefix #,(any (lambda (x)
                                                                    (syntax-case x ()
-                                                                     (input (identifier? #'input)
-                                                                      (eq? (syntax->datum #'id)
-                                                                           (syntax->datum #'input)))
-                                                                     ((_ input)
-                                                                      (eq? (syntax->datum #'id)
-                                                                           (syntax->datum #'input)))
+                                                                     ((prefix input)
+                                                                      (and (eq? (syntax->datum #'id)
+                                                                                (syntax->datum #'input))
+                                                                           #'prefix))
                                                                      (_ #f)))
                                                                  run)
-                                        #:prefix #,(any (lambda (x)
-                                                          (syntax-case x ()
-                                                            ((prefix input)
-                                                             (and (eq? (syntax->datum #'id)
-                                                                       (syntax->datum #'input))
-                                                                  #'prefix))
-                                                            (_ #f)))
-                                                        run)
-                                        args ...))))
-                          inputs))
-            (list #,@(map (lambda (x)
-                            ;; Instantiate <output> object.
-                            (syntax-case x ()
-                              ((id args ...) (identifier? #'id)
-                               #'(output 'id args ...))
-                              (id (identifier? #'id) #'(output 'id))
-                              (_ (error "Invalid output:"
-                                        (syntax->datum x)))))
-                          outputs))
-            (list #,@(map (lambda (x)
-                            (syntax-case x ()
-                              ;; Replace input symbol with quoted symbol.
-                              (input (identifier? #'input)
-                               #''input)
-                              ;; Leave string as is.
-                              (string-arg (string? (syntax->datum #'string-arg))
-                               #'string-arg)
-                              ;; Replace prefixed input symbol with
-                              ;; quoted symbol.
-                              ((prefix input) (and (string? (syntax->datum #'prefix))
-                                                   (identifier? #'input))
-                               #''input)
-                              (_ (error "Invalid command element:"
-                                        (syntax->datum x)))))
-                          run))
-            #,(and stdin #`'#,stdin)
-            (list #,@other))))
-     x)))
+                                                 args ...))))
+                                   inputs))
+                     (list #,@(map (lambda (x)
+                                     ;; Instantiate <output> object.
+                                     (syntax-case x ()
+                                       ((id args ...) (identifier? #'id)
+                                        #'(output 'id args ...))
+                                       (id (identifier? #'id) #'(output 'id))
+                                       (_ (error "Invalid output:"
+                                                 (syntax->datum x)))))
+                                   outputs))
+                     (list #,@(map (lambda (x)
+                                     (syntax-case x ()
+                                       ;; Replace input symbol with quoted symbol.
+                                       (input (identifier? #'input)
+                                        #''input)
+                                       ;; Leave string as is.
+                                       (string-arg (string? (syntax->datum #'string-arg))
+                                        #'string-arg)
+                                       ;; Replace prefixed input symbol with
+                                       ;; quoted symbol.
+                                       ((prefix input) (and (string? (syntax->datum #'prefix))
+                                                            (identifier? #'input))
+                                        #''input)
+                                       (_ (error "Invalid command element:"
+                                                 (syntax->datum x)))))
+                                   run))
+                     #,(and stdin #`'#,stdin)
+                     (list #,@other))))
+              #'(args ...))))))
 
 (define (input=? input1 input2)
   (eq? (input-id input1)
