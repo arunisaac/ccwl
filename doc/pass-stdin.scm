@@ -1,5 +1,5 @@
 (define count-bytes
-  (command #:inputs (file #:type 'File)
+  (command #:inputs (file #:type File)
            #:run "wc" "-c"
            #:stdin file))
 

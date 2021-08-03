@@ -1,10 +1,10 @@
 (define decompress
-  (command #:inputs (compressed #:type 'File)
+  (command #:inputs (compressed #:type File)
            #:run "gzip" "--stdout" "--decompress" compressed
            #:outputs (decompressed #:type 'stdout)))
 
 (define compile
-  (command #:inputs (source #:type 'File)
+  (command #:inputs (source #:type File)
            #:run "gcc" "-x" "c" source
            #:outputs (executable
                       #:type 'File

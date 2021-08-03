@@ -1,5 +1,5 @@
 (define extract
-  (command #:inputs (archive #:type 'File)
+  (command #:inputs (archive #:type File)
            #:run "tar" "--extract" "--file" archive
            #:outputs (extracted-file
                       #:type 'File

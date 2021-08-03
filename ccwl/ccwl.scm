@@ -45,17 +45,29 @@
   (type input-type)
   (label input-label)
   (default input-default)
-  (position input-position)
-  (prefix input-prefix)
+  (position input-position set-input-position)
+  (prefix input-prefix set-input-prefix)
   (other input-other))
 
 (define-immutable-record-type <unspecified-default>
   (make-unspecified-default)
   unspecified-default?)
 
-(define* (input id #:key (type 'File) label (default (make-unspecified-default)) position prefix (other '()))
-  "Build and return an <input> object."
-  (make-input id type label default position prefix other))
+(define (input input-spec)
+  "Return syntax to build an <input> object from INPUT-SPEC."
+  (syntax-case input-spec ()
+    ((id args ...) (identifier? #'id)
+     (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) #:key* other)
+              (let ((position #f)
+                    (prefix #f))
+                #`(make-input '#,id '#,type #,label
+                              #,(if (unspecified-default? default)
+                                    #'(make-unspecified-default)
+                                    default)
+                              #,position #,prefix '#,other)))
+            #'(id args ...)))
+    (id (identifier? #'id) (input #'(id)))
+    (_ (error "Invalid input:" (syntax->datum input-spec)))))
 
 (define-immutable-record-type <output>
   (make-output id type binding source other)
@@ -98,77 +110,84 @@ association list."
   (stdin command-stdin)
   (other command-other))
 
+(define (input-spec-id input-spec)
+  "Return the identifier symbol of INPUT-SPEC."
+  (syntax->datum
+   (syntax-case input-spec ()
+     ((id _ ...) (identifier? #'id) #'id)
+     (id (identifier? #'id) #'id)
+     (_ (error "Invalid input:" (syntax->datum input-spec))))))
+
+(define (run-arg-position input-id run-args)
+  "Return the position of input identified by symbol INPUT-ID in
+RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
+  (list-index (lambda (run-arg)
+                (let ((run-arg-input
+                       (syntax-case run-arg ()
+                         (input (identifier? #'input)
+                          (syntax->datum #'input))
+                         ((_ input) (identifier? #'input)
+                          (syntax->datum #'input))
+                         (_ #f))))
+                  (and run-arg-input
+                       (eq? run-arg-input input-id))))
+              run-args))
+
+(define (run-arg-prefix input-id run-args)
+  "Return the prefix of input identified by symbol INPUT-ID in
+RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
+  (any (lambda (x)
+         (syntax-case x ()
+           ((prefix input) (identifier? #'input)
+            (and (eq? (syntax->datum #'input)
+                      input-id)
+                 #'prefix))
+           (_ #f)))
+       run-args))
+
 ;; TODO: Add fine-grained syntax checking.
 (define-syntax command
   (lambda (x)
     (syntax-case x ()
       ((_ args ...)
        (apply (syntax-lambda** (#:key stdin #:key* inputs outputs run other)
-                (let ((inputs
-                       ;; Canonicalize inputs.
-                       (map (lambda (x)
-                              (syntax-case x ()
-                                ((id args ...) (identifier? #'id)
-                                 #'(id args ...))
-                                (id (identifier? #'id) #'(id))
-                                (_ (error "Invalid input:" (syntax->datum x)))))
-                            inputs)))
-                  (unless run
-                    (error "#:run key required in command definition" (syntax->datum x)))
-                  #`(make-command
-                     (list #,@(map (lambda (x)
-                                     (syntax-case x ()
-                                       ((id args ...)
-                                        ;; Instantiate <input> object with
-                                        ;; position and prefix.
-                                        #`(input 'id
-                                                 #:position #,(list-index (lambda (x)
-                                                                            (syntax-case x ()
-                                                                              (input (identifier? #'input)
-                                                                               (eq? (syntax->datum #'id)
-                                                                                    (syntax->datum #'input)))
-                                                                              ((_ input)
-                                                                               (eq? (syntax->datum #'id)
-                                                                                    (syntax->datum #'input)))
-                                                                              (_ #f)))
-                                                                          run)
-                                                 #:prefix #,(any (lambda (x)
-                                                                   (syntax-case x ()
-                                                                     ((prefix input)
-                                                                      (and (eq? (syntax->datum #'id)
-                                                                                (syntax->datum #'input))
-                                                                           #'prefix))
-                                                                     (_ #f)))
-                                                                 run)
-                                                 args ...))))
-                                   inputs))
-                     (list #,@(map (lambda (x)
-                                     ;; Instantiate <output> object.
-                                     (syntax-case x ()
-                                       ((id args ...) (identifier? #'id)
-                                        #'(output 'id args ...))
-                                       (id (identifier? #'id) #'(output 'id))
-                                       (_ (error "Invalid output:"
-                                                 (syntax->datum x)))))
-                                   outputs))
-                     (list #,@(map (lambda (x)
-                                     (syntax-case x ()
-                                       ;; Replace input symbol with quoted symbol.
-                                       (input (identifier? #'input)
-                                        #''input)
-                                       ;; Leave string as is.
-                                       (string-arg (string? (syntax->datum #'string-arg))
-                                        #'string-arg)
-                                       ;; Replace prefixed input symbol with
-                                       ;; quoted symbol.
-                                       ((prefix input) (and (string? (syntax->datum #'prefix))
-                                                            (identifier? #'input))
-                                        #''input)
-                                       (_ (error "Invalid command element:"
-                                                 (syntax->datum x)))))
-                                   run))
-                     #,(and stdin #`'#,stdin)
-                     (list #,@other))))
+                (unless run
+                  (error "#:run key required in command definition" (syntax->datum x)))
+                #`(make-command
+                   (list #,@(map (lambda (input-spec)
+                                   (let ((id (input-spec-id input-spec)))
+                                     #`(set-input-prefix
+                                        (set-input-position #,(input input-spec)
+                                                            #,(run-arg-position id run))
+                                        #,(run-arg-prefix id run))))
+                                 inputs))
+                   (list #,@(map (lambda (x)
+                                   ;; Instantiate <output> object.
+                                   (syntax-case x ()
+                                     ((id args ...) (identifier? #'id)
+                                      #'(output 'id args ...))
+                                     (id (identifier? #'id) #'(output 'id))
+                                     (_ (error "Invalid output:"
+                                               (syntax->datum x)))))
+                                 outputs))
+                   (list #,@(map (lambda (x)
+                                   (syntax-case x ()
+                                     ;; Replace input symbol with quoted symbol.
+                                     (input (identifier? #'input)
+                                      #''input)
+                                     ;; Leave string as is.
+                                     (string-arg (string? (syntax->datum #'string-arg))
+                                      #'string-arg)
+                                     ;; Replace prefixed input symbol with
+                                     ;; quoted symbol.
+                                     ((prefix input) (and (string? (syntax->datum #'prefix))
+                                                          (identifier? #'input))
+                                      #''input)
+                                     (_ (error "Invalid command element:"
+                                               (syntax->datum x)))))
+                                 run))
+                   #,(and stdin #`'#,stdin)
+                   (list #,@other)))
               #'(args ...))))))
 
 (define (input=? input1 input2)
@@ -414,23 +433,18 @@ return #f."
 (define-syntax workflow
   (lambda (x)
     (syntax-case x ()
-      ((_ inputs tree)
-       (let* ((inputs (map (match-lambda
-                             ((id args ...)
-                              (apply input id args))
-                             (id (input id)))
-                           (syntax->datum #'inputs)))
-              (output-keys steps (workflow-steps #'tree
-                                                 (map (compose key input-id) inputs))))
-         ;; TODO: Error out on duplicated step IDs.
-         #`'#,(datum->syntax
-               x
-               (make-workflow steps
-                              inputs
-                              ;; Find the output object for each
-                              ;; output key. Filter out global
-                              ;; workflow inputs.
-                              (filter-map (cut key->output <> steps)
-                                          output-keys)))))
+      ((_ (inputs ...) tree)
+       #`(let ((input-objects (list #,@(map input #'(inputs ...))))
+               (output-keys steps (workflow-steps #'tree
+                                                  (map (compose key input-spec-id)
+                                                       #'(inputs ...)))))
+           ;; TODO: Error out on duplicated step IDs.
+           (make-workflow steps
+                          input-objects
+                          ;; Find the output object for each
+                          ;; output key. Filter out global
+                          ;; workflow inputs.
+                          (filter-map (cut key->output <> steps)
+                                      output-keys))))
       (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
                 (syntax->datum #'x))))))

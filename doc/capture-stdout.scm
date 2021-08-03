@@ -1,5 +1,5 @@
 (define print
-  (command #:inputs (message #:type 'string)
+  (command #:inputs (message #:type string)
            #:run "echo" message
            #:outputs (printed-message #:type 'stdout)))
 
