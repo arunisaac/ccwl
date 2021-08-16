@@ -179,8 +179,8 @@ references the input ,(code "file").])
       (scheme-source "doc/pass-stdin.scm")
 
       (p [Compiling and running this workflow gives us the following
-output. Notice the file ,(file "foo") passed into the standard input
-of ,(command "wc"), and the file size reported in bytes.])
+output. Notice the file ,(file "hello.txt") passed into the standard
+input of ,(command "wc"), and the file size reported in bytes.])
 
       (prog :line #f (source :file "doc/pass-stdin.out")))
 

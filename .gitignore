@@ -4,6 +4,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
+build-aux/generate-cwl-output.sh
 build-aux/install-sh
 build-aux/missing
 build-aux/test-driver.scm
@@ -13,8 +14,10 @@ configure
 doc/*.cwl
 doc/*.html
 doc/*.info
+doc/*.out
 doc/*.png
 doc/.dirstamp
+doc/cwl-output
 doc/stamp-vti
 pre-inst-env
 scripts/ccwl

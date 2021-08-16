@@ -95,10 +95,38 @@ EXTRA_DIST +=			\
 
 include .depends
 
-CLEANFILES += doc/*.cwl doc/*.dot doc/*.png
+CLEANFILES += doc/*.cwl doc/*.dot doc/*.out doc/*.png
+CLEAN_DIRECTORIES = doc/cwl-output
 
 %.cwl: %.scm
 	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile $< > $@
+
+GENERATE_CWL_OUTPUT = ./build-aux/generate-cwl-output.sh
+
+doc/capture-output-file.out: doc/capture-output-file.cwl doc/hello.tar $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive hello.tar
+
+doc/capture-output-file-with-parameter-reference.out: doc/capture-output-file-with-parameter-reference.cwl doc/hello.tar $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive hello.tar --extractfile hello.txt
+
+doc/capture-stdout.out: doc/capture-stdout.cwl $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --message '"Hello World!"'
+
+doc/checksum.out: doc/checksum.cwl doc/hello.txt $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file hello.txt
+
+doc/decompress-compile-run.out: doc/decompress-compile-run.cwl doc/hello.c.gz $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --compressed-source hello.c.gz
+
+doc/hello-world.out: doc/hello-world.cwl $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --message '"Hello World!"'
+
+doc/pass-stdin.out: doc/pass-stdin.cwl doc/hello.txt $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file hello.txt
+
+doc/hello.tar.out: doc/hello.tar
+	echo "$$ tar --list --file $(notdir $<)" > $@
+	tar --list --file $< >> $@
 
 # Print out graph for graphviz's dot, but remove file path prefix from
 # workflow step identifiers.
@@ -116,7 +144,7 @@ html-local: doc/ccwl.html
 
 SKRIBILO_FLAGS = --source-path=$(srcdir) --image-path=$(builddir)
 CLEANFILES += doc/ccwl.info doc/skribilo.go
-CLEAN_DIRECTORIES = doc/ccwl.html
+CLEAN_DIRECTORIES += doc/ccwl.html
 
 doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
