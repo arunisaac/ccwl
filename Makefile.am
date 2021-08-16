@@ -1,3 +1,4 @@
+# -*- indent-tabs-mode: t; -*-
 # ccwl --- Concise Common Workflow Language
 # Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
 #
