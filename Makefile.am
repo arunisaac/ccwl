@@ -95,7 +95,7 @@ EXTRA_DIST +=			\
 
 include .depends
 
-CLEANFILES += doc/*.cwl doc/%.dot doc/*.png
+CLEANFILES += doc/*.cwl doc/*.dot doc/*.png
 
 %.cwl: %.scm
 	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile $< > $@
