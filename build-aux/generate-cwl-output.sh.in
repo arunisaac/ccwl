@@ -28,9 +28,9 @@ output_file=$(basename $cwl_file .cwl).out
 {
     echo "\$ ccwl compile $(basename $cwl_file .cwl).scm > $cwl_file"
     echo "\$ cwltool $cwl_file $@"
-    # On Guix, workflows involving gcc need the
-    # --preserve-entire-environment flag.
-    @CWLTOOL@ --preserve-entire-environment --outdir cwl-output $cwl_file "$@" 2>&1 \
+    # On Guix, workflows involving gcc need to preserve the
+    # LIBRARY_PATH environment variable.
+    @CWLTOOL@ --preserve-environment LIBRARY_PATH --outdir cwl-output $cwl_file "$@" 2>&1 \
         | @SED@ '1,2d' \
         | @SED@ 's|\[1;30mINFO\[0m ||g' \
         | @SED@ "s|$(pwd)|/home/manimekalai|g"
