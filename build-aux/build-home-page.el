@@ -38,6 +38,5 @@
   (with-temp-buffer
     (insert-file-contents "README.org")
     (search-forward "* Contributing\n\n")
-    (beginning-of-line)
     (insert "ccwl is developed on [[https://github.com/arunisaac/ccwl][GitHub]]. ")
     (org-export-to-file 'html "website/index.html")))
