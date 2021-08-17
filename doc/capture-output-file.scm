@@ -2,7 +2,7 @@
   (command #:inputs (archive #:type File)
            #:run "tar" "--extract" "--file" archive
            #:outputs (extracted-file
-                      #:type 'File
+                      #:type File
                       #:binding '((glob . "hello.txt")))))
 
 (workflow ((archive #:type File))

@@ -78,9 +78,15 @@
   (source output-source set-output-source)
   (other output-other))
 
-(define* (output id #:key (type 'File) binding source (other '()))
-  "Build and return an <output> object."
-  (make-output id type binding source other))
+(define (output output-spec)
+  "Return syntax to build an <output> object from OUTPUT-SPEC."
+  (syntax-case output-spec ()
+    ((id args ...) (identifier? #'id)
+     (apply (syntax-lambda** (id #:key (type #'File) binding source #:key* other)
+              #`(make-output '#,id '#,type #,binding #,source '#,other))
+            #'(id args ...)))
+    (id (identifier? #'id) (output #'(id)))
+    (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
 (define (filter-alist alist)
   "Filter ALIST removing entries with #f as the value. If the
@@ -161,15 +167,7 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                                                             #,(run-arg-position id run))
                                         #,(run-arg-prefix id run))))
                                  inputs))
-                   (list #,@(map (lambda (x)
-                                   ;; Instantiate <output> object.
-                                   (syntax-case x ()
-                                     ((id args ...) (identifier? #'id)
-                                      #'(output 'id args ...))
-                                     (id (identifier? #'id) #'(output 'id))
-                                     (_ (error "Invalid output:"
-                                               (syntax->datum x)))))
-                                 outputs))
+                   (list #,@(map output outputs))
                    (list #,@(map (lambda (x)
                                    (syntax-case x ()
                                      ;; Replace input symbol with quoted symbol.
