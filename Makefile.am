@@ -182,7 +182,7 @@ website: website/index.html website/manual/dev/en
 
 CLEANFILES += website/index.html
 CLEAN_DIRECTORIES += website/manual
-website/index.html: README.org
+website/index.html: README.org build-aux/build-home-page.el
 	$(EMACS_GEN)$(EMACS) -Q --batch --load build-aux/build-home-page.el --funcall build-website
 
 website/manual/dev/en: doc/ccwl.html
