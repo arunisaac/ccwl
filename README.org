@@ -11,6 +11,9 @@ ccwl is a compiler to generate CWL workflows from concise descriptions
 in ccwl. In the future, ccwl will also have a runtime whereby users
 can interactively execute workflows while developing them.
 
+#+BEGIN: download
+#+END:
+
 * Documentation
 
 [[https://ccwl.systemreboot.net/manual/dev/en/][Documentation for ccwl]] is available online. If ccwl is installed on
@@ -19,9 +22,6 @@ browser. The Tutorial section of the manual provides a gentle
 introduction to ccwl.
 
 * Contributing
-
-#+BEGIN: github-link
-#+END:
 
 Feedback, suggestions, feature requests, bug reports and pull requests
 are all welcome. Unclear and unspecific error messages are considered

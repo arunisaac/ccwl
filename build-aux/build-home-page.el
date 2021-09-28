@@ -34,11 +34,33 @@
       org-html-head-include-scripts nil
       org-html-postamble nil)
 
-(defun org-dblock-write:github-link (params)
-  "Dynamically write github-link block."
-  (insert "ccwl is developed on [[https://github.com/arunisaac/ccwl][GitHub]]."))
+(defun org-dblock-write:download (params)
+  "Dynamically write download block."
+  (insert "* Download
+
+Download release tarballs.
+
+")
+  (call-process "git" nil t nil
+                "for-each-ref" "--sort=-taggerdate"
+                (let ((release-file "./releases/ccwl-%(refname:short).tar.lz"))
+                  (format "--format=- %%(taggerdate:short) [[%s][%s]] [[%s.asc][GPG Signature]]"
+                          release-file
+                          (file-name-nondirectory release-file)
+                          release-file))
+                "refs/tags/v*")
+  (insert "
+Download [[https://systemreboot.net/files/misc/arunisaac.pub][public signing key]].
+
+Browse the [[https://github.com/arunisaac/ccwl][development version]] of ccwl hosted on GitHub.")
+  ;; Fix tarball filenames.
+  (replace-string "ccwl-v" "ccwl-" nil nil nil t))
 
 (defun build-website ()
   (with-current-buffer (find-file "README.org")
     (org-update-all-dblocks)
+    ;; Unfortunately, org is unable to handle headlines inside dynamic
+    ;; blocks. So, dissolve the download dynamic block.
+    (replace-string "#+BEGIN: download" "")
+    (replace-string "#+END:" "")
     (org-export-to-file 'html "website/index.html")))
