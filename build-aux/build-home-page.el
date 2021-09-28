@@ -34,9 +34,11 @@
       org-html-head-include-scripts nil
       org-html-postamble nil)
 
+(defun org-dblock-write:github-link (params)
+  "Dynamically write github-link block."
+  (insert "ccwl is developed on [[https://github.com/arunisaac/ccwl][GitHub]]."))
+
 (defun build-website ()
-  (with-temp-buffer
-    (insert-file-contents "README.org")
-    (search-forward "* Contributing\n\n")
-    (insert "ccwl is developed on [[https://github.com/arunisaac/ccwl][GitHub]]. ")
+  (with-current-buffer (find-file "README.org")
+    (org-update-all-dblocks)
     (org-export-to-file 'html "website/index.html")))

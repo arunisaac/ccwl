@@ -20,6 +20,9 @@ introduction to ccwl.
 
 * Contributing
 
+#+BEGIN: github-link
+#+END:
+
 Feedback, suggestions, feature requests, bug reports and pull requests
 are all welcome. Unclear and unspecific error messages are considered
 a bug. Do report them!
