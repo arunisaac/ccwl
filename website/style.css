@@ -23,7 +23,7 @@ code {
     padding-right: 0.2em;
 }
 
-/* Make the svg badges clickable. */
+/* Make the SVG badges clickable. */
 object {
     pointer-events: none;
 }
