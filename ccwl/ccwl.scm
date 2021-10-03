@@ -325,9 +325,8 @@ list of supplied input <key> objects."
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
-              (let ((child-output-keys child-steps (workflow-steps expression input-keys)))
-                (values (append input-keys child-output-keys)
-                        (append steps child-steps))))
+              (let ((input-keys child-steps (workflow-steps expression input-keys)))
+                (values input-keys (append steps child-steps))))
             #'(expressions ...)
             input-keys
             (list)))
