@@ -319,8 +319,10 @@ command is not defined, return #f."
          (variable-ref var))))
 
 (define (workflow-steps x input-keys)
-  "Traverse ccwl source X and return list of steps. INPUT-KEYS is a
-list of supplied input <key> objects."
+  "Traverse ccwl source X and return two values---a list of output
+keys and a list of steps. INPUT-KEYS is a list of supplied input
+keys. Keys are represented by <key> objects, and steps are represented
+by <step> objects."
   (syntax-case x (pipe tee)
     ;; pipe
     ((pipe expressions ...)
