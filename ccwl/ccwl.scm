@@ -370,7 +370,7 @@ list of supplied input <key> objects."
          (missing-parameters
           (scm-error 'misc-error
                      #f
-                     "Step ~S missing required parameters ~S"
+                     "Step `~S' missing required parameters `~S'"
                      (list step-id missing-parameters)
                      #f)))
        ;; Test for unknown keys.
@@ -380,7 +380,7 @@ list of supplied input <key> objects."
                                   (command-input-keys command-object))
                       (scm-error 'misc-error
                                  #f
-                                 "ccwl command ~S does not accept input key ~S. Accepted keys are ~S."
+                                 "ccwl command `~S' does not accept input key `~S'. Accepted keys are `~S'."
                                  (list (syntax->datum #'command)
                                        arg
                                        (command-input-keys command-object))
@@ -388,7 +388,7 @@ list of supplied input <key> objects."
                     (unless (memq value input-key-symbols)
                       (scm-error 'misc-error
                                  #f
-                                 "ccwl step ~S supplied with unknown key ~S. Known keys at this step are ~S."
+                                 "ccwl step `~S' supplied with unknown key `~S'. Known keys at this step are `~S'."
                                  (list step-id value input-key-symbols)
                                  #f))))
                  (syntax->datum (pairify #'(args ...))))
