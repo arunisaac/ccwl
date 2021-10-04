@@ -80,6 +80,11 @@
   ((lambda** (#:key* foo)
      foo)))
 
+(test-error "lambda** should error out on unrecognized keywords in arguments" #t
+  (macroexpand
+   '(lambda** (#:key foo #:foo bar)
+      foo)))
+
 (test-assert "syntax-lambda**"
   (equal? (list #'1 #'2 #'123 (list #'1 #'2 #'3))
           ((syntax-lambda** (a b #:key foo #:key* bar)

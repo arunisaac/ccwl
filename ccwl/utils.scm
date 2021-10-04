@@ -155,6 +155,14 @@ while that for n-ary arguments is the empty list. For example,
                                          (list)))
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
                                         (list))))
+               (for-each (lambda (keyword)
+                           (unless (memq keyword (list #:key #:key* #:allow-other-keys))
+                             (scm-error 'misc-error
+                                        #f
+                                        "Invalid keyword `~S' in `~S'"
+                                        (list keyword (syntax->datum args-spec))
+                                        #f)))
+                         (filter keyword? args-spec))
                #`(apply (lambda* #,(append positionals
                                            (cons #:key unary-arguments)
                                            (map (lambda (x)
