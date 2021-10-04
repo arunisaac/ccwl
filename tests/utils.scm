@@ -86,9 +86,6 @@
              (list a b foo bar))
            #'1 #'2 #'#:foo #'123 #'#:bar #'1 #'2 #'3)))
 
-((syntax-lambda** (a b #:key foo #:key* bar)
-             (list a b foo bar))
-           #'1 #'2 #'#:foo #'123 #'#:bar #'1 #'2 #'3)
 (test-assert "syntax-lambda** with default values"
   (equal? (list #'1 #'2 #'123 9 #'(321 456) '(7) '(3 2 1))
           ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
