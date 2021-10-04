@@ -144,7 +144,16 @@ while that for n-ary arguments is the empty list. For example,
 ((lambda** (foo bar #:key aal vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1) uruthi)
      (list foo bar aal vale pal naal irandu sol uruthi))
    1 2 #:vale 123 #:naal 321 456)
-=> (1 2 #f 123 9 (321 456) (7) (3 2 1) ())"
+=> (1 2 #f 123 9 (321 456) (7) (3 2 1) ())
+
+Like lambda*, lambda** supports #:allow-other-keys. For example,
+
+((lambda** (#:key foo #:allow-other-keys)
+     foo)
+   #:foo 1 #:bar 2)
+=> 1
+
+However, #:optional and #:rest are not supported."
     (syntax-case x ()
       ((_ (args-spec ...) body ...)
        #`(lambda args
@@ -154,7 +163,8 @@ while that for n-ary arguments is the empty list. For example,
                     (unary-arguments (or (plist-ref grouped-rest #:key)
                                          (list)))
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
-                                        (list))))
+                                        (list)))
+                    (allow-other-keys? (plist-ref grouped-rest #:allow-other-keys)))
                (for-each (lambda (keyword)
                            (unless (memq keyword (list #:key #:key* #:allow-other-keys))
                              (scm-error 'misc-error
@@ -170,7 +180,10 @@ while that for n-ary arguments is the empty list. For example,
                                                     ((arg defaults ...)
                                                      #'(arg (list defaults ...)))
                                                     (arg #'(arg '()))))
-                                                nary-arguments))
+                                                nary-arguments)
+                                           (if allow-other-keys?
+                                               (list #:allow-other-keys)
+                                               (list)))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
                           (append positionals
@@ -191,13 +204,22 @@ while that for n-ary arguments is the empty list. For example,
  #'1 #'2 #'#:foo #'123 #'#:bar #'1 #'2 #'3)
 => (#'1 #'2 #'123 (#'1 #'2 #'3))
 
-Just like lambda**, syntax-lambda** also supports default values for
+Like lambda**, syntax-lambda** supports default values for
 arguments. For example,
 
 ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
    (list foo aal vale pal naal irandu sol))
  #'1 #'2 #'#:vale #'123 #'#:naal #'321 #'456)
-=> (#'1 #'2 #'123 9 (#'321 #'456) (7) (3 2 1))"
+=> (#'1 #'2 #'123 9 (#'321 #'456) (7) (3 2 1))
+
+Like lambda**, syntax-lambda** supports #:allow-other-keys.
+
+((syntax-lambda** (#:key foo #:allow-other-keys)
+     foo)
+   #'#:foo #'1 #'#:bar #'2)
+=> #'1
+
+#:optional and #:rest are not supported."
   (lambda args
     (apply (lambda** formal-args body ...)
            (unsyntax-keywords args))))

@@ -85,6 +85,12 @@
    '(lambda** (#:key foo #:foo bar)
       foo)))
 
+(test-equal "Allow other keys in lambda**"
+  1
+  ((lambda** (#:key foo #:allow-other-keys)
+     foo)
+   #:foo 1 #:bar 2))
+
 (test-assert "syntax-lambda**"
   (equal? (list #'1 #'2 #'123 (list #'1 #'2 #'3))
           ((syntax-lambda** (a b #:key foo #:key* bar)
@@ -96,6 +102,15 @@
           ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
              (list foo aal vale pal naal irandu sol))
            #'1 #'2 #'#:vale #'123 #'#:naal #'321 #'456)))
+
+;; We cannot use test-equal to compare syntax objects, since
+;; test-equal does not preserve the lexical contexts of the test
+;; expressions.
+(test-assert "Allow other keys in syntax-lambda**"
+  (equal? #'1
+          ((syntax-lambda** (#:key foo #:allow-other-keys)
+             foo)
+           #'#:foo #'1 #'#:bar #'2)))
 
 (test-equal "filter-mapi"
   '(1 3 5 7 9)
