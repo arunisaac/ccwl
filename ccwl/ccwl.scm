@@ -394,9 +394,10 @@ by <step> objects."
                                  (list step-id value input-key-symbols)
                                  #f))))
                  (syntax->datum (pairify #'(args ...))))
-       (values (map (lambda (output)
-                      (key (output-id output) step-id))
-                    (command-outputs command-object))
+       (values (append (remove key-step input-keys)
+                       (map (lambda (output)
+                              (key (output-id output) step-id))
+                            (command-outputs command-object)))
                (list (make-step step-id
                                 command-object
                                 (map (match-lambda
