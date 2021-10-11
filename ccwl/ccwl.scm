@@ -217,12 +217,6 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   (eq? (input-id input1)
        (input-id input2)))
 
-(define (invoke-command step-id command . args)
-  (make-step step-id
-             command
-             (plist->alist args)
-             (command-outputs command)))
-
 (define (command-input-keys command)
   "Return the list of input keys accepted by COMMAND."
   (map input-id (command-inputs command)))
