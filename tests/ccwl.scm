@@ -25,8 +25,8 @@
   (not (assoc-ref
         (assoc-ref
          (assoc-ref
-          ((module-ref (resolve-module '(ccwl ccwl))
-                       'command->cwl)
+          ((module-ref (resolve-module '(ccwl cwl))
+                       'command->cwl-scm)
            (command #:inputs (file #:type 'File)
                     #:run "wc" "-c"
                     #:stdin file))

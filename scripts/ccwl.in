@@ -27,15 +27,15 @@
 
 (use-modules (ice-9 match)
              (ccwl ccwl)
-             (ccwl yaml))
+             (ccwl cwl))
 
 (match (command-line)
   ((_ "compile" input-file)
    ;; FIXME: Compiling ccwl files fails since the workflow macro is
    ;; unable to access command definitions.
    (set! %load-should-auto-compile #f)
-   (scm->yaml (load (canonicalize-path input-file))
-              (current-output-port)))
+   (workflow->cwl (load (canonicalize-path input-file))
+                  (current-output-port)))
   ((program _ ...)
    (format (current-error-port)
            "Usage: ~a compile input-file~%"

@@ -73,7 +73,7 @@ godir  = $(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 
 bin_SCRIPTS = scripts/ccwl
 
-SOURCES = ccwl/ccwl.scm ccwl/yaml.scm ccwl/utils.scm
+SOURCES = ccwl/ccwl.scm ccwl/cwl.scm ccwl/yaml.scm ccwl/utils.scm
 TEST_EXTENSIONS = .scm
 SCM_TESTS = tests/ccwl.scm tests/utils.scm tests/yaml.scm
 TESTS = $(SCM_TESTS)

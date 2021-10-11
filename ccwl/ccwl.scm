@@ -32,10 +32,39 @@
   #:use-module (ice-9 match)
   #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
-  #:export (command
-            workflow))
-
-(define %cwl-version "v1.2")
+  #:export (command?
+            command
+            command-inputs
+            command-outputs
+            command-args
+            command-stdin
+            command-other
+            workflow
+            workflow?
+            workflow-steps
+            workflow-inputs
+            workflow-outputs
+            workflow-other
+            input?
+            input-id
+            input-type
+            input-label
+            input-default
+            input-position
+            input-prefix
+            input-other
+            output?
+            output-id
+            output-type
+            output-binding
+            output-source
+            output-other
+            step?
+            step-id
+            step-run
+            step-in
+            step-out
+            unspecified-default?))
 
 (define-immutable-record-type <input>
   (make-input id type label default position prefix other)
@@ -87,17 +116,6 @@
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
-(define (filter-alist alist)
-  "Filter ALIST removing entries with #f as the value. If the
-resulting association list is empty, return #f. Else, return that
-association list."
-  (match (filter (match-lambda
-                   ((_ . #f) #f)
-                   (_ #t))
-                 alist)
-    (() #f)
-    (result result)))
-
 (define-immutable-record-type <step>
   (make-step id run in out)
   step?
@@ -114,6 +132,14 @@ association list."
   (args command-args)
   (stdin command-stdin)
   (other command-other))
+
+(define-immutable-record-type <workflow>
+  (make-workflow steps inputs outputs other)
+  workflow?
+  (steps workflow-steps)
+  (inputs workflow-inputs)
+  (outputs workflow-outputs)
+  (other workflow-other))
 
 (define (input-spec-id input-spec)
   "Return the identifier symbol of INPUT-SPEC."
@@ -197,86 +223,6 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
              (plist->alist args)
              (command-outputs command)))
 
-(define* (make-workflow steps inputs outputs #:key (other '()))
-  "Build a Workflow class CWL workflow."
-  `((cwlVersion . ,%cwl-version)
-    (class . Workflow)
-    (requirements (SubworkflowFeatureRequirement))
-    ,@other
-    (inputs . ,(map (lambda (input)
-                      `(,(input-id input)
-                        ,@(filter-alist
-                           `((type . ,(input-type input))
-                             (label . ,(input-label input))
-                             (default . ,(and (not (unspecified-default? (input-default input)))
-                                              (input-default input)))))
-                        ,@(input-other input)))
-                    inputs))
-    (outputs . ,(map (lambda (output)
-                       `(,(output-id output)
-                         (type . ,(match (output-type output)
-                                    ('stdout 'File)
-                                    (some-other-type some-other-type)))
-                         (outputSource . ,(match (output-source output)
-                                            ((? string? source) source)
-                                            ((? input? input) (input-id input))))))
-                     outputs))
-    (steps . ,(map (lambda (step)
-                     `(,(step-id step)
-                       (in . ,(map (lambda (in)
-                                     (match in
-                                       ((id . (? string? source))
-                                        in)
-                                       ((id . (? input? input))
-                                        (cons id (input-id input)))))
-                                   (step-in step)))
-                       (out . ,(list->vector (map output-id (step-out step))))
-                       (run . ,(match (step-run step)
-                                 ((? command? command)
-                                  (command->cwl command))
-                                 (tree tree)))))
-                   steps))))
-
-(define (output->cwl output)
-  `(,(output-id output)
-    ,@(filter identity
-              (list (and (output-type output)
-                         (cons 'type (output-type output)))
-                    (and (output-binding output)
-                         (cons 'outputBinding (output-binding output)))))
-    ,@(output-other output)))
-
-(define (command->cwl command)
-  `((cwlVersion . ,%cwl-version)
-    (class . CommandLineTool)
-    ,@(command-other command)
-    (arguments . ,(list->vector
-                   ;; Put string arguments into the arguments array.
-                   (filter-mapi (lambda (arg index)
-                                  (and (string? arg)
-                                       `((position . ,index)
-                                         (valueFrom . ,arg))))
-                                (command-args command))))
-    (inputs . ,(map (lambda (input)
-                      `(,(input-id input)
-                        ,@(filter-alist
-                           `((type . ,(input-type input))
-                             (label . ,(input-label input))
-                             (default . ,(and (not (unspecified-default? (input-default input)))
-                                              (input-default input)))
-                             (inputBinding . ,(filter-alist
-                                               `((position . ,(input-position input))
-                                                 (prefix . ,(input-prefix input)))))))
-                        ,@(input-other input)))
-                    (command-inputs command)))
-    (outputs . ,(map output->cwl (command-outputs command)))
-    ,@(if (command-stdin command)
-          `((stdin . ,(string-append "$(inputs."
-                                     (symbol->string
-                                      (command-stdin command))
-                                     ".path)")))
-          '())))
-
 (define (command-input-keys command)
   "Return the list of input keys accepted by COMMAND."
   (map input-id (command-inputs command)))
@@ -309,23 +255,23 @@ command is not defined, return #f."
          (command? (variable-ref var))
          (variable-ref var))))
 
-(define (workflow-steps x input-keys)
-  "Traverse ccwl source X and return two values---a list of output
-keys and a list of steps. INPUT-KEYS is a list of supplied input
-keys. Keys are represented by <key> objects, and steps are represented
-by <step> objects."
+(define (collect-steps x input-keys)
+  "Traverse ccwl workflow body X and return two values---a list of
+output keys and a list of steps. INPUT-KEYS is a list of supplied
+input keys. Keys are represented by <key> objects, and steps are
+represented by <step> objects."
   (syntax-case x (pipe tee)
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
-              (let ((input-keys child-steps (workflow-steps expression input-keys)))
+              (let ((input-keys child-steps (collect-steps expression input-keys)))
                 (values input-keys (append steps child-steps))))
             #'(expressions ...)
             input-keys
             (list)))
     ;; tee
     ((tee expressions ...)
-     (append-mapn (cut workflow-steps <> input-keys)
+     (append-mapn (cut collect-steps <> input-keys)
                   #'(expressions ...)))
     ;; commands with only a single input and when only a single key is
     ;; available at this step
@@ -335,13 +281,13 @@ by <step> objects."
           (= (length (command-input-keys
                       (command-object #'command)))
              1))
-     (workflow-steps #`(command (step-id)
+     (collect-steps #`(command (step-id)
                                 #,(match (command-input-keys
                                           (command-object #'command))
                                     ((command-key) (symbol->keyword command-key)))
                                 #,(match input-keys
                                     ((input-key) (key-name input-key))))
-                     input-keys))
+                    input-keys))
     ((command (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
@@ -402,8 +348,8 @@ by <step> objects."
                                 (command-outputs command-object))))))
     ;; commands with an implicit step identifier
     ((command args ...)
-     (workflow-steps #'(command (command) args ...)
-                     input-keys))
+     (collect-steps #'(command (command) args ...)
+                             input-keys))
     ;; any other unrecognized syntax
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
@@ -426,16 +372,17 @@ return #f."
     (syntax-case x ()
       ((_ (inputs ...) tree)
        #`(let ((input-objects (list #,@(map input #'(inputs ...))))
-               (output-keys steps (workflow-steps #'tree
-                                                  (map (compose key input-spec-id)
-                                                       #'(inputs ...)))))
+               (output-keys steps (collect-steps #'tree (map (compose key input-spec-id)
+                                                             #'(inputs ...)))))
            ;; TODO: Error out on duplicated step IDs.
+           ;; TODO: Implement escape hatch #:other in workflow syntax.
            (make-workflow steps
                           input-objects
                           ;; Find the output object for each
                           ;; output key. Filter out global
                           ;; workflow inputs.
                           (filter-map (cut key->output <> steps)
-                                      output-keys))))
+                                      output-keys)
+                          '())))
       (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
                 (syntax->datum #'x))))))
