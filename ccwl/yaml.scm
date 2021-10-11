@@ -30,6 +30,7 @@
 (define-module (ccwl yaml)
   #:use-module (srfi srfi-26)
   #:use-module (ice-9 match)
+  #:use-module (ccwl utils)
   #:export (scm->yaml
             scm->yaml-string))
 
@@ -54,10 +55,6 @@
    ((boolean? atom)
     (display (if atom "true" "false") port))
    (else (error "Unknown atom" atom))))
-
-(define (indent-level port level)
-  "Emit whitespaces to PORT corresponding to nesting LEVEL."
-  (display (make-string (* 2 level) #\space) port))
 
 (define (display-array-element element port level)
   "Display array ELEMENT to PORT at nesting LEVEL."

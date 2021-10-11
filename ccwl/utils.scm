@@ -27,7 +27,8 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
-  #:export (pairify
+  #:export (indent-level
+            pairify
             plist->alist
             lambda**
             syntax-lambda**
@@ -35,6 +36,10 @@
             append-mapn
             foldn
             filter-mapi))
+
+(define (indent-level port level)
+  "Emit whitespaces to PORT corresponding to nesting LEVEL."
+  (display (make-string (* 2 level) #\space) port))
 
 (define (pairify lst)
   "Return a list of pairs of successive elements of LST. For example,
