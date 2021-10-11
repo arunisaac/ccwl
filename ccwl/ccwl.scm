@@ -33,8 +33,7 @@
   #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
   #:export (command
-            workflow
-            write-cwl))
+            workflow))
 
 (define %cwl-version "v1.2")
 
@@ -277,14 +276,6 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                                       (command-stdin command))
                                      ".path)")))
           '())))
-
-(define (write-cwl step file)
-  (call-with-output-file file
-    (cut scm->yaml (let ((run (step-run step)))
-                     (if (command? run)
-                         (command->cwl run)
-                         run))
-         <>)))
 
 (define (command-input-keys command)
   "Return the list of input keys accepted by COMMAND."
