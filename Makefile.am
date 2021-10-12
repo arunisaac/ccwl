@@ -128,10 +128,9 @@ doc/hello.tar.out: doc/hello.tar
 	echo "$$ tar --list --file $(notdir $<)" > $@
 	tar --list --file $< >> $@
 
-# Print out graph for graphviz's dot, but remove file path prefix from
-# workflow step identifiers.
-%.dot: %.cwl
-	$(CWLTOOL_GEN)$(CWLTOOL) --print-dot $< | $(SED) 's/file:[^#]*#//g' > $@
+# Print out graph for graphviz's dot.
+%.dot: %.scm
+	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile --to=graphviz $< > $@
 
 %.png: %.dot
 	$(DOT_GEN)$(DOT) -Tpng -o$@ $<
