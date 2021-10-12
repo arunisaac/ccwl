@@ -29,15 +29,18 @@
              (ccwl ccwl)
              (ccwl cwl))
 
-(match (command-line)
-  ((_ "compile" input-file)
-   ;; FIXME: Compiling ccwl files fails since the workflow macro is
-   ;; unable to access command definitions.
-   (set! %load-should-auto-compile #f)
-   (workflow->cwl (load (canonicalize-path input-file))
-                  (current-output-port)))
-  ((program _ ...)
-   (format (current-error-port)
-           "Usage: ~a compile input-file~%"
-           program)
-   (exit #f)))
+(define main
+  (match-lambda*
+    ((_ "compile" input-file)
+     ;; FIXME: Compiling ccwl files fails since the workflow macro is
+     ;; unable to access command definitions.
+     (set! %load-should-auto-compile #f)
+     (workflow->cwl (load (canonicalize-path input-file))
+                    (current-output-port)))
+    ((program _ ...)
+     (format (current-error-port)
+             "Usage: ~a compile input-file~%"
+             program)
+     (exit #f))))
+
+(apply main (command-line))
