@@ -25,18 +25,28 @@
 
 ;;; Code:
 
-(use-modules (ice-9 match)
+(use-modules (srfi srfi-37)
+             (ice-9 match)
              (ccwl ccwl)
              (ccwl cwl))
 
+(define (invalid-option opt name arg result)
+  (error "Invalid option" name))
+
 (define main
   (match-lambda*
-    ((_ "compile" input-file)
-     ;; FIXME: Compiling ccwl files fails since the workflow macro is
-     ;; unable to access command definitions.
-     (set! %load-should-auto-compile #f)
-     (workflow->cwl (load (canonicalize-path input-file))
-                    (current-output-port)))
+    ((_ "compile" args ...)
+     (let* ((args (args-fold args
+                             '()
+                             invalid-option
+                             (lambda (arg result)
+                               (acons 'source-file arg result))
+                             '())))
+       ;; FIXME: Compiling ccwl files fails since the workflow macro is
+       ;; unable to access command definitions.
+       (set! %load-should-auto-compile #f)
+       (workflow->cwl (load (canonicalize-path (assq-ref args 'source-file)))
+                      (current-output-port))))
     ((program _ ...)
      (format (current-error-port)
              "Usage: ~a compile input-file~%"
