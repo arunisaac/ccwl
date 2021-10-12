@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 
-;; This script compiles a CCWL workflow to CWL.
+;; This script is the command-line interface to ccwl.
 
 ;;; Code:
 
@@ -29,7 +29,8 @@
              (srfi srfi-37)
              (ice-9 match)
              (ccwl ccwl)
-             (ccwl cwl))
+             (ccwl cwl)
+             (ccwl graphviz))
 
 (define (invalid-option opt name arg result)
   (error "Invalid option" name))
@@ -46,15 +47,32 @@
   (match-lambda*
     ((program "compile" args ...)
      (let* ((args (args-fold args
-                             (list %help-option)
+                             (list (option (list #\t "to") #t #f
+                                           (lambda (opt name arg result)
+                                             (let ((supported (list "cwl" "graphviz")))
+                                               (unless (member arg supported)
+                                                 (scm-error 'misc-error
+                                                            #f
+                                                            "Invalid target ~A argument ~S. Supported targets are ~A."
+                                                            (list (if (char? name)
+                                                                      (string #\- name)
+                                                                      (string-append "--" name))
+                                                                  arg
+                                                                  (string-join supported ", "))
+                                                            #f)))
+                                             (acons 'to arg result)))
+                                   %help-option)
                              invalid-option
                              (lambda (arg result)
                                (acons 'source-file arg result))
-                             '())))
+                             '((to . "cwl")))))
        (when (or (assq 'help args)
                  (not (assq-ref args 'source-file)))
          (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
 Compile SOURCE-FILE.
+
+  -t, --to=TARGET    compile SOURCE-FILE to TARGET language;
+                     Supported targets are cwl (default) and graphviz.
 
 "
                           program)
@@ -63,8 +81,12 @@ Compile SOURCE-FILE.
        ;; FIXME: Compiling ccwl files fails since the workflow macro is
        ;; unable to access command definitions.
        (set! %load-should-auto-compile #f)
-       (workflow->cwl (load (canonicalize-path (assq-ref args 'source-file)))
-                      (current-output-port))))
+       (let ((to (assq-ref args 'to)))
+         ((cond
+           ((string=? to "cwl") workflow->cwl)
+           ((string=? to "graphviz") workflow->graphviz))
+          (load (canonicalize-path (assq-ref args 'source-file)))
+          (current-output-port)))))
     ((program args ...)
      (let ((args (args-fold args
                             (list %help-option)
