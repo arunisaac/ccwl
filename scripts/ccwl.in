@@ -25,7 +25,8 @@
 
 ;;; Code:
 
-(use-modules (srfi srfi-37)
+(use-modules (srfi srfi-28)
+             (srfi srfi-37)
              (ice-9 match)
              (ccwl ccwl)
              (ccwl cwl))
@@ -33,24 +34,57 @@
 (define (invalid-option opt name arg result)
   (error "Invalid option" name))
 
+(define (invalid-operand arg result)
+  (error "Invalid argument" arg))
+
+(define %help-option
+  (option (list "help") #f #t
+          (lambda (opt name arg result)
+            (acons 'help #t result))))
+
 (define main
   (match-lambda*
-    ((_ "compile" args ...)
+    ((program "compile" args ...)
      (let* ((args (args-fold args
-                             '()
+                             (list %help-option)
                              invalid-option
                              (lambda (arg result)
                                (acons 'source-file arg result))
                              '())))
+       (when (or (assq 'help args)
+                 (not (assq-ref args 'source-file)))
+         (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
+Compile SOURCE-FILE.
+
+"
+                          program)
+                  (current-error-port))
+         (exit (assq 'help args)))
        ;; FIXME: Compiling ccwl files fails since the workflow macro is
        ;; unable to access command definitions.
        (set! %load-should-auto-compile #f)
        (workflow->cwl (load (canonicalize-path (assq-ref args 'source-file)))
                       (current-output-port))))
-    ((program _ ...)
-     (format (current-error-port)
-             "Usage: ~a compile input-file~%"
-             program)
-     (exit #f))))
+    ((program args ...)
+     (let ((args (args-fold args
+                            (list %help-option)
+                            (lambda (opt name arg result)
+                              result)
+                            (lambda (arg result)
+                              result)
+                            '())))
+       (display (format "Usage: ~a COMMAND [OPTIONS] [ARGS]
+
+COMMAND must be one of the sub-commands listed below:
+
+  compile   compile a workflow
+
+To get usage information for one of these sub-commands, run
+  ~a COMMAND --help
+
+"
+                        program program)
+                (current-error-port))
+       (exit (assq 'help args))))))
 
 (apply main (command-line))
