@@ -222,23 +222,24 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   (map input-id (command-inputs command)))
 
 (define-immutable-record-type <key>
-  (make-key name step)
+  (make-key name cwl-id step)
   key?
   (name key-name)
+  (cwl-id key-cwl-id)
   (step key-step))
 
-(define* (key name #:optional step)
+(define* (key name #:optional step (cwl-id name))
   "Build and return a <key> object."
-  (make-key name step))
+  (make-key name cwl-id step))
 
 ;; TODO: Add docstring.
 (define (cwl-key-address key)
   (if (key-step key)
       ;; Input/output of particular step
       (string-append (symbol->string (key-step key))
-                     "/" (symbol->string (key-name key)))
+                     "/" (symbol->string (key-cwl-id key)))
       ;; Global input/output
-      (symbol->string (key-name key))))
+      (symbol->string (key-cwl-id key))))
 
 (define (command-object command-syntax)
   "Return the command object described by COMMAND-SYNTAX. If such a
@@ -357,7 +358,7 @@ return #f."
                                      steps))
              (output (find (lambda (output)
                              (eq? (output-id output)
-                                  (key-name key)))
+                                  (key-cwl-id key)))
                            (step-out step-with-output))))
     (set-output-source output (cwl-key-address key))))
 
