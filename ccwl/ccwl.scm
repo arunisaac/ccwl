@@ -288,11 +288,11 @@ represented by <step> objects."
                       (command-object #'command)))
              1))
      (collect-steps #`(command (step-id)
-                                #,(match (command-input-keys
-                                          (command-object #'command))
-                                    ((command-key) (symbol->keyword command-key)))
-                                #,(match input-keys
-                                    ((input-key) (key-name input-key))))
+                               #,(match (command-input-keys
+                                         (command-object #'command))
+                                   ((command-key) (symbol->keyword command-key)))
+                               #,(match input-keys
+                                   ((input-key) (key-name input-key))))
                     input-keys))
     ((command (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
@@ -355,7 +355,7 @@ represented by <step> objects."
     ;; commands with an implicit step identifier
     ((command args ...)
      (collect-steps #'(command (command) args ...)
-                             input-keys))
+                    input-keys))
     ;; any other unrecognized syntax
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
@@ -384,9 +384,8 @@ return #f."
            ;; TODO: Implement escape hatch #:other in workflow syntax.
            (make-workflow steps
                           input-objects
-                          ;; Find the output object for each
-                          ;; output key. Filter out global
-                          ;; workflow inputs.
+                          ;; Find the output object for each output
+                          ;; key. Filter out global workflow inputs.
                           (filter-map (cut key->output <> steps)
                                       output-keys)
                           '())))
