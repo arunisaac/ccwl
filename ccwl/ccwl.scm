@@ -255,7 +255,7 @@ command is not defined, return #f."
 output keys and a list of steps. INPUT-KEYS is a list of supplied
 input keys. Keys are represented by <key> objects, and steps are
 represented by <step> objects."
-  (syntax-case x (pipe tee)
+  (syntax-case x (pipe tee rename)
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
@@ -268,6 +268,17 @@ represented by <step> objects."
     ((tee expressions ...)
      (append-mapn (cut collect-steps <> input-keys)
                   #'(expressions ...)))
+    ;; rename keys
+    ((rename mapping ...)
+     (values (map (lambda (key)
+                    (or (any (match-lambda
+                               ((new . old)
+                                (and (eq? old (key-name key))
+                                     (set-key-name key (keyword->symbol new)))))
+                             (syntax->datum (pairify #'(mapping ...))))
+                        key))
+                  input-keys)
+             (list)))
     ;; commands with only a single input when only a single key is
     ;; available at this step and when no inputs are passed to it
     ((command (step-id))
