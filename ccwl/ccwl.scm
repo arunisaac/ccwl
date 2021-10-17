@@ -224,7 +224,7 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
 (define-immutable-record-type <key>
   (make-key name cwl-id step)
   key?
-  (name key-name)
+  (name key-name set-key-name)
   (cwl-id key-cwl-id)
   (step key-step))
 
