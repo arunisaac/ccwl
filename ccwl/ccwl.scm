@@ -268,8 +268,8 @@ represented by <step> objects."
     ((tee expressions ...)
      (append-mapn (cut collect-steps <> input-keys)
                   #'(expressions ...)))
-    ;; commands with only a single input and when only a single key is
-    ;; available at this step
+    ;; commands with only a single input when only a single key is
+    ;; available at this step and when no inputs are passed to it
     ((command (step-id))
      (and (command-object #'command)
           (= (length input-keys) 1)
