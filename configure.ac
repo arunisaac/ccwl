@@ -36,13 +36,18 @@ AC_DEFUN([CHECK_FOR_PROGRAM], [
 AC_DEFUN([REQUIRED_PROGRAM], [
   CHECK_FOR_PROGRAM([$1], [$2], [AC_MSG_ERROR([cannot find $2 m4_ifnblank([$3], [from the $3 package])])])
 ])
+
+# OPTIONAL_PROGRAM(VARIABLE, PROGRAM-TO-CHECK-FOR, WARNING)
+# ----------------------------------------------------------------------------
+AC_DEFUN([OPTIONAL_PROGRAM], [
+  CHECK_FOR_PROGRAM([$1], [$2], [AC_MSG_WARN([$3])])
 ])
 
 AC_PROG_SED
 REQUIRED_PROGRAM([DOT], [dot], [graphviz])
 REQUIRED_PROGRAM([CWLTOOL], [cwltool])
 REQUIRED_PROGRAM([SKRIBILO], [skribilo])
-AC_PATH_PROG([EMACS], [emacs])
+OPTIONAL_PROGRAM([EMACS], [emacs], [cannot find emacs, and therefore cannot build the website])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([pre-inst-env], [chmod +x pre-inst-env])
