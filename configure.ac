@@ -23,11 +23,26 @@ AM_SILENT_RULES([yes])
 
 GUILE_PKG([3.0 2.2])
 GUILE_PROGS
+
+# CHECK_FOR_PROGRAM(VARIABLE, PROGRAM-TO-CHECK-FOR, MESSAGE)
+# ----------------------------------------------------------
+AC_DEFUN([CHECK_FOR_PROGRAM], [
+  AC_PATH_PROG([$1], [$2], [no])
+  AS_IF([test x"$$1" = xno], [$3])
+])
+
+# REQUIRED_PROGRAM(VARIABLE, PROGRAM-TO-CHECK-FOR, PACKAGE-CONTAINING-PROGRAM)
+# ----------------------------------------------------------------------------
+AC_DEFUN([REQUIRED_PROGRAM], [
+  CHECK_FOR_PROGRAM([$1], [$2], [AC_MSG_ERROR([cannot find $2 m4_ifnblank([$3], [from the $3 package])])])
+])
+])
+
 AC_PROG_SED
-AC_PATH_PROG([DOT], [dot])
-AC_PATH_PROG([CWLTOOL], [cwltool])
+REQUIRED_PROGRAM([DOT], [dot], [graphviz])
+REQUIRED_PROGRAM([CWLTOOL], [cwltool])
+REQUIRED_PROGRAM([SKRIBILO], [skribilo])
 AC_PATH_PROG([EMACS], [emacs])
-AC_PATH_PROG([SKRIBILO], [skribilo])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([pre-inst-env], [chmod +x pre-inst-env])
