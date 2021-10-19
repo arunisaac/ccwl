@@ -27,49 +27,27 @@
 
 ;;; Code:
 
-(use-modules (srfi srfi-1)
-             (srfi srfi-26)
-             (ice-9 match)
-             (ice-9 popen)
-             (ice-9 rdelim)
-             (gnu packages autotools)
+(use-modules (gnu packages autotools)
              (gnu packages bioinformatics)
              (gnu packages graphviz)
              (gnu packages guile)
              (gnu packages pkg-config)
              (gnu packages skribilo)
              (gnu packages texinfo)
-             (guix build utils)
              (guix build-system gnu)
              (guix gexp)
+             (guix git-download)
              (guix packages)
              ((guix licenses) #:prefix license:))
 
 (define %source-dir (dirname (current-filename)))
 
-(define git-file?
-  (let* ((pipe (with-directory-excursion %source-dir
-                 (open-pipe* OPEN_READ "git" "ls-files")))
-         (files (let loop ((lines '()))
-                  (match (read-line pipe)
-                    ((? eof-object?)
-                     (reverse lines))
-                    (line
-                     (loop (cons line lines))))))
-         (status (close-pipe pipe)))
-    (lambda (file stat)
-      (match (stat:type stat)
-        ('directory
-         #t)
-        ((or 'regular 'symlink)
-         (any (cut string-suffix? <> file) files))
-        (_
-         #f)))))
-
 (package
   (name "ccwl")
   (version "0.1.0")
-  (source (local-file %source-dir #:recursive? #t #:select? git-file?))
+  (source (local-file %source-dir
+                      #:recursive? #t
+                      #:select? (git-predicate %source-dir)))
   (build-system gnu-build-system)
   (arguments
    '(#:make-flags '("GUILE_AUTO_COMPILE=0"))) ; to prevent guild warnings
