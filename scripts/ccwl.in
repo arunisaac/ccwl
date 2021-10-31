@@ -49,7 +49,7 @@
      (let* ((args (args-fold args
                              (list (option (list #\t "to") #t #f
                                            (lambda (opt name arg result)
-                                             (let ((supported (list "cwl" "graphviz")))
+                                             (let ((supported (list "cwl" "dot")))
                                                (unless (member arg supported)
                                                  (scm-error 'misc-error
                                                             #f
@@ -72,7 +72,7 @@
 Compile SOURCE-FILE.
 
   -t, --to=TARGET    compile SOURCE-FILE to TARGET language;
-                     Supported targets are cwl (default) and graphviz.
+                     Supported targets are cwl (default) and dot.
 
 "
                           program)
@@ -84,7 +84,7 @@ Compile SOURCE-FILE.
        (let ((to (assq-ref args 'to)))
          ((cond
            ((string=? to "cwl") workflow->cwl)
-           ((string=? to "graphviz") workflow->graphviz))
+           ((string=? to "dot") workflow->dot))
           (load (canonicalize-path (assq-ref args 'source-file)))
           (current-output-port)))))
     ((program args ...)

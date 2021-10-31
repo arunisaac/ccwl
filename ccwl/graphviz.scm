@@ -19,7 +19,7 @@
 ;;; Commentary:
 
 ;; This file implements conversion from ccwl objects (<workflow>,
-;; <command>, <input>, <output>, <step>) to graphviz.
+;; <command>, <input>, <output>, <step>) to the graphviz dot language.
 
 ;;; Code:
 
@@ -31,13 +31,13 @@
   #:use-module (ice-9 match)
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
-  #:export (workflow->graphviz))
+  #:export (workflow->dot))
 
-(define (workflow->graphviz workflow port)
-  "Render WORKFLOW, a <workflow> object, to PORT in the graphviz
+(define (workflow->dot workflow port)
+  "Render WORKFLOW, a <workflow> object, to PORT in the graphviz dot
 language."
-  (graph->graphviz (workflow->graph workflow)
-                   port))
+  (graph->dot (workflow->graph workflow)
+              port))
 
 (define-immutable-record-type <graph>
   (make-graph name properties nodes edges subgraphs)
@@ -113,7 +113,7 @@ language."
                                                (workflow-outputs workflow))))))
 
 (define (escape-id id)
-  "Escape string ID if necessary according to graphviz syntax."
+  "Escape string ID if necessary according to graphviz dot syntax."
   (let ((id (if (symbol? id)
                 (symbol->string id)
                 id)))
@@ -125,8 +125,9 @@ language."
         (call-with-output-string
           (cut write id <>)))))
 
-(define* (graph->graphviz graph #:optional (port (current-output-port)) (level 0))
-  "Render GRAPH, a <graph> object, in graphviz syntax to PORT."
+(define* (graph->dot graph #:optional (port (current-output-port)) (level 0))
+  "Render GRAPH, a <graph> object, in the graphviz dot syntax to
+PORT."
   (indent-level port level)
   (display (format "~a ~a {~%"
                    (if (zero? level) "digraph" "subgraph")
@@ -159,7 +160,7 @@ language."
                         port)))
             (graph-edges graph))
   (for-each (lambda (subgraph)
-              (graph->graphviz subgraph port (1+ level)))
+              (graph->dot subgraph port (1+ level)))
             (graph-subgraphs graph))
   (indent-level port level)
   (display (format "}~%") port))

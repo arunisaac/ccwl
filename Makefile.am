@@ -130,7 +130,7 @@ doc/hello.tar.out: doc/hello.tar
 
 # Print out graph for graphviz's dot.
 %.dot: %.scm
-	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile --to=graphviz $< > $@
+	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile --to=dot $< > $@
 
 %.png: %.dot
 	$(DOT_GEN)$(DOT) -Tpng -o$@ $<
