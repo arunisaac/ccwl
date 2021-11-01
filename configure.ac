@@ -23,6 +23,7 @@ AM_SILENT_RULES([yes])
 
 GUILE_PKG([3.0 2.2])
 GUILE_PROGS
+GUILE_MODULE_REQUIRED([yaml])
 
 # CHECK_FOR_PROGRAM(VARIABLE, PROGRAM-TO-CHECK-FOR, MESSAGE)
 # ----------------------------------------------------------
