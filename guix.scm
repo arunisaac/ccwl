@@ -31,6 +31,7 @@
              (gnu packages bioinformatics)
              (gnu packages graphviz)
              (gnu packages guile)
+             ((gnu packages guile-xyz) #:prefix guix:)
              (gnu packages pkg-config)
              (gnu packages skribilo)
              (gnu packages texinfo)
@@ -38,9 +39,31 @@
              (guix gexp)
              (guix git-download)
              (guix packages)
-             ((guix licenses) #:prefix license:))
+             ((guix licenses) #:prefix license:)
+             (guix utils))
 
 (define %source-dir (dirname (current-filename)))
+
+;; The upstream Guix guile-libyaml package is broken. Fix it
+;; temporarily here.
+(define guile-libyaml
+  (package
+    (inherit guix:guile-libyaml)
+    (arguments
+     (substitute-keyword-arguments (package-arguments guix:guile-libyaml)
+       ((#:phases phases)
+        `(modify-phases ,phases
+           (replace 'remove-unused-files
+             (lambda _
+               (for-each delete-file
+                         (list "guix.scm" "demo1.scm" "demo1.yml"))))
+           (replace 'build-ffi
+             (lambda* (#:key inputs #:allow-other-keys)
+               (substitute* "yaml/libyaml.scm"
+                 (("dynamic-link \"libyaml\"")
+                  (string-append "dynamic-link \""
+                                 (assoc-ref inputs "libyaml")
+                                 "/lib/libyaml\"")))))))))))
 
 (define ccwl
   (package
@@ -53,7 +76,8 @@
     (arguments
      '(#:make-flags '("GUILE_AUTO_COMPILE=0"))) ; to prevent guild warnings
     (inputs
-     `(("guile" ,guile-3.0)))
+     `(("guile" ,guile-3.0)
+       ("guile-libyaml" ,guile-libyaml)))
     (native-inputs
      `(("autoconf" ,autoconf)
        ("automake" ,automake)

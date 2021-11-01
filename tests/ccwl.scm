@@ -34,4 +34,18 @@
          'file)
         'inputBinding)))
 
+(test-equal "read all forms of inputs and outputs from a CWL workflow"
+  '(((spam string))
+    ((ham stdout)
+     (eggs stdout)))
+  (let ((cwl-workflow (cwl-workflow "tests/input-output-parameters.cwl")))
+    (list (map (lambda (input)
+                 (list (input-id input)
+                       (input-type input)))
+               (cwl-workflow-inputs cwl-workflow))
+          (map (lambda (output)
+                 (list (output-id output)
+                       (output-type output)))
+               (cwl-workflow-outputs cwl-workflow)))))
+
 (test-end "ccwl")

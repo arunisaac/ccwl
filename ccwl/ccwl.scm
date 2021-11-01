@@ -31,7 +31,7 @@
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
   #:use-module (ccwl utils)
-  #:use-module (ccwl yaml)
+  #:use-module (yaml)
   #:export (command?
             command
             command-inputs
@@ -39,6 +39,11 @@
             command-args
             command-stdin
             command-other
+            cwl-workflow?
+            cwl-workflow
+            cwl-workflow-file
+            cwl-workflow-inputs
+            cwl-workflow-outputs
             workflow
             workflow?
             workflow-steps
@@ -133,6 +138,13 @@
   (stdin command-stdin)
   (other command-other))
 
+(define-immutable-record-type <cwl-workflow>
+  (make-cwl-workflow file inputs outputs)
+  cwl-workflow?
+  (file cwl-workflow-file)
+  (inputs cwl-workflow-inputs)
+  (outputs cwl-workflow-outputs))
+
 (define-immutable-record-type <workflow>
   (make-workflow steps inputs outputs other)
   workflow?
@@ -213,13 +225,61 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                    (list #,@other)))
               #'(args ...))))))
 
+(define (cwl-workflow file)
+  (define (parameters->id+type parameters)
+    (if (vector? parameters)
+        ;; Vector of dictionaries
+        (map (lambda (alist)
+               (cons (string->symbol (assoc-ref alist "id"))
+                     (string->symbol (assoc-ref alist "type"))))
+             (vector->list parameters))
+        ;; One dictionary
+        (map (match-lambda
+               ((id . (? string? type))
+                (cons (string->symbol id)
+                      (string->symbol type)))
+               ((id . alist)
+                (cons (string->symbol id)
+                      (string->symbol (assoc-ref alist "type")))))
+             parameters)))
+
+  (unless (file-exists? file)
+    (error "CWL workflow file does not exist" file))
+  ;; Read inputs/outputs from CWL workflow YAML file and build a
+  ;; <cwl-workflow> object.
+  (let ((yaml (read-yaml-file file)))
+    (make-cwl-workflow file
+                       (map (match-lambda
+                              ((id . type)
+                               (make-input id type #f #f #f #f #f)))
+                            (parameters->id+type (assoc-ref yaml "inputs")))
+                       (map (match-lambda
+                              ((id . type)
+                               (make-output id type #f #f #f)))
+                            (parameters->id+type (assoc-ref yaml "outputs"))))))
+
 (define (input=? input1 input2)
   (eq? (input-id input1)
        (input-id input2)))
 
-(define (command-input-keys command)
-  "Return the list of input keys accepted by COMMAND."
-  (map input-id (command-inputs command)))
+(define (function-input-keys function)
+  "Return the list of input keys accepted by FUNCTION, a <command>
+object or a <cwl-workflow> object."
+  (map input-id
+       ((cond
+         ((command? function) command-inputs)
+         ((cwl-workflow? function) cwl-workflow-inputs)
+         (else (error "Unrecognized ccwl function" function)))
+        function)))
+
+(define (function-outputs function)
+  "Return the outputs of FUNCTION, a <command> or <cwl-workflow>
+object."
+  ((cond
+    ((command? function) command-outputs)
+    ((cwl-workflow? function) cwl-workflow-outputs)
+    (else (error "Unrecognized ccwl function" function)))
+   function))
 
 (define-immutable-record-type <key>
   (make-key name cwl-id step)
@@ -241,13 +301,15 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
       ;; Global input/output
       (symbol->string (key-cwl-id key))))
 
-(define (command-object command-syntax)
-  "Return the command object described by COMMAND-SYNTAX. If such a
-command is not defined, return #f."
+(define (function-object x)
+  "Return the ccwl function object (a <command> or a <cwl-workflow>
+object) described by syntax X. If such a ccwl function is not defined,
+return #f."
   (let ((var (module-variable (current-module)
-                              (syntax->datum command-syntax))))
+                              (syntax->datum x))))
     (and var
-         (command? (variable-ref var))
+         (or (command? (variable-ref var))
+             (cwl-workflow? (variable-ref var)))
          (variable-ref var))))
 
 (define (collect-steps x input-keys)
@@ -279,35 +341,35 @@ represented by <step> objects."
                         key))
                   input-keys)
              (list)))
-    ;; commands with only a single input when only a single key is
-    ;; available at this step and when no inputs are passed to it
-    ((command (step-id))
-     (and (command-object #'command)
+    ;; ccwl functions with only a single input when only a single key
+    ;; is available at this step and when no inputs are passed to it
+    ((function (step-id))
+     (and (function-object #'function)
           (= (length input-keys) 1)
-          (= (length (command-input-keys
-                      (command-object #'command)))
+          (= (length (function-input-keys
+                      (function-object #'function)))
              1))
-     (collect-steps #`(command (step-id)
-                               #,(match (command-input-keys
-                                         (command-object #'command))
-                                   ((command-key) (symbol->keyword command-key)))
-                               #,(match input-keys
-                                   ((input-key) (key-name input-key))))
+     (collect-steps #`(function (step-id)
+                                #,(match (function-input-keys
+                                          (function-object #'function))
+                                    ((command-key) (symbol->keyword command-key)))
+                                #,(match input-keys
+                                    ((input-key) (key-name input-key))))
                     input-keys))
-    ((command (step-id) args ...)
+    ((function (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
      (let ((input-key-symbols (map key-name input-keys))
-           (command-object (command-object #'command))
+           (function-object (function-object #'function))
            (step-id (syntax->datum #'step-id)))
        ;; Test for undefined command.
-       (unless command-object
-         (error "Undefined ccwl command:" (syntax->datum #'command)))
+       (unless function-object
+         (error "Undefined ccwl command:" (syntax->datum #'function)))
        ;; Test for missing required parameters.
        ;; TODO: Filter out optional parameters.
        (match (lset-difference
                eq?
-               (command-input-keys command-object)
+               (function-input-keys function-object)
                (map (match-lambda
                       ((key . _) (keyword->symbol key)))
                     (syntax->datum (pairify #'(args ...)))))
@@ -322,13 +384,13 @@ represented by <step> objects."
        (for-each (match-lambda
                    ((arg . value)
                     (unless (memq (keyword->symbol arg)
-                                  (command-input-keys command-object))
+                                  (function-input-keys function-object))
                       (scm-error 'misc-error
                                  #f
                                  "ccwl command `~S' does not accept input key `~S'. Accepted keys are `~S'."
-                                 (list (syntax->datum #'command)
+                                 (list (syntax->datum #'ccwl-function)
                                        arg
-                                       (command-input-keys command-object))
+                                       (function-input-keys function-object))
                                  #f))
                     (unless (memq value input-key-symbols)
                       (scm-error 'misc-error
@@ -340,9 +402,9 @@ represented by <step> objects."
        (values (append (remove key-step input-keys)
                        (map (lambda (output)
                               (key (output-id output) step-id))
-                            (command-outputs command-object)))
+                            (function-outputs function-object)))
                (list (make-step step-id
-                                command-object
+                                function-object
                                 (map (match-lambda
                                        ((arg . value)
                                         (cons (keyword->symbol arg)
@@ -351,10 +413,10 @@ represented by <step> objects."
                                                        (eq? value (key-name key)))
                                                      input-keys)))))
                                      (pairify (syntax->datum #'(args ...))))
-                                (command-outputs command-object))))))
-    ;; commands with an implicit step identifier
-    ((command args ...)
-     (collect-steps #'(command (command) args ...)
+                                (function-outputs function-object))))))
+    ;; ccwl functions with an implicit step identifier
+    ((function args ...)
+     (collect-steps #'(function (function) args ...)
                     input-keys))
     ;; any other unrecognized syntax
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))

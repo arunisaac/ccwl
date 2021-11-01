@@ -86,6 +86,8 @@ association list."
                        (run . ,(match (step-run step)
                                  ((? command? command)
                                   (command->cwl-scm command))
+                                 ((? cwl-workflow? cwl-workflow)
+                                  (cwl-workflow-file cwl-workflow))
                                  (tree tree)))))
                    (workflow-steps workflow)))))
 
