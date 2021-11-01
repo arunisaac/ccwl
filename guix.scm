@@ -42,26 +42,29 @@
 
 (define %source-dir (dirname (current-filename)))
 
-(package
-  (name "ccwl")
-  (version "0.1.0")
-  (source (local-file %source-dir
-                      #:recursive? #t
-                      #:select? (git-predicate %source-dir)))
-  (build-system gnu-build-system)
-  (arguments
-   '(#:make-flags '("GUILE_AUTO_COMPILE=0"))) ; to prevent guild warnings
-  (inputs
-   `(("guile" ,guile-3.0)))
-  (native-inputs
-   `(("autoconf" ,autoconf)
-     ("automake" ,automake)
-     ("pkg-config" ,pkg-config)
-     ;; To build documentation
-     ("cwltool" ,cwltool)
-     ("graphviz" ,graphviz)
-     ("skribilo" ,skribilo)))
-  (home-page "https://git.systemreboot.net/ccwl")
-  (synopsis "Concise common workflow language")
-  (description "Concise common workflow language")
-  (license license:gpl3+))
+(define ccwl
+  (package
+    (name "ccwl")
+    (version "0.1.0")
+    (source (local-file %source-dir
+                        #:recursive? #t
+                        #:select? (git-predicate %source-dir)))
+    (build-system gnu-build-system)
+    (arguments
+     '(#:make-flags '("GUILE_AUTO_COMPILE=0"))) ; to prevent guild warnings
+    (inputs
+     `(("guile" ,guile-3.0)))
+    (native-inputs
+     `(("autoconf" ,autoconf)
+       ("automake" ,automake)
+       ("pkg-config" ,pkg-config)
+       ;; To build documentation
+       ("cwltool" ,cwltool)
+       ("graphviz" ,graphviz)
+       ("skribilo" ,skribilo)))
+    (home-page "https://git.systemreboot.net/ccwl")
+    (synopsis "Concise common workflow language")
+    (description "Concise common workflow language")
+    (license license:gpl3+)))
+
+ccwl
