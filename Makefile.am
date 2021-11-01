@@ -88,7 +88,7 @@ EXTRA_DIST +=			\
   tests/input-output-parameters.cwl \
   doc/skribilo.scm              \
   doc/ccwl.skb                  \
-  $(DOC_OTHER)                  \
+  $(DOC_SCM)                    \
   COPYING			\
   README.org
 
@@ -146,10 +146,10 @@ SKRIBILO_FLAGS = --source-path=$(srcdir) --image-path=$(builddir)
 CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES += doc/ccwl.html
 
-doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
+doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT)
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
 
-doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_OTHER)
+doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html
