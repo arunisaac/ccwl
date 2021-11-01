@@ -85,6 +85,7 @@ SCM_LOG_DRIVER =		\
 
 EXTRA_DIST +=			\
   $(TESTS)                      \
+  tests/input-output-parameters.cwl \
   doc/skribilo.scm              \
   doc/ccwl.skb                  \
   $(DOC_OTHER)                  \
