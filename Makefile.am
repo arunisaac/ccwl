@@ -88,7 +88,9 @@ EXTRA_DIST +=			\
   tests/input-output-parameters.cwl \
   doc/skribilo.scm              \
   doc/ccwl.skb                  \
+  doc/hello.c.gz                \
   doc/hello.tar                 \
+  doc/hello.txt                 \
   $(DOC_SCM)                    \
   COPYING			\
   README.org
