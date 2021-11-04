@@ -20,18 +20,23 @@
 
 set -o pipefail
 
-cwl_file=$(basename $1)
+cwl_file=$1
 shift
 
-cd doc
 output_file=$(basename $cwl_file .cwl).out
 {
-    echo "\$ ccwl compile $(basename $cwl_file .cwl).scm > $cwl_file"
-    echo "\$ cwltool $cwl_file $@"
+    echo "\$ ccwl compile $(basename $cwl_file .cwl).scm > $(basename $cwl_file)"
+    echo -n "\$ cwltool $(basename $cwl_file) "
+    for arg in $@
+    do
+        echo -n "${arg#doc/} "
+    done
+    echo
+
     # On Guix, workflows involving gcc need to preserve the
     # LIBRARY_PATH environment variable.
-    @CWLTOOL@ --preserve-environment LIBRARY_PATH --outdir cwl-output $cwl_file "$@" 2>&1 \
+    @CWLTOOL@ --preserve-environment LIBRARY_PATH --outdir doc/cwl-output $cwl_file "$@" 2>&1 \
         | @SED@ '1,2d' \
         | @SED@ 's|\[1;30mINFO\[0m ||g' \
         | @SED@ "s|$(pwd)|/home/manimekalai|g"
-} > $output_file
+} > doc/$output_file
