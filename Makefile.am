@@ -106,25 +106,25 @@ CLEAN_DIRECTORIES = doc/cwl-output
 GENERATE_CWL_OUTPUT = ./build-aux/generate-cwl-output.sh
 
 doc/capture-output-file.out: doc/capture-output-file.cwl doc/hello.tar $(GENERATE_CWL_OUTPUT)
-	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive doc/hello.tar
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive $(word 2, $^)
 
 doc/capture-output-file-with-parameter-reference.out: doc/capture-output-file-with-parameter-reference.cwl doc/hello.tar $(GENERATE_CWL_OUTPUT)
-	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive doc/hello.tar --extractfile hello.txt
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --archive $(word 2, $^) --extractfile hello.txt
 
 doc/capture-stdout.out: doc/capture-stdout.cwl $(GENERATE_CWL_OUTPUT)
 	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --message '"Hello World!"'
 
 doc/checksum.out: doc/checksum.cwl doc/hello.txt $(GENERATE_CWL_OUTPUT)
-	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file doc/hello.txt
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file $(word 2, $^)
 
 doc/decompress-compile-run.out: doc/decompress-compile-run.cwl doc/hello.c.gz $(GENERATE_CWL_OUTPUT)
-	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --compressed-source doc/hello.c.gz
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --compressed-source $(word 2, $^)
 
 doc/hello-world.out: doc/hello-world.cwl $(GENERATE_CWL_OUTPUT)
 	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --message '"Hello World!"'
 
 doc/pass-stdin.out: doc/pass-stdin.cwl doc/hello.txt $(GENERATE_CWL_OUTPUT)
-	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file doc/hello.txt
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file $(word 2, $^)
 
 doc/hello.tar.out: doc/hello.tar
 	echo "$$ tar --list --file $(notdir $<)" > $@
