@@ -1,0 +1,5 @@
+(workflow (text-file)
+  (pipe (split-words #:text text-file)
+        (downcase #:words words)
+        (sort (sort-words) #:words downcased-words)
+        (rename #:sorted-words sorted)))

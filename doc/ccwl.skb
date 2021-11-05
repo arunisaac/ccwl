@@ -247,7 +247,81 @@ following output.])
         (p [The MD5, SHA1 and SHA256 checksums are in the files
 ,(file "112be1054505027982e64d56b0879049c12737c6"),
 ,(file "d2f19c786fcd3feb329004c8747803fba581a02d") and
-,(file "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1") respectively.]))))
+,(file "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1") respectively.])))
+
+    (section :title [Let's write a spell check workflow]
+      (p [Finally, let's put together a complex workflow to understand
+how everything fits together. The workflow we will be attempting is a
+spell check workflow inspired by the founders of Unix,(footnote
+["UNIX: Making Computers Easier to Use" has a ,(ref
+:url "https://www.youtube.com/watch?v=XvDZLjaCJuw?t=315"
+:text "section where Brian Kernighan writes a spell check system using
+pipes")]) and by dgsh,(footnote [dgsh, a shell supporting general
+directed graph pipelines, has a ,(ref
+:url "https://www.spinellis.gr/sw/dgsh/#spell-highlight" :text "spell
+check example").]). The workflow is pictured below. Let's start by
+coding each of the steps required by the workflow.])
+
+      (image :file "doc/spell-check.png")
+
+      (p [The first command, ,(code "split-words"), splits up the
+input text into words, one per line. It does this by invoking the
+,(command "tr") command to replace anything that is not an alphabetic
+character with a newline. In addition, it uses the
+,(code "--squeeze-repeats") flag to prevent blank lines from appearing
+in its output. Notice that no type is specified for the input
+,(code "text"). When no type is specified, ccwl assumes a
+,(code "File") type.]
+         (scheme-source-form "doc/spell-check.scm" "\\(define split-words"))
+
+      (p [We want our spell check to be case-insensitive. So, we
+downcase all words. This is achieved using another invocation of the
+,(command "tr") command.]
+         (scheme-source-form "doc/spell-check.scm" "\\(define downcase"))
+
+      (p [For easy comparison against a dictionary, we want both our
+words and our dictionary sorted and deduplicated. We achieve this by
+invoking the ,(command "sort") command with the ,(code "--unique")
+flag.]
+         (scheme-source-form "doc/spell-check.scm" "\\(define sort"))
+
+      (p [Finally, we compare the sorted word list with the sorted
+dictionary to identify the misspellings. We do this using the
+,(command "comm") command.]
+         (scheme-source-form "doc/spell-check.scm"
+                             "\\(define find-misspellings"))
+
+      (p [Now, let's wire up the workflow. First, we assemble the
+,(code "split-words")-,(code "downcase")-,(code "sort-words") arm of
+the workflow. This arm is just a linear chain that can be assembled
+using ,(code "pipe"). We will need to invoke the ,(code "sort")
+command twice in our workflow. To distinguish the two invocations, CWL
+requires us to specify a unique step id for each invocation. We do
+this using the second element, ,(code "(sort-words)"). To avoid name
+conflicts, we also need to rename the output of the ,(code "sort")
+command. The last step,
+,(source-ref "ccwl/ccwl.scm" "\\(\\(rename" (code "rename")), a
+special ccwl construct that, is used to achieve this. In this case, it
+renames the ,(code "sorted") output of the ,(code "sort") command into
+,(code "sorted-words").]
+         (scheme-source "doc/spell-check-workflow-1.scm"))
+
+      (p [Next, we assemble the ,(code "split-dictionary") arm of the
+workflow. This arm is just a single step. Then, we connect up both the
+arms using a ,(code "tee"). Here too, we have a step id and renaming
+of intermediate inputs/outputs.]
+         (scheme-source "doc/spell-check-workflow-2.scm"))
+
+      (p [And finally, we use the outputs of both the arms of the
+workflow together in the ,(code "find-misspellings") step.]
+         (scheme-source-form "doc/spell-check.scm" "\\(workflow"))
+
+      (p [The complete workflow is as follows.]
+         (scheme-source "doc/spell-check.scm"))
+
+      (p [When compiled and run with a text file and a dictionary, the
+misspelt words appear at the output.]
+         (prog :line #f (source :file "doc/spell-check.out")))))
 
   (chapter :title [Cookbook]
     (section :title [Reuse external CWL workflows]

@@ -1,0 +1,7 @@
+(workflow (text-file dictionary)
+  (tee (pipe (split-words #:text text-file)
+                   (downcase #:words words)
+                   (sort (sort-words) #:words downcased-words)
+                   (rename #:sorted-words sorted))
+             (pipe (sort (sort-dictionary) #:words dictionary)
+                   (rename #:sorted-dictionary sorted))))

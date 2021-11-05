@@ -91,6 +91,8 @@ EXTRA_DIST +=			\
   doc/hello.c.gz                \
   doc/hello.tar                 \
   doc/hello.txt                 \
+  doc/spell-check-text.txt      \
+  doc/dictionary                \
   $(DOC_SCM)                    \
   $(DOC_OTHER)                  \
   COPYING			\
@@ -136,6 +138,9 @@ doc/hello-world.out: doc/hello-world.cwl $(GENERATE_CWL_OUTPUT)
 
 doc/pass-stdin.out: doc/pass-stdin.cwl doc/hello.txt $(GENERATE_CWL_OUTPUT)
 	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --file $(word 2, $^)
+
+doc/spell-check.out: doc/spell-check.cwl doc/spell-check-text.txt doc/dictionary $(GENERATE_CWL_OUTPUT)
+	$(CWLTOOL_GEN)$(GENERATE_CWL_OUTPUT) $< --text-file $(word 2, $^) --dictionary $(word 3, $^)
 
 doc/hello.tar.out: doc/hello.tar
 	echo "$$ tar --list --file $(notdir $<)" > $@
