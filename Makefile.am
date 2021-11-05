@@ -100,8 +100,14 @@ EXTRA_DIST +=			\
 
 include .depends
 
-CLEANFILES += $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT)
+CLEANFILES += doc/.dirstamp $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT)
 CLEAN_DIRECTORIES = doc/cwl-output
+
+doc/.dirstamp:
+	@$(MKDIR_P) $(dir $@)
+	@: > $@
+
+$(DOC_IMAGES:.png=.dot) $(DOC_OUT): doc/.dirstamp
 
 %.cwl: %.scm
 	$(CCWL_GEN)$(builddir)/pre-inst-env ccwl compile $< > $@
