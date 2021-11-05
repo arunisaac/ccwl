@@ -38,6 +38,7 @@
   #:export (command
             file
             scheme-source
+            scheme-source-form
             source-ref))
 
 ;; Constants
@@ -124,6 +125,18 @@ and END are line numbers indexed from 1."
                                    "-L"
                                    (number->string end-line)))))
        #:text text))
+
+;; Extract forms from scheme source
+(define (scheme-source-form file regexp)
+  "Extract form from scheme source FILE whose beginning matches
+REGEXP. Return it enclosed in a prog form."
+  (prog (match (sexp-file-lines file regexp)
+          ((start . stop)
+           (source #:language scheme
+                   #:file file
+                   #:start (1- start)
+                   #:stop (1- stop))))
+        #:line #f))
 
 ;; HTML engine customizations
 (let ((html-engine (find-engine 'html)))
