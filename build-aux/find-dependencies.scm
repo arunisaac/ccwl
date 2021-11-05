@@ -56,6 +56,8 @@ dependency is of the form (tag . file). tag may either be the symbol
             args))
     (('scheme-source file)
      `((scm . ,file)))
+    (('scheme-source-form file _)
+     `((scm . ,file)))
     (('source-ref file _ ...)
      `((scm . ,file)))
     ((elements ...)
