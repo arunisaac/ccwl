@@ -165,7 +165,7 @@ doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT) 
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html
-	cp -vr $(DOC_IMAGES) $@
+	cp -v $(DOC_IMAGES) $@
 
 # The install target depends on the install-data target, which in turn
 # depends on the install-data-local target. Use the install-data-local
