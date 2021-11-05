@@ -130,7 +130,8 @@ and END are line numbers indexed from 1."
 (define (scheme-source-form file regexp)
   "Extract form from scheme source FILE whose beginning matches
 REGEXP. Return it enclosed in a prog form."
-  (prog (match (sexp-file-lines file regexp)
+  (prog (match (sexp-file-lines (search-path (*source-path*) file)
+                                regexp)
           ((start . stop)
            (source #:language scheme
                    #:file file
