@@ -249,6 +249,22 @@ following output.])
 ,(file "d2f19c786fcd3feb329004c8747803fba581a02d") and
 ,(file "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1") respectively.]))))
 
+  (chapter :title [Cookbook]
+    (section :title [Reuse external CWL workflows]
+      (p [Even though you may be a ccwl convert (hurrah!), others may
+not be. And, you might have to work with CWL workflows written by
+others. ccwl permits easy reuse of external CWL workflows, and free
+mixing with ccwl commands. Here is a workflow to find the string
+length of a message, where one of the commands, ,(code "echo"), is
+defined as an external CWL workflow. External CWL workflows are
+referenced in ccwl using ,(code "cwl-workflow"). The identifiers and
+types of the inputs/outputs are read from the YAML specification of
+the external CWL workflow.]
+         (scheme-source "doc/external-cwl-workflow.scm")
+         [,(file "echo.cwl") is defined as]
+         ;; TODO: Syntax highlight doc/external-cwl-workflow.cwl.
+         (prog :line #f (source :file "doc/echo.cwl")))))
+
   (chapter :title [Contributing]
     (p [ccwl is developed on GitHub at ,(ref
 :url "https://github.com/arunisaac/ccwl"). Feedback, suggestions,

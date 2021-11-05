@@ -12,6 +12,7 @@ config.log
 config.status
 configure
 doc/*.cwl
+!doc/echo.cwl
 doc/*.html
 doc/*.info
 doc/*.out
