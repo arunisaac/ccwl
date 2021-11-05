@@ -92,6 +92,7 @@ EXTRA_DIST +=			\
   doc/hello.tar                 \
   doc/hello.txt                 \
   $(DOC_SCM)                    \
+  $(DOC_OTHER)                  \
   COPYING			\
   README.org
 
@@ -149,10 +150,10 @@ SKRIBILO_FLAGS = --source-path=$(srcdir) --image-path=$(builddir)
 CLEANFILES += doc/ccwl.info doc/skribilo.go
 CLEAN_DIRECTORIES += doc/ccwl.html
 
-doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT)
+doc/ccwl.info: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT) $(DOC_OTHER)
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t info $< -o $@
 
-doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT)
+doc/ccwl.html: doc/ccwl.skb doc/skribilo.go $(DOC_IMAGES) $(DOC_SCM) $(DOC_OUT) $(DOC_OTHER)
 	rm -rf $@
 	$(MKDIR_P) $@
 	$(SKRIBILO_GEN)$(builddir)/pre-inst-env $(SKRIBILO) $(SKRIBILO_FLAGS) -t html $< -o $@/index.html

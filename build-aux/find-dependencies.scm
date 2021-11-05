@@ -50,7 +50,9 @@ dependency is of the form (tag . file). tag may either be the symbol
             args))
     (('source args ...)
      (apply (lambda* (#:key file #:allow-other-keys)
-              `((out . ,file)))
+              (if (string-suffix? ".out" file)
+                  `((out . ,file))
+                  `((other . ,file))))
             args))
     (('scheme-source file)
      `((scm . ,file)))
@@ -78,6 +80,12 @@ dependency is of the form (tag . file). tag may either be the symbol
   (format #t "DOC_OUT = ~a~%"
           (string-join (filter-map (match-lambda
                                      (('out . file) file)
+                                     (_ #f))
+                                   dependencies)
+                       " "))
+  (format #t "DOC_OTHER = ~a~%"
+          (string-join (filter-map (match-lambda
+                                     (('other . file) file)
                                      (_ #f))
                                    dependencies)
                        " ")))
