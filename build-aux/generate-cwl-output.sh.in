@@ -38,5 +38,5 @@ output_file=$(basename $cwl_file .cwl).out
     @CWLTOOL@ --preserve-environment LIBRARY_PATH --outdir doc/cwl-output $cwl_file "$@" 2>&1 \
         | @SED@ '1,2d' \
         | @SED@ 's|\[1;30mINFO\[0m ||g' \
-        | @SED@ "s|$(pwd)|/home/manimekalai|g"
+        | @SED@ "s|$(pwd)/doc/cwl-output|/home/manimekalai|g"
 } > doc/$output_file
