@@ -96,6 +96,8 @@ EXTRA_DIST +=			\
   COPYING			\
   README.org
 
+.DELETE_ON_ERROR:
+
 # Build documentation
 
 include .depends
