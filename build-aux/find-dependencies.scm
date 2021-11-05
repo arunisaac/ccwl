@@ -66,26 +66,30 @@ dependency is of the form (tag . file). tag may either be the symbol
 (let ((dependencies
        (find-dependencies (skribilo-document "doc/ccwl.skb"))))
   (format #t "DOC_IMAGES = ~a~%"
-          (string-join (filter-map (match-lambda
-                                     (('image . file) file)
-                                     (_ #f))
-                                   dependencies)
+          (string-join (delete-duplicates
+                        (filter-map (match-lambda
+                                      (('image . file) file)
+                                      (_ #f))
+                                    dependencies))
                        " "))
   (format #t "DOC_SCM = ~a~%"
-          (string-join (filter-map (match-lambda
-                                     (('scm . file) file)
-                                     (_ #f))
-                                   dependencies)
+          (string-join (delete-duplicates
+                        (filter-map (match-lambda
+                                      (('scm . file) file)
+                                      (_ #f))
+                                    dependencies))
                        " "))
   (format #t "DOC_OUT = ~a~%"
-          (string-join (filter-map (match-lambda
-                                     (('out . file) file)
-                                     (_ #f))
-                                   dependencies)
+          (string-join (delete-duplicates
+                        (filter-map (match-lambda
+                                      (('out . file) file)
+                                      (_ #f))
+                                    dependencies))
                        " "))
   (format #t "DOC_OTHER = ~a~%"
-          (string-join (filter-map (match-lambda
-                                     (('other . file) file)
-                                     (_ #f))
-                                   dependencies)
+          (string-join (delete-duplicates
+                        (filter-map (match-lambda
+                                      (('other . file) file)
+                                      (_ #f))
+                                    dependencies))
                        " ")))
