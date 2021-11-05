@@ -16,7 +16,7 @@ dnl
 dnl You should have received a copy of the GNU General Public License
 dnl along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-AC_INIT([ccwl], [0.1.0])
+AC_INIT([ccwl], [0.2.0])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([color-tests -Wall -Wno-portability foreign check-news no-dist-gzip dist-lzip])
 AM_SILENT_RULES([yes])

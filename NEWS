@@ -3,4 +3,16 @@
 
 Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
 
+* Changes in 0.2.0 (since 0.1.0)
+** Documentation
+*** New "Let's write a spell check workflow" section in the manual
+*** New "Reuse external CWL workflows" section in the manual
+** Features
+*** Make workflow inputs global to all steps
+*** Support renaming intermediate inputs and outputs
+*** Support external CWL workflows
+*** Support compiling workflows to graphviz dot language for rendering as a graph
+** Other
+*** New guile-libyaml dependency
+
 * Initial release 0.1.0
