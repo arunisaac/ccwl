@@ -13,6 +13,7 @@ config.status
 configure
 doc/*.cwl
 !doc/echo.cwl
+doc/*.dot
 doc/*.html
 doc/*.info
 doc/*.out
