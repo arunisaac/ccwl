@@ -100,7 +100,7 @@ EXTRA_DIST +=			\
 
 include .depends
 
-CLEANFILES += doc/*.cwl doc/*.dot doc/*.out doc/*.png
+CLEANFILES += $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT)
 CLEAN_DIRECTORIES = doc/cwl-output
 
 %.cwl: %.scm
