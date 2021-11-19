@@ -14,6 +14,30 @@ can interactively execute workflows while developing them.
 #+BEGIN: download
 #+END:
 
+* Installation
+** Using Guix
+
+The easiest and best way (considering reproducibility) is to install
+ccwl through [[https://guix.gnu.org/][GNU Guix]]. The Guix package definition for ccwl is in the
+file /guix.scm/. You can use it to install ccwl by running
+#+BEGIN_SRC shell
+  $ guix package -if guix.scm
+#+END_SRC
+
+** Manually
+
+You can also install ccwl more traditionally using the provided GNU
+build system scripts. You will have to ensure that the necessary
+dependencies (guile and guile-libyaml) are installed, and then run
+
+#+BEGIN_SRC shell
+  $ ./bootstrap.sh
+  $ ./configure; make; make install
+#+END_SRC
+
+If you are using a release tarball, you may skip the /bootstrap.sh/
+step.
+
 * Documentation
 
 [[https://ccwl.systemreboot.net/manual/dev/en/][Documentation for ccwl]] is available online. If ccwl is installed on
