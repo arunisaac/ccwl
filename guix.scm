@@ -23,7 +23,7 @@
 ;; Run the following command to enter a development environment for
 ;; ccwl:
 ;;
-;;  $ guix environment -l guix.scm
+;;  $ guix shell -Df guix.scm
 
 ;;; Code:
 
