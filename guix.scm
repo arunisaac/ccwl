@@ -47,7 +47,7 @@
 (define ccwl
   (package
     (name "ccwl")
-    (version "0.1.0")
+    (version "0.2.0")
     (source (local-file %source-dir
                         #:recursive? #t
                         #:select? (git-predicate %source-dir)))
