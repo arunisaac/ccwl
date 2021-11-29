@@ -53,7 +53,25 @@
                         #:select? (git-predicate %source-dir)))
     (build-system gnu-build-system)
     (arguments
-     '(#:make-flags '("GUILE_AUTO_COMPILE=0"))) ; to prevent guild warnings
+     `(#:make-flags '("GUILE_AUTO_COMPILE=0") ; to prevent guild warnings
+       #:modules (((guix build guile-build-system)
+                   #:select (target-guile-effective-version))
+                  ,@%gnu-build-system-modules)
+       #:imported-modules ((guix build guile-build-system)
+                           ,@%gnu-build-system-modules)
+       #:phases
+       (modify-phases %standard-phases
+         (add-after 'install 'wrap
+           (lambda* (#:key inputs outputs #:allow-other-keys)
+             (let ((out (assoc-ref outputs "out"))
+                   (effective-version (target-guile-effective-version)))
+               (wrap-program (string-append out "/bin/ccwl")
+                 `("GUILE_LOAD_PATH" prefix
+                   (,(string-append out "/share/guile/site/" effective-version)
+                    ,(getenv "GUILE_LOAD_PATH")))
+                 `("GUILE_LOAD_COMPILED_PATH" prefix
+                   (,(string-append out "/lib/guile/" effective-version "/site-ccache")
+                    ,(getenv "GUILE_LOAD_COMPILED_PATH"))))))))))
     (inputs
      `(("guile" ,guile-3.0)
        ("guile-libyaml" ,guile-libyaml)))
