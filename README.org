@@ -15,6 +15,37 @@ can interactively execute workflows while developing them.
 #+END:
 
 * Installation
+** Using binary software bundles
+
+If you don't have [[https://guix.gnu.org/][GNU Guix]] set up, the easiest way to quickly try ccwl
+is to using the provided software bundles---either using the Guix
+tarball pack or the Docker image.
+
+*** Using the Guix tarball pack
+
+Download the Guix tarball pack from [[https://github.com/arunisaac/ccwl/releases][the GitHub releases page]] and
+extract it. Then, run ccwl with command-line arguments of your choice.
+#+BEGIN_SRC shell
+  $ tar -xf ccwl-pack.tar.gz
+  $ ./opt/gnu/bin/ccwl [ARGS...]
+#+END_SRC
+
+*** Using the Docker image
+
+Download the Docker image from [[https://github.com/arunisaac/ccwl/releases][the GitHub releases page]] and load
+it. Then, run ccwl with command-line arguments of your choice.
+#+BEGIN_SRC shell
+  $ docker load -i ccwl-docker.tar.gz
+  $ docker run ccwl [ARGS...]
+#+END_SRC
+
+When passing files into the Docker container, remember to share the
+filesystem. The following command is one way to share the current
+directory with the container.
+#+BEGIN_SRC shell
+  $ docker run -v "$PWD:$PWD" -w "$PWD" ccwl compile foo.scm
+#+END_SRC
+
 ** Using Guix
 
 The easiest and best way (considering reproducibility) is to install
