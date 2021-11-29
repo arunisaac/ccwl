@@ -219,6 +219,15 @@ $(CURRENT_RELEASE): dist distcheck
 %.asc: %
 	gpg --detach-sign --armor $<
 
+# Build software bundles.
+
+.PHONY: docker pack
+docker:
+	guix pack -RR --format=docker --entry-point=bin/ccwl --expression='(load "guix.scm")'
+
+pack:
+	guix pack -RR --symlink=/opt/gnu/bin=bin --expression='(load "guix.scm")'
+
 # The clean target depends on clean-local. Use clean-local to clean up
 # several directories. Directories cannot be specified in CLEANFILES.
 clean-local:
