@@ -55,7 +55,7 @@ file /guix.scm/. You can use it to install ccwl by running
   $ guix package -if guix.scm
 #+END_SRC
 
-** Manually
+** Manually from source
 
 You can also install ccwl more traditionally using the provided GNU
 build system scripts. You will have to ensure that the necessary
