@@ -82,6 +82,12 @@ Feedback, suggestions, feature requests, bug reports and pull requests
 are all welcome. Unclear and unspecific error messages are considered
 a bug. Do report them!
 
+To hack on ccwl, you can use GNU Guix to quickly drop into a
+development environment by running
+#+BEGIN_SRC shell
+  $ guix shell -Df guix.scm
+#+END_SRC
+
 * License
 
 ccwl is free software released under the terms of the [[https://www.gnu.org/licenses/gpl.html][GNU General
