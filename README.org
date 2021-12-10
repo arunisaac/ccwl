@@ -49,10 +49,10 @@ directory with the container.
 ** Using Guix
 
 The easiest and best way (considering reproducibility) is to install
-ccwl through [[https://guix.gnu.org/][GNU Guix]]. The Guix package definition for ccwl is in the
-file /guix.scm/. You can use it to install ccwl by running
+ccwl through [[https://guix.gnu.org/][GNU Guix]]. ccwl is packaged for Guix and can be installed
+by running
 #+BEGIN_SRC shell
-  $ guix package -if guix.scm
+  $ guix install ccwl
 #+END_SRC
 
 ** Manually from source
