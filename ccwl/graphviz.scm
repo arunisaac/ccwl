@@ -121,24 +121,23 @@ language."
 (define (serialize object)
   "Serialize OBJECT according to graphviz dot syntax. OBJECT may a
 symbol, a string, or a <html-string> object."
-  (let ((str (cond
-              ((symbol? object) (symbol->string object))
-              ((string? object) object)
-              ((html-string? object) (html-string-underlying object))
-              (else (error "Unknown object type to serialize to graphviz dot:" object)))))
-    (cond
-     ;; Surround HTML strings in <>, and don't escape.
-     ((html-string? object)
-      (format "<~a>" str))
-     ;; Don't quote safe strings.
-     ((string-every (char-set-union (char-set-intersection char-set:letter+digit
-                                                           char-set:ascii)
-                                    (char-set #\_))
-                    str)
-      str)
-     ;; Quote strings with unsafe characters.
-     (else
-      (format "\"~a\"" (string-replace-substring str "\"" "\\\""))))))
+  (cond
+   ((symbol? object)
+    (serialize (symbol->string object)))
+   ;; Surround HTML strings in <>, and don't escape.
+   ((html-string? object)
+    (format "<~a>" (html-string-underlying object)))
+   ;; Don't quote safe strings.
+   ((and (string? object)
+         (string-every (char-set-union (char-set-intersection char-set:letter+digit
+                                                              char-set:ascii)
+                                       (char-set #\_))
+                       object))
+    object)
+   ;; Quote strings with unsafe characters.
+   ((string? object)
+    (format "\"~a\"" (string-replace-substring object "\"" "\\\"")))
+   (else (error "Unknown object type to serialize to graphviz dot:" object))))
 
 (define* (graph->dot graph #:optional (port (current-output-port)) (level 0))
   "Render GRAPH, a <graph> object, in the graphviz dot syntax to
