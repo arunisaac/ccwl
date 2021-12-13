@@ -62,6 +62,11 @@ language."
   "Construct <graph-node> object."
   (make-graph-node name properties))
 
+(define-immutable-record-type <html-string>
+  (html-string str)
+  html-string?
+  (str html-string-underlying))
+
 (define (workflow->graph workflow)
   "Convert WORKFLOW, a <workflow> object, to a <graph> object."
   (graph 'workflow
@@ -112,18 +117,27 @@ language."
                                                                (style . "filled"))))
                                                (workflow-outputs workflow))))))
 
-(define (escape-id id)
-  "Escape string ID if necessary according to graphviz dot syntax."
-  (let ((id (if (symbol? id)
-                (symbol->string id)
-                id)))
-    (if (string-every (char-set-union (char-set-intersection char-set:letter+digit
-                                                             char-set:ascii)
-                                      (char-set #\_))
-                      id)
-        id
-        (call-with-output-string
-          (cut write id <>)))))
+(define (serialize object)
+  "Serialize OBJECT according to graphviz dot syntax. OBJECT may a
+symbol, a string, or a <html-string> object."
+  (let ((str (cond
+              ((symbol? object) (symbol->string object))
+              ((string? object) object)
+              ((html-string? object) (html-string-underlying object))
+              (else (error "Unknown object type to serialize to graphviz dot:" object)))))
+    (cond
+     ;; Surround HTML strings in <>, and don't escape.
+     ((html-string? object)
+      (format "<~a>" str))
+     ;; Don't escape safe strings.
+     ((string-every (char-set-union (char-set-intersection char-set:letter+digit
+                                                           char-set:ascii)
+                                    (char-set #\_))
+                    str)
+      str)
+     ;; Escape strings with unsafe characters.
+     (else (call-with-output-string
+             (cut write str <>))))))
 
 (define* (graph->dot graph #:optional (port (current-output-port)) (level 0))
   "Render GRAPH, a <graph> object, in the graphviz dot syntax to
@@ -136,16 +150,16 @@ PORT."
   (for-each (match-lambda
               ((key . value)
                (indent-level port (1+ level))
-               (display (format "~a=~a;~%" key (escape-id value)) port)))
+               (display (format "~a=~a;~%" key (serialize value)) port)))
             (graph-properties graph))
   (for-each (lambda (node)
               (indent-level port (1+ level))
-              (display (escape-id (graph-node-name node)) port)
+              (display (serialize (graph-node-name node)) port)
               (unless (null? (graph-node-properties node))
                 (display (format " [~a]"
                                  (string-join (map (match-lambda
                                                      ((key . value)
-                                                      (format "~a=~a" key (escape-id value))))
+                                                      (format "~a=~a" key (serialize value))))
                                                    (graph-node-properties node))
                                               ", "))
                          port))
@@ -155,8 +169,8 @@ PORT."
               ((from . to)
                (indent-level port (1+ level))
                (display (format "~a -> ~a;~%"
-                                (escape-id from)
-                                (escape-id to))
+                                (serialize from)
+                                (serialize to))
                         port)))
             (graph-edges graph))
   (for-each (lambda (subgraph)
