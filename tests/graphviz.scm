@@ -27,6 +27,9 @@
 (define graph-node
   (@@ (ccwl graphviz) graph-node))
 
+(define graph-port
+  (@@ (ccwl graphviz) graph-port))
+
 (define html-string
   (@@ (ccwl graphviz) html-string))
 
@@ -56,6 +59,18 @@
        (graph 'foo
               #:nodes (list (graph-node 'bar
                                         `((label . "foo\\lbar")))))
+       port))))
+
+(test-equal "serialize ports correctly"
+  "digraph foo {
+  foo:p1 -> bar:p2;
+}
+"
+  (call-with-output-string
+    (lambda (port)
+      (graph->dot
+       (graph 'foo
+              #:edges `((,(graph-port "foo" "p1") . ,(graph-port "bar" "p2"))))
        port))))
 
 (test-end "graphviz")

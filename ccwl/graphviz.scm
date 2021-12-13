@@ -63,6 +63,12 @@ language."
   "Construct <graph-node> object."
   (make-graph-node name properties))
 
+(define-immutable-record-type <graph-port>
+  (graph-port node port)
+  graph-port?
+  (node graph-port-node)
+  (port graph-port-name))
+
 (define-immutable-record-type <html-string>
   (html-string str)
   html-string?
@@ -120,10 +126,14 @@ language."
 
 (define (serialize object)
   "Serialize OBJECT according to graphviz dot syntax. OBJECT may a
-symbol, a string, or a <html-string> object."
+symbol, a string, a <graph-port> object, or a <html-string> object."
   (cond
    ((symbol? object)
     (serialize (symbol->string object)))
+   ((graph-port? object)
+    (string-append (serialize (graph-port-node object))
+                   ":"
+                   (serialize (graph-port-name object))))
    ;; Surround HTML strings in <>, and don't escape.
    ((html-string? object)
     (format "<~a>" (html-string-underlying object)))
