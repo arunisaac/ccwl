@@ -29,6 +29,7 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-28)
   #:use-module (ice-9 match)
+  #:use-module (ice-9 string-fun)
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
   #:export (workflow->dot))
@@ -129,15 +130,15 @@ symbol, a string, or a <html-string> object."
      ;; Surround HTML strings in <>, and don't escape.
      ((html-string? object)
       (format "<~a>" str))
-     ;; Don't escape safe strings.
+     ;; Don't quote safe strings.
      ((string-every (char-set-union (char-set-intersection char-set:letter+digit
                                                            char-set:ascii)
                                     (char-set #\_))
                     str)
       str)
-     ;; Escape strings with unsafe characters.
-     (else (call-with-output-string
-             (cut write str <>))))))
+     ;; Quote strings with unsafe characters.
+     (else
+      (format "\"~a\"" (string-replace-substring str "\"" "\\\""))))))
 
 (define* (graph->dot graph #:optional (port (current-output-port)) (level 0))
   "Render GRAPH, a <graph> object, in the graphviz dot syntax to

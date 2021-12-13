@@ -45,4 +45,17 @@
                                         `((label . ,(html-string "<table><tr><td>bar</td></tr></table>"))))))
        port))))
 
+(test-equal "do not escape backslashes"
+  "digraph foo {
+  bar [label=\"foo\\lbar\"];
+}
+"
+  (call-with-output-string
+    (lambda (port)
+      (graph->dot
+       (graph 'foo
+              #:nodes (list (graph-node 'bar
+                                        `((label . "foo\\lbar")))))
+       port))))
+
 (test-end "graphviz")
