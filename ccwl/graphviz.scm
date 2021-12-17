@@ -63,6 +63,17 @@ language."
   "Construct <graph-node> object."
   (make-graph-node name properties))
 
+(define-immutable-record-type <graph-edge>
+  (make-graph-edge from to properties)
+  graph-edge?
+  (from graph-edge-from)
+  (to graph-edge-to)
+  (properties graph-edge-properties))
+
+(define* (graph-edge from to #:optional (properties '()))
+  "Construct <graph-edge> object."
+  (make-graph-edge from to properties))
+
 (define-immutable-record-type <graph-port>
   (graph-port node port)
   graph-port?
@@ -181,13 +192,24 @@ PORT."
                          port))
               (display (format ";~%") port))
             (graph-nodes graph))
-  (for-each (match-lambda
-              ((from . to)
-               (indent-level port (1+ level))
-               (display (format "~a -> ~a;~%"
-                                (serialize from)
-                                (serialize to))
-                        port)))
+  (for-each (lambda (edge)
+              (indent-level port (1+ level))
+              (match edge
+                ((? graph-edge? edge)
+                 (display (format "~a -> ~a"
+                                  (serialize (graph-edge-from edge))
+                                  (serialize (graph-edge-to edge)))
+                          port)
+                 (unless (null? (graph-edge-properties edge))
+                   (display " " port)
+                   (display (serialize-properties (graph-edge-properties edge))
+                            port))
+                 (display (format ";~%") port))
+                ((from . to)
+                 (display (format "~a -> ~a;~%"
+                                  (serialize from)
+                                  (serialize to))
+                          port))))
             (graph-edges graph))
   (for-each (lambda (subgraph)
               (graph->dot subgraph port (1+ level)))
