@@ -149,6 +149,16 @@ symbol, a string, a <graph-port> object, or a <html-string> object."
     (format "\"~a\"" (string-replace-substring object "\"" "\\\"")))
    (else (error "Unknown object type to serialize to graphviz dot:" object))))
 
+(define (serialize-properties properties)
+  (string-append
+   "["
+   (string-join (map (match-lambda
+                       ((key . value)
+                        (format "~a=~a" key (serialize value))))
+                     properties)
+                ", ")
+   "]"))
+
 (define* (graph->dot graph #:optional (port (current-output-port)) (level 0))
   "Render GRAPH, a <graph> object, in the graphviz dot syntax to
 PORT."
@@ -166,12 +176,8 @@ PORT."
               (indent-level port (1+ level))
               (display (serialize (graph-node-name node)) port)
               (unless (null? (graph-node-properties node))
-                (display (format " [~a]"
-                                 (string-join (map (match-lambda
-                                                     ((key . value)
-                                                      (format "~a=~a" key (serialize value))))
-                                                   (graph-node-properties node))
-                                              ", "))
+                (display " " port)
+                (display (serialize-properties (graph-node-properties node))
                          port))
               (display (format ";~%") port))
             (graph-nodes graph))
