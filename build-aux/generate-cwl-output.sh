@@ -35,8 +35,8 @@ output_file=$(basename $cwl_file .cwl).out
 
     # On Guix, workflows involving gcc need to preserve the
     # LIBRARY_PATH environment variable.
-    @CWLTOOL@ --preserve-environment LIBRARY_PATH --outdir doc/cwl-output $cwl_file "$@" 2>&1 \
-        | @SED@ '1,2d' \
-        | @SED@ 's|\[1;30mINFO\[0m ||g' \
-        | @SED@ "s|$(pwd)/doc/cwl-output|/home/manimekalai|g"
+    cwltool --preserve-environment LIBRARY_PATH --outdir doc/cwl-output $cwl_file "$@" 2>&1 \
+        | sed '1,2d' \
+        | sed 's|\[1;30mINFO\[0m ||g' \
+        | sed "s|$(pwd)/doc/cwl-output|/home/manimekalai|g"
 } > doc/$output_file

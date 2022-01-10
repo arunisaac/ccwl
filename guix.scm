@@ -40,10 +40,6 @@
     (inherit guix:ccwl)
     (source (local-file %source-dir
                         #:recursive? #t
-                        #:select? (git-predicate %source-dir)))
-    (native-inputs
-     `(("autoconf" ,autoconf)
-       ("automake" ,automake)
-       ,@(package-native-inputs guix:ccwl)))))
+                        #:select? (git-predicate %source-dir)))))
 
 ccwl

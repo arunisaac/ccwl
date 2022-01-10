@@ -1,5 +1,4 @@
-#! @GUILE@ --no-auto-compile
--*- scheme -*-
+#! /usr/bin/env guile
 !#
 ;;; ccwl --- Concise Common Workflow Language
 ;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
@@ -28,9 +27,11 @@
                                         '()))
                             ":")))
 
-(prepend-path-env! "GUILE_LOAD_PATH" "@abs_top_builddir@" "@abs_top_srcdir@")
-(prepend-path-env! "GUILE_LOAD_COMPILED_PATH" "@abs_top_builddir@")
-(prepend-path-env! "PATH" "@abs_top_builddir@/scripts")
+(define %source-dir (dirname (current-filename)))
+
+(prepend-path-env! "GUILE_LOAD_PATH" %source-dir)
+(prepend-path-env! "GUILE_LOAD_COMPILED_PATH" %source-dir)
+(prepend-path-env! "PATH" (string-append %source-dir "/scripts"))
 
 (match (command-line)
   ((_ command args ...)

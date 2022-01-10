@@ -1,5 +1,4 @@
-#! @GUILE@
--*- scheme -*-
+#! /usr/bin/env guile
 !#
 ;;; ccwl --- Concise Common Workflow Language
 ;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -26,20 +26,9 @@
 ;;; Code:
 
 (use-modules (ice-9 format)
-             (ice-9 getopt-long)
              (ice-9 match)
              (srfi srfi-26)
              (srfi srfi-64))
-
-;; Currently, only log-file and trs-file are understood. Everything
-;; else is ignored.
-(define %options
-  '((test-name (value #t))
-    (log-file (value #t))
-    (trs-file (value #t))
-    (color-tests (value #t))
-    (expect-failure (value #t))
-    (enable-hard-errors (value #t))))
 
 (define (color code str color?)
   (if color?
@@ -50,7 +39,7 @@
 (define green (cut color 32 <> <>))
 (define magenta (cut color 35 <> <>))
 
-(define (my-gnu-runner log-port trs-port color?)
+(define (my-gnu-runner color?)
   (let ((runner (test-runner-null)))
     (test-runner-on-group-begin! runner
       (lambda (runner suite-name count)
@@ -64,36 +53,39 @@
               (result (string-upcase
                        (symbol->string (test-result-kind runner))))
               (result-alist (test-result-alist runner)))
-          (format trs-port ":test-result: ~a ~a~%" result name)
           (format #t "~a ~a~%"
                   (case (test-result-kind runner)
                     ((pass) (green result color?))
                     (else (red result color?)))
                   name)
-          (format log-port "~a ~a~%" result name)
           ;; If test did not pass, print details.
           (unless (eq? (test-result-kind runner) 'pass)
-            (let* ((expected-value (match (assq-ref result-alist 'source-form)
-                                     (('test-assert _ ...) #t)
-                                     (_ (assq-ref result-alist 'expected-value))))
-                   (log-output
-                    (format #f "~a:~a~%expected: ~s~%actual: ~s~%"
-                            (assq-ref result-alist 'source-file)
-                            (assq-ref result-alist 'source-line)
-                            expected-value
-                            (assq-ref result-alist 'actual-value))))
-              (display log-output log-port)
-              (display log-output (current-error-port)))))))
+            (format (current-error-port)
+                    "~a:~a~%expected: ~s~%actual: ~s~%"
+                    (assq-ref result-alist 'source-file)
+                    (assq-ref result-alist 'source-line)
+                    (match (assq-ref result-alist 'source-form)
+                      (('test-assert _ ...) #t)
+                      (_ (assq-ref result-alist 'expected-value)))
+                    (assq-ref result-alist 'actual-value))))))
     runner))
 
-(let ((opts (getopt-long (command-line) %options)))
-  (call-with-output-file (string-append "@abs_top_builddir@/"
-                                        (option-ref opts 'log-file #f))
-    (lambda (log-port)
-      (call-with-output-file (option-ref opts 'trs-file #f)
-        (lambda (trs-port)
-          (chdir "@abs_top_srcdir@")
-          (test-with-runner (my-gnu-runner log-port trs-port
-                                           (string=? (option-ref opts 'color-tests "yes")
-                                                     "yes"))
-            (load-from-path (option-ref opts 'test-name #f))))))))
+(match (command-line)
+  ((_ test-files ...)
+   (let ((runner (my-gnu-runner #t)))
+     (test-with-runner runner
+       (for-each load-from-path test-files)
+       (display (magenta "SUMMARY" #t))
+       (newline)
+       (format #t "PASS: ~a
+FAIL: ~a
+XPASS: ~a
+XFAIL: ~a
+SKIP: ~a
+"
+               (test-runner-pass-count runner)
+               (test-runner-fail-count runner)
+               (test-runner-xpass-count runner)
+               (test-runner-xfail-count runner)
+               (test-runner-skip-count runner))
+       (exit (zero? (test-runner-fail-count runner)))))))
