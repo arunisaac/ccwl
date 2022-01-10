@@ -3,6 +3,8 @@
 
 ((nil
   (indent-tabs-mode))
+ (makefile-gmake-mode
+  (indent-tabs-mode t))
  (scheme-mode
   (eval put 'lambda** 'scheme-indent-function 1)
   (eval put 'syntax-lambda** 'scheme-indent-function 1)
