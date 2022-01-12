@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -130,7 +130,7 @@ are prefixed by #:key. n-ary keyword arguments are prefixed by
 #:key*. For example:
 
 (lambda** (a b #:key foo #:key* bar)
-   (list a b foo bar))
+  (list a b foo bar))
 
 Here, a and b are positional arguments. foo is a unary keyword
 argument. bar is an n-ary keyword argument. The above function could,
@@ -147,15 +147,15 @@ arguments. Note that the default value for unary arguments is #f,
 while that for n-ary arguments is the empty list. For example,
 
 ((lambda** (foo bar #:key aal vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1) uruthi)
-     (list foo bar aal vale pal naal irandu sol uruthi))
-   1 2 #:vale 123 #:naal 321 456)
+   (list foo bar aal vale pal naal irandu sol uruthi))
+ 1 2 #:vale 123 #:naal 321 456)
 => (1 2 #f 123 9 (321 456) (7) (3 2 1) ())
 
 Like lambda*, lambda** supports #:allow-other-keys. For example,
 
 ((lambda** (#:key foo #:allow-other-keys)
-     foo)
-   #:foo 1 #:bar 2)
+   foo)
+ #:foo 1 #:bar 2)
 => 1
 
 However, #:optional and #:rest are not supported."
