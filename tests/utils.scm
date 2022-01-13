@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -54,8 +54,7 @@
 ;; expressions.
 (test-assert "unsyntax-keywords"
   (equal? (list #:ham #'1 #:eggs #'2)
-          ((module-ref (resolve-module '(ccwl utils))
-                       'unsyntax-keywords)
+          ((@@ (ccwl utils) unsyntax-keywords)
            (list #'#:ham #'1 #'#:eggs #'2))))
 
 (test-equal "lambda**"

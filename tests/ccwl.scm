@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -25,8 +25,7 @@
   (not (assoc-ref
         (assoc-ref
          (assoc-ref
-          ((module-ref (resolve-module '(ccwl cwl))
-                       'command->cwl-scm)
+          ((@@ (ccwl cwl) command->cwl-scm)
            (command #:inputs (file #:type File)
                     #:run "wc" "-c"
                     #:stdin file))
