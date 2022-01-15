@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -121,14 +121,6 @@
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
-(define-immutable-record-type <step>
-  (make-step id run in out)
-  step?
-  (id step-id)
-  (run step-run)
-  (in step-in)
-  (out step-out))
-
 (define-immutable-record-type <command>
   (make-command inputs outputs args stdin other)
   command?
@@ -144,6 +136,24 @@
   (file cwl-workflow-file)
   (inputs cwl-workflow-inputs)
   (outputs cwl-workflow-outputs))
+
+(define (function-outputs function)
+  "Return the outputs of FUNCTION, a <command> or <cwl-workflow>
+object."
+  ((cond
+    ((command? function) command-outputs)
+    ((cwl-workflow? function) cwl-workflow-outputs)
+    (else (error "Unrecognized ccwl function" function)))
+   function))
+
+(define-immutable-record-type <step>
+  (make-step id run in)
+  step?
+  (id step-id)
+  (run step-run)
+  (in step-in))
+
+(define step-out (compose function-outputs step-run))
 
 (define-immutable-record-type <workflow>
   (make-workflow steps inputs outputs other)
@@ -271,15 +281,6 @@ object or a <cwl-workflow> object."
          ((cwl-workflow? function) cwl-workflow-inputs)
          (else (error "Unrecognized ccwl function" function)))
         function)))
-
-(define (function-outputs function)
-  "Return the outputs of FUNCTION, a <command> or <cwl-workflow>
-object."
-  ((cond
-    ((command? function) command-outputs)
-    ((cwl-workflow? function) cwl-workflow-outputs)
-    (else (error "Unrecognized ccwl function" function)))
-   function))
 
 (define-immutable-record-type <key>
   (make-key name cwl-id step)
@@ -412,8 +413,7 @@ represented by <step> objects."
                                                (find (lambda (key)
                                                        (eq? value (key-name key)))
                                                      input-keys)))))
-                                     (pairify (syntax->datum #'(args ...))))
-                                (function-outputs function-object))))))
+                                     (pairify (syntax->datum #'(args ...)))))))))
     ;; ccwl functions with an implicit step identifier
     ((function args ...)
      (collect-steps #'(function (function) args ...)
