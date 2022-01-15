@@ -405,7 +405,7 @@ represented by <step> objects."
                               (key (output-id output) step-id))
                             (function-outputs function-object)))
                (list (make-step step-id
-                                function-object
+                                #'function
                                 (map (match-lambda
                                        ((arg . value)
                                         (cons (keyword->symbol arg)
@@ -422,34 +422,44 @@ represented by <step> objects."
     (x (error "Unrecognized syntax:" (syntax->datum #'x)))))
 
 (define (key->output key steps)
-  "Return the <output> object corresponding to KEY, a <key> object, in
-STEPS, a list of <step> objects. If no such <output> object is found,
-return #f."
+  "Return syntax to construct an <output> object corresponding to KEY,
+a <key> object, in STEPS, a list of <step> objects. If no such
+<output> object is found, return #f."
   (and-let* ((step-with-output (find (lambda (step)
                                        (eq? (step-id step)
                                             (key-step key)))
-                                     steps))
-             (output (find (lambda (output)
-                             (eq? (output-id output)
-                                  (key-cwl-id key)))
-                           (step-out step-with-output))))
-    (set-output-source output (cwl-key-address key))))
+                                     steps)))
+    (with-syntax ((key-cwl-id (datum->syntax #f (key-cwl-id key))))
+      #`(set-output-source (find (lambda (output)
+                                   (eq? (output-id output)
+                                        'key-cwl-id))
+                                 (function-outputs
+                                  #,(step-run step-with-output)))
+                           #,(cwl-key-address key)))))
 
 (define-syntax workflow
   (lambda (x)
     (syntax-case x ()
       ((_ (inputs ...) tree)
-       #`(let ((input-objects (list #,@(map input #'(inputs ...))))
-               (output-keys steps (collect-steps #'tree (map (compose key input-spec-id)
-                                                             #'(inputs ...)))))
-           ;; TODO: Error out on duplicated step IDs.
-           ;; TODO: Implement escape hatch #:other in workflow syntax.
-           (make-workflow steps
-                          input-objects
-                          ;; Find the output object for each output
-                          ;; key. Filter out global workflow inputs.
-                          (filter-map (cut key->output <> steps)
-                                      output-keys)
-                          '())))
+       (let ((output-keys steps (collect-steps
+                                 #'tree (map (compose key input-spec-id)
+                                             #'(inputs ...)))))
+         ;; TODO: Error out on duplicated step IDs.
+         ;; TODO: Implement escape hatch #:other in workflow syntax.
+         #`(make-workflow
+            (list #,@(map (lambda (step)
+                            #`(make-step
+                               #,(with-syntax ((id (datum->syntax #f (step-id step))))
+                                   #''id)
+                               #,(step-run step)
+                               #,(with-syntax ((in (datum->syntax #f (step-in step))))
+                                   #''in)))
+                          steps))
+            (list #,@(map input #'(inputs ...)))
+            ;; Find the output object for each output
+            ;; key. Filter out global workflow inputs.
+            (list #,@(filter-map (cut key->output <> steps)
+                                 output-keys))
+            '())))
       (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
                 (syntax->datum #'x))))))
