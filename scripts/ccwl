@@ -80,8 +80,9 @@ Compile SOURCE-FILE.
                           program)
                   (current-error-port))
          (exit (assq 'help args)))
-       ;; FIXME: Compiling ccwl files fails since the workflow macro is
-       ;; unable to access command definitions.
+       ;; We don't need to compile ccwl files. Loading is sufficient
+       ;; for our purposes. Besides, compiling would fail since the
+       ;; workflow macro cannot access command definitions.
        (set! %load-should-auto-compile #f)
        (let ((to (assq-ref args 'to)))
          ((cond
