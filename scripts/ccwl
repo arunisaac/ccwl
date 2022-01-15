@@ -1,7 +1,7 @@
 #! /usr/bin/env guile
 !#
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -84,7 +84,8 @@ Compile SOURCE-FILE.
          ((cond
            ((string=? to "cwl") workflow->cwl)
            ((string=? to "dot") workflow->dot))
-          (load (canonicalize-path (assq-ref args 'source-file)))
+          (load (canonicalize-path (assq-ref args 'source-file))
+                read-syntax)
           (current-output-port)))))
     ((program args ...)
      (let ((args (args-fold args
