@@ -29,7 +29,11 @@
             invalid-keyword-arity-assertion
             invalid-keyword-arity-assertion?
             invalid-positional-arguments-arity-assertion
-            invalid-positional-arguments-arity-assertion?))
+            invalid-positional-arguments-arity-assertion?
+            formatted-message
+            formatted-message?
+            formatted-message-format
+            formatted-message-arguments))
 
 (define-condition-type &ccwl-violation &violation
   make-ccwl-violation ccwl-violation?
@@ -52,3 +56,14 @@
 
 (define-condition-type &invalid-positional-arguments-arity-assertion &assertion
   invalid-positional-arguments-arity-assertion invalid-positional-arguments-arity-assertion?)
+
+(define-condition-type &formatted-message &message
+  make-formatted-message formatted-message?
+  (format formatted-message-format)
+  (arguments formatted-message-arguments))
+
+(define (formatted-message format-string . arguments)
+  "Return &ccwl-message condition for FORMAT-STRING with ARGUMENTS."
+  (make-formatted-message (apply format format-string arguments)
+                          format-string
+                          arguments))
