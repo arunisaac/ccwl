@@ -16,8 +16,12 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (srfi srfi-64)
+(use-modules (rnrs conditions)
+             (rnrs exceptions)
+             (srfi srfi-1)
+             (srfi srfi-64)
              (srfi srfi-71)
+             (ccwl conditions)
              (ccwl utils))
 
 (test-begin "utils")
@@ -79,16 +83,42 @@
   ((lambda** (#:key* foo)
      foo)))
 
-(test-error "lambda** should error out on unrecognized keywords in arguments" #t
-  (macroexpand
-   '(lambda** (#:key foo #:foo bar)
-      foo)))
+(test-assert "lambda** should raise an &unrecognized-keyword-assertion on unrecognized keywords in arguments with syntax objects as irritants"
+  (guard (exception
+          (else (and (unrecognized-keyword-assertion? exception)
+                     ;; We check with NOT keyword? because we have no
+                     ;; way of directly checking for syntax?.
+                     (not (any keyword? (condition-irritants exception))))))
+    (macroexpand
+     '(lambda** (#:key foo #:foo bar)
+        foo))))
 
 (test-equal "Allow other keys in lambda**"
   1
   ((lambda** (#:key foo #:allow-other-keys)
      foo)
    #:foo 1 #:bar 2))
+
+(test-assert "Unrecognized keyword argument passed to lambda** should raise an &unrecognized-keyword-assertion condition"
+  (guard (exception
+          (else (unrecognized-keyword-assertion? exception)))
+    ((lambda** (spam ham #:key eggs)
+       spam)
+     1 2 #:foo 123)))
+
+(test-assert "Unary lambda** keyword argument passed multiple arguments should raise an &invalid-keyword-arity-assertion condition"
+  (guard (exception
+          (else (invalid-keyword-arity-assertion? exception)))
+    ((lambda** (spam ham #:key eggs)
+       (list spam ham eggs))
+     1 2 #:eggs 123 345)))
+
+(test-assert "Wrong number of positional arguments to lambda** should raise an &invalid-positional-arguments-arity-assertion condition"
+  (guard (exception
+          (else (invalid-positional-arguments-arity-assertion? exception)))
+    ((lambda** (spam ham #:key eggs)
+       spam)
+     1 #:eggs 123)))
 
 (test-assert "syntax-lambda**"
   (equal? (list #'1 #'2 #'123 (list #'1 #'2 #'3))
@@ -110,6 +140,40 @@
           ((syntax-lambda** (#:key foo #:allow-other-keys)
              foo)
            #'#:foo #'1 #'#:bar #'2)))
+
+(test-assert "syntax-lambda** should raise an &unrecognized-keyword-assertion on unrecognized keywords in arguments"
+  (guard (exception
+          (else (unrecognized-keyword-assertion? exception)))
+    (macroexpand
+     '(syntax-lambda** (#:key foo #:foo bar)
+        foo))))
+
+(test-assert "Unrecognized keyword argument passed to syntax-lambda** should raise an &unrecognized-keyword-assertion condition with syntax objects as irritants"
+  (guard (exception
+          (else (and (unrecognized-keyword-assertion? exception)
+                     ;; We check with NOT keyword? because we have no
+                     ;; way of directly checking for syntax?.
+                     (not (any keyword? (condition-irritants exception))))))
+    ((syntax-lambda** (spam ham #:key eggs)
+       spam)
+     #'1 #'2 #'#:foo #'123)))
+
+(test-assert "Unary syntax-lambda** keyword argument passed multiple arguments should raise an &invalid-keyword-arity-assertion condition"
+  (guard (exception
+          (else (and (invalid-keyword-arity-assertion? exception)
+                     ;; We check with NOT keyword? because we have no
+                     ;; way of directly checking for syntax?.
+                     (not (any keyword? (condition-irritants exception))))))
+    ((syntax-lambda** (spam ham #:key eggs)
+       (list spam ham eggs))
+     #'1 #'2 #'#:eggs #'123 #'345)))
+
+(test-assert "Wrong number of positional arguments to syntax-lambda** should raise an &invalid-positional-arguments-arity-assertion condition"
+  (guard (exception
+          (else (invalid-positional-arguments-arity-assertion? exception)))
+    ((syntax-lambda** (spam ham #:key eggs)
+       spam)
+     #'1 #'#:eggs #'123)))
 
 (test-equal "filter-mapi"
   '(1 3 5 7 9)

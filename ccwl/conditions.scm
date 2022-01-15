@@ -23,7 +23,13 @@
             ccwl-violation?
             ccwl-violation-file
             ccwl-violation-line
-            ccwl-violation-column))
+            ccwl-violation-column
+            unrecognized-keyword-assertion
+            unrecognized-keyword-assertion?
+            invalid-keyword-arity-assertion
+            invalid-keyword-arity-assertion?
+            invalid-positional-arguments-arity-assertion
+            invalid-positional-arguments-arity-assertion?))
 
 (define-condition-type &ccwl-violation &violation
   make-ccwl-violation ccwl-violation?
@@ -37,3 +43,12 @@
     (make-ccwl-violation (assq-ref properties 'filename)
                          (assq-ref properties 'line)
                          (assq-ref properties 'column))))
+
+(define-condition-type &unrecognized-keyword-assertion &assertion
+  unrecognized-keyword-assertion unrecognized-keyword-assertion?)
+
+(define-condition-type &invalid-keyword-arity-assertion &assertion
+  invalid-keyword-arity-assertion invalid-keyword-arity-assertion?)
+
+(define-condition-type &invalid-positional-arguments-arity-assertion &assertion
+  invalid-positional-arguments-arity-assertion invalid-positional-arguments-arity-assertion?)

@@ -23,10 +23,16 @@
 ;;; Code:
 
 (define-module (ccwl utils)
+  #:use-module ((rnrs conditions) #:select (condition
+                                            condition-irritants
+                                            (make-irritants-condition . irritants-condition)))
+  #:use-module ((rnrs exceptions) #:select (guard
+                                            (raise . raise-exception)))
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
+  #:use-module (ccwl conditions)
   #:export (indent-level
             pairify
             plist->alist
@@ -72,24 +78,25 @@ arity are listed in UNARY-KEYWORDS. For example,
 
 (group-keyword-arguments (list #:spam 1 #:ham 1 2 3 #:eggs 0)
                          (list #:spam))
-=> (#:spam 1 #:ham (1 2 3) #:eggs (0))"
+=> (#:spam 1 #:ham (1 2 3) #:eggs (0))
+
+If a unary keyword is passed multiple arguments, a
+&invalid-keyword-arity-assertion is raised."
   (match args
-    (((? (lambda (keyword)
-           (and (keyword? keyword)
-                (not (member keyword unary-keywords))))
-         this-keyword)
-      tail ...)
+    (((? keyword? this-keyword) tail ...)
      (let ((this-keyword-args tail (break keyword? tail)))
        (cons* this-keyword
-              (apply list this-keyword-args)
+              (if (member this-keyword unary-keywords)
+                  ;; unary keyword argument
+                  (match this-keyword-args
+                    ((this-keyword-arg) this-keyword-arg)
+                    (_ (raise-exception
+                        (condition (invalid-keyword-arity-assertion)
+                                   (irritants-condition
+                                    (cons this-keyword this-keyword-args))))))
+                  ;; n-ary keyword argument
+                  (apply list this-keyword-args))
               (group-keyword-arguments tail unary-keywords))))
-    (((? (lambda (keyword)
-           (and (keyword? keyword)
-                (member keyword unary-keywords)))
-         this-keyword)
-      this-keyword-arg tail ...)
-     (cons* this-keyword this-keyword-arg
-            (group-keyword-arguments tail unary-keywords)))
     ((non-keyword _ ...)
      (error "Invalid sequence of keywords arguments" args))
     (() '())))
@@ -158,26 +165,38 @@ Like lambda*, lambda** supports #:allow-other-keys. For example,
  #:foo 1 #:bar 2)
 => 1
 
-However, #:optional and #:rest are not supported."
+However, #:optional and #:rest are not supported.
+
+If an unrecognized keyword is passed to the lambda function, a
+&unrecognized-keyword-assertion condition is raised. If a unary
+keyword argument is passed more than one argument, a
+&invalid-keyword-arity-assertion condition is raised. If a wrong
+number of positional arguments is passed, a
+&invalid-positional-arguments-arity-assertion condition is raised."
     (syntax-case x ()
       ((_ (args-spec ...) body ...)
        #`(lambda args
-           #,(let* ((args-spec (unsyntax-keywords #'(args-spec ...)))
-                    (positionals rest (break keyword? args-spec))
+           #,(let* ((positionals rest (break keyword?
+                                             (unsyntax-keywords #'(args-spec ...))))
                     (grouped-rest (group-keyword-arguments rest))
                     (unary-arguments (or (plist-ref grouped-rest #:key)
                                          (list)))
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
                                         (list)))
-                    (allow-other-keys? (plist-ref grouped-rest #:allow-other-keys)))
-               (for-each (lambda (keyword)
-                           (unless (memq keyword (list #:key #:key* #:allow-other-keys))
-                             (scm-error 'misc-error
-                                        #f
-                                        "Invalid keyword `~S' in `~S'"
-                                        (list keyword (syntax->datum args-spec))
-                                        #f)))
-                         (filter keyword? args-spec))
+                    (allow-other-keys? (if (plist-ref grouped-rest #:allow-other-keys)
+                                           #t #f)))
+               (let ((unrecognized-keywords
+                      (lset-difference (lambda (x y)
+                                         (let ((x (if (keyword? x) x (syntax->datum x)))
+                                               (y (if (keyword? y) y (syntax->datum x))))
+                                           (eq? x y)))
+                                       (filter (compose keyword? syntax->datum)
+                                               #'(args-spec ...))
+                                       (list #:key #:key* #:allow-other-keys))))
+                 (unless (null? unrecognized-keywords)
+                   (raise-exception
+                    (condition (unrecognized-keyword-assertion)
+                               (irritants-condition unrecognized-keywords)))))
                #`(apply (lambda* #,(append positionals
                                            (cons #:key unary-arguments)
                                            (map (lambda (x)
@@ -191,6 +210,29 @@ However, #:optional and #:rest are not supported."
                                                (list)))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
+                          ;; Test for correct number of positional
+                          ;; arguments.
+                          (unless (= (length positionals)
+                                     #,(length positionals))
+                            (raise-exception
+                             (condition (invalid-positional-arguments-arity-assertion)
+                                        (irritants-condition positionals))))
+                          ;; Test if all keywords are recognized.
+                          (let ((unrecognized-keywords
+                                 (lset-difference eq?
+                                                  (filter keyword? rest)
+                                                  '#,(map (lambda (x)
+                                                            (symbol->keyword
+                                                             (syntax->datum (syntax-case x ()
+                                                                              ((arg _ ...) #'arg)
+                                                                              (arg #'arg)))))
+                                                          (append unary-arguments
+                                                                  nary-arguments)))))
+                            (unless (or #,allow-other-keys?
+                                        (null? unrecognized-keywords))
+                              (raise-exception
+                               (condition (unrecognized-keyword-assertion)
+                                          (irritants-condition unrecognized-keywords)))))
                           (append positionals
                                   (group-keyword-arguments
                                    rest (list #,@(map (lambda (x)
@@ -224,10 +266,42 @@ Like lambda**, syntax-lambda** supports #:allow-other-keys.
    #'#:foo #'1 #'#:bar #'2)
 => #'1
 
-#:optional and #:rest are not supported."
+#:optional and #:rest are not supported.
+
+If an unrecognized keyword is passed to the lambda function, a
+&unrecognized-keyword-assertion condition is raised. If a unary
+keyword argument is passed more than one argument, a
+&invalid-keyword-arity-assertion condition is raised. If a wrong
+number of positional arguments is passed, a
+&invalid-positional-arguments-arity-assertion condition is raised."
   (lambda args
-    (apply (lambda** formal-args body ...)
-           (unsyntax-keywords args))))
+    (guard (exception
+            ((unrecognized-keyword-assertion? exception)
+             (raise-exception
+              (condition (unrecognized-keyword-assertion)
+                         (irritants-condition
+                          ;; Resyntax irritant keywords.
+                          (map (lambda (irritant-keyword)
+                                 (find (lambda (arg)
+                                         (eq? (syntax->datum arg)
+                                              irritant-keyword))
+                                       args))
+                               (condition-irritants exception))))))
+            ((invalid-keyword-arity-assertion? exception)
+             (raise-exception
+              (condition (invalid-keyword-arity-assertion)
+                         (irritants-condition
+                          ;; Resyntax irritant keyword.
+                          (match (condition-irritants exception)
+                            ((irritant-keyword . irritant-args)
+                             (cons (find (lambda (arg)
+                                           (eq? (syntax->datum arg)
+                                                irritant-keyword))
+                                         args)
+                                   irritant-args))))))))
+      (apply
+       (lambda** formal-args body ...)
+       (unsyntax-keywords args)))))
 
 (define (filter-mapi proc lst)
   "Indexed filter-map. Like filter-map, but PROC calls are (proc item
