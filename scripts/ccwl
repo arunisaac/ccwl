@@ -24,12 +24,15 @@
 
 ;;; Code:
 
-(use-modules (srfi srfi-28)
+(use-modules (rnrs exceptions)
+             (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
              (ccwl ccwl)
+             (ccwl conditions)
              (ccwl cwl)
-             (ccwl graphviz))
+             (ccwl graphviz)
+             (ccwl ui))
 
 (define (invalid-option opt name arg result)
   (error "Invalid option" name))
@@ -84,8 +87,14 @@ Compile SOURCE-FILE.
          ((cond
            ((string=? to "cwl") workflow->cwl)
            ((string=? to "dot") workflow->dot))
-          (load (canonicalize-path (assq-ref args 'source-file))
-                read-syntax)
+          (guard (exception
+                  ;; Handle syntax violation exceptions by reporting
+                  ;; them and exiting.
+                  ((ccwl-violation? exception)
+                   (report-ccwl-violation exception)
+                   (exit #f)))
+            (load (canonicalize-path (assq-ref args 'source-file))
+                  read-syntax))
           (current-output-port)))))
     ((program args ...)
      (let ((args (args-fold args
