@@ -24,6 +24,9 @@
              (ccwl conditions)
              (ccwl utils))
 
+(define plist-ref
+  (@@ (ccwl utils) plist-ref))
+
 (test-begin "utils")
 
 (test-equal "pairify"
@@ -33,9 +36,6 @@
 (test-equal "plist->alist"
   '((spam . 1) (ham . 2) (eggs . 3))
   (plist->alist (list #:spam 1 #:ham 2 #:eggs 3)))
-
-(define plist-ref
-  (@@ (ccwl utils) plist-ref))
 
 (test-equal "plist-ref"
   2
