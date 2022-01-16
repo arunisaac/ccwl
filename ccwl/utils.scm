@@ -150,8 +150,8 @@ for example, be invoked as:
 => (1 2 123 (1 2 3))
 
 lambda** also supports default values for both unary and n-ary keyword
-arguments. Note that the default value for unary arguments is #f,
-while that for n-ary arguments is the empty list. For example,
+arguments. Note that the default default value for unary arguments is
+#f, while that for n-ary arguments is the empty list. For example,
 
 ((lambda** (foo bar #:key aal vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1) uruthi)
    (list foo bar aal vale pal naal irandu sol uruthi))

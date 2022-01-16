@@ -73,12 +73,12 @@
      (list foo aal vale pal naal irandu sol))
    1 2 #:vale 123 #:naal 321 456))
 
-(test-equal "default value of lambda** unary argument should be #f"
+(test-equal "default default value of lambda** unary argument should be #f"
   #f
   ((lambda** (#:key foo)
      foo)))
 
-(test-equal "default value of lambda** n-ary argument should be the empty list"
+(test-equal "default default value of lambda** n-ary argument should be the empty list"
   '()
   ((lambda** (#:key* foo)
      foo)))
