@@ -479,30 +479,37 @@ represented by <step> objects."
                     (syntax->datum (pairify #'(args ...)))))
          (() #t)
          (missing-parameters
-          (scm-error 'misc-error
-                     #f
-                     "Step `~S' missing required parameters `~S'"
-                     (list step-id missing-parameters)
-                     #f)))
+          (raise-exception
+           ;; TODO: Report entire form, not just the name of the
+           ;; step.
+           (condition (ccwl-violation #'function)
+                      (formatted-message "Step ~a missing required parameters ~a"
+                                         step-id
+                                         (map symbol->keyword missing-parameters))))))
        ;; Test for unknown keys.
        (for-each (match-lambda
                    ((arg . value)
-                    (unless (memq (keyword->symbol arg)
+                    (unless (memq (keyword->symbol (syntax->datum arg))
                                   (function-input-keys function-object))
-                      (scm-error 'misc-error
-                                 #f
-                                 "ccwl command `~S' does not accept input key `~S'. Accepted keys are `~S'."
-                                 (list (syntax->datum #'ccwl-function)
-                                       arg
-                                       (function-input-keys function-object))
-                                 #f))
-                    (unless (memq value input-key-symbols)
-                      (scm-error 'misc-error
-                                 #f
-                                 "ccwl step `~S' supplied with unknown key `~S'. Known keys at this step are `~S'."
-                                 (list step-id value input-key-symbols)
-                                 #f))))
-                 (syntax->datum (pairify #'(args ...))))
+                      (raise-exception
+                       ;; TODO: Report arg and value, not just arg.
+                       (condition (ccwl-violation arg)
+                                  ;; TODO: Do not report accepted keys
+                                  ;; that have already been satisfied.
+                                  (formatted-message "Step ~a does not accept input key ~a. Accepted keys are ~a."
+                                                     step-id
+                                                     (syntax->datum arg)
+                                                     (map symbol->keyword
+                                                          (function-input-keys function-object))))))
+                    (unless (memq (syntax->datum value)
+                                  input-key-symbols)
+                      (raise-exception
+                       (condition (ccwl-violation value)
+                                  (formatted-message "Step ~a supplied with unknown key ~a. Known keys at this step are ~a."
+                                                     step-id
+                                                     (syntax->datum value)
+                                                     input-key-symbols))))))
+                 (pairify #'(args ...)))
        (values (append (remove key-step input-keys)
                        (map (lambda (output)
                               (key (output-id output) step-id))
