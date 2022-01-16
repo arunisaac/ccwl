@@ -465,7 +465,10 @@ represented by <step> objects."
            (step-id (syntax->datum #'step-id)))
        ;; Test for undefined command.
        (unless function-object
-         (error "Undefined ccwl command:" (syntax->datum #'function)))
+         (raise-exception
+          (condition (ccwl-violation #'function)
+                     (formatted-message "Undefined ccwl command ~a"
+                                        (syntax->datum #'function)))))
        ;; Test for missing required parameters.
        ;; TODO: Filter out optional parameters.
        (match (lset-difference
