@@ -273,37 +273,67 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   (lambda (x)
     (syntax-case x ()
       ((_ args ...)
-       (apply (syntax-lambda** (#:key stdin #:key* inputs outputs run other)
-                (unless run
-                  (error "#:run key required in command definition" (syntax->datum x)))
-                #`(make-command
-                   (list #,@(map (lambda (input-spec)
-                                   (let ((id (input-spec-id input-spec)))
-                                     #`(set-input-prefix
-                                        (set-input-position #,(input input-spec)
-                                                            #,(run-arg-position id run))
-                                        #,(run-arg-prefix id run))))
-                                 inputs))
-                   (list #,@(map output outputs))
-                   (list #,@(map (lambda (x)
-                                   (syntax-case x ()
-                                     ;; Replace input symbol with quoted symbol.
-                                     (input (identifier? #'input)
-                                      #''input)
-                                     ;; Leave string as is.
-                                     (string-arg (string? (syntax->datum #'string-arg))
-                                      #'string-arg)
-                                     ;; Replace prefixed input symbol with
-                                     ;; quoted symbol.
-                                     ((prefix input) (and (string? (syntax->datum #'prefix))
-                                                          (identifier? #'input))
-                                      #''input)
-                                     (_ (error "Invalid command element:"
-                                               (syntax->datum x)))))
-                                 run))
-                   #,(and stdin #`'#,stdin)
-                   (list #,@other)))
-              #'(args ...))))))
+       (guard (exception
+               ((unrecognized-keyword-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ((irritant _ ...)
+                    (condition (ccwl-violation irritant)
+                               (formatted-message "Unrecognized keyword argument ~a in command definition"
+                                                  (syntax->datum irritant)))))))
+               ((invalid-keyword-arity-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ;; TODO: Report all extra arguments, not just the
+                   ;; first one.
+                   ((keyword _ extra _ ...)
+                    (condition (ccwl-violation extra)
+                               (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                  (syntax->datum extra)
+                                                  (syntax->datum keyword)))))))
+               ((invalid-positional-arguments-arity-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ;; TODO: Report all extra positional arguments, not
+                   ;; just the first one.
+                   ((extra _ ...)
+                    (condition (ccwl-violation extra)
+                               (formatted-message "Unexpected extra positional argument ~a in command definition"
+                                                  (syntax->datum extra))))))))
+         (apply (syntax-lambda** (#:key stdin #:key* inputs outputs run other)
+                  (when (null? run)
+                    (raise-exception
+                     (condition (ccwl-violation x)
+                                (formatted-message "Missing ~a key in command definition"
+                                                   #:run))))
+                  #`(make-command
+                     (list #,@(map (lambda (input-spec)
+                                     (let ((id (input-spec-id input-spec)))
+                                       #`(set-input-prefix
+                                          (set-input-position #,(input input-spec)
+                                                              #,(run-arg-position id run))
+                                          #,(run-arg-prefix id run))))
+                                   inputs))
+                     (list #,@(map output outputs))
+                     (list #,@(map (lambda (x)
+                                     (syntax-case x ()
+                                       ;; Replace input symbol with quoted symbol.
+                                       (input (identifier? #'input)
+                                              #''input)
+                                       ;; Leave string as is.
+                                       (string-arg (string? (syntax->datum #'string-arg))
+                                                   #'string-arg)
+                                       ;; Replace prefixed input symbol with
+                                       ;; quoted symbol.
+                                       ((prefix input) (and (string? (syntax->datum #'prefix))
+                                                            (identifier? #'input))
+                                        #''input)
+                                       (_ (error "Invalid command element:"
+                                                 (syntax->datum x)))))
+                                   run))
+                     #,(and stdin #`'#,stdin)
+                     (list #,@other)))
+                #'(args ...)))))))
 
 (define (cwl-workflow file)
   (define (parameters->id+type parameters)

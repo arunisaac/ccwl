@@ -85,4 +85,30 @@
           (else (ccwl-violation? exception)))
     (output #'(message #:type int string))))
 
+(test-assert "command, when passed positional arguments, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (macroexpand
+     '(command foo
+               #:inputs (message #:type string)
+               #:run "echo" message
+               #:outputs (stdout #:type stdout)))))
+
+(test-assert "command, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (macroexpand
+     '(command #:foo (message #:type string)
+               #:run "echo" message
+               #:outputs (stdout #:type stdout)))))
+
+(test-assert "command, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (macroexpand
+     '(command #:inputs (message #:type string)
+               #:run "echo" message
+               #:outputs (stdout #:type stdout)
+               #:stdin "foo" "bar"))))
+
 (test-end "ccwl")
