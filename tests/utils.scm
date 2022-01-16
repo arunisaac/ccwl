@@ -132,6 +132,16 @@
              (list foo aal vale pal naal irandu sol))
            #'1 #'2 #'#:vale #'123 #'#:naal #'321 #'456)))
 
+(test-equal "default default value of syntax-lambda** unary argument should be #f"
+  #f
+  ((syntax-lambda** (#:key foo)
+     foo)))
+
+(test-equal "default default value of syntax-lambda** n-ary argument should be the empty list"
+  '()
+  ((syntax-lambda** (#:key* foo)
+     foo)))
+
 ;; We cannot use test-equal to compare syntax objects, since
 ;; test-equal does not preserve the lexical contexts of the test
 ;; expressions.

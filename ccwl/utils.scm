@@ -252,7 +252,8 @@ number of positional arguments is passed, a
 => (#'1 #'2 #'123 (#'1 #'2 #'3))
 
 Like lambda**, syntax-lambda** supports default values for
-arguments. For example,
+arguments. The default default value for unary arguments is #f, while
+that for n-ary arguments is the empty list. For example,
 
 ((syntax-lambda** (foo aal #:key vale (pal 9) #:key* naal (irandu 7) (sol 3 2 1))
    (list foo aal vale pal naal irandu sol))
