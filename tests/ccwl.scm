@@ -24,6 +24,9 @@
 (define input
   (@@ (ccwl ccwl) input))
 
+(define output
+  (@@ (ccwl ccwl) output))
+
 (test-begin "ccwl")
 
 (test-assert "stdin input should not have inputBinding"
@@ -66,5 +69,20 @@
   (guard (exception
           (else (ccwl-violation? exception)))
     (input #'(message #:type int string))))
+
+(test-assert "output, when passed more than one positional argument, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (output #'(message string))))
+
+(test-assert "output, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (output #'(message #:foo string))))
+
+(test-assert "output, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (output #'(message #:type int string))))
 
 (test-end "ccwl")

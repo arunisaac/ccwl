@@ -149,9 +149,39 @@
   "Return syntax to build an <output> object from OUTPUT-SPEC."
   (syntax-case output-spec ()
     ((id args ...) (identifier? #'id)
-     (apply (syntax-lambda** (id #:key (type #'File) binding source #:key* other)
-              #`(make-output '#,id '#,type #,binding #,source '#,other))
-            #'(id args ...)))
+     (guard (exception
+             ((unrecognized-keyword-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ((irritant _ ...)
+                  (condition (ccwl-violation irritant)
+                             (formatted-message "Unrecognized keyword argument ~a in output"
+                                                (syntax->datum irritant)))))))
+             ((invalid-keyword-arity-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ;; TODO: Report all extra arguments, not just the
+                 ;; first one.
+                 ((keyword _ extra _ ...)
+                  (condition (ccwl-violation extra)
+                             (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                (syntax->datum extra)
+                                                (syntax->datum keyword)))))))
+             ((invalid-positional-arguments-arity-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ;; TODO: Report all extra positional arguments, not
+                 ;; just the first one.
+                 ((id extra _ ...)
+                  (condition (ccwl-violation extra)
+                             (formatted-message "Unexpected extra positional argument ~a in output"
+                                                (syntax->datum extra))))
+                 (()
+                  (condition (ccwl-violation output-spec)
+                             (formatted-message "Output has no identifier")))))))
+       (apply (syntax-lambda** (id #:key (type #'File) binding source #:key* other)
+                #`(make-output '#,id '#,type #,binding #,source '#,other))
+              #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
