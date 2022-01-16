@@ -58,18 +58,6 @@
      (cons (cons first second)
            (pairify tail)))))
 
-(define (plist->alist plist)
-  "Convert the property list PLIST to an association list. A property
-list is a list of the form (#:key1 value1 #:key2 value2 ...). For
-example,
-
-(plist->alist (list #:spam 1 #:ham 2 #:eggs 3))
-=> ((spam . 1) (ham . 2) (eggs . 3))"
-  (map (match-lambda
-         ((key . value)
-          (cons (keyword->symbol key) value)))
-       (pairify plist)))
-
 (define* (group-keyword-arguments args #:optional (unary-keywords (list)))
   "Group ARGS, a list of keyword arguments of arbitrary arity. Return
 a list of unary keyword arguments. n-ary arguments are grouped

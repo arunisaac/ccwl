@@ -33,10 +33,6 @@
   '((1 . 2) (3 . 4) (5 . 6))
   (pairify (list 1 2 3 4 5 6)))
 
-(test-equal "plist->alist"
-  '((spam . 1) (ham . 2) (eggs . 3))
-  (plist->alist (list #:spam 1 #:ham 2 #:eggs 3)))
-
 (test-equal "plist-ref"
   2
   (plist-ref (list #:spam 1 #:ham 2 #:eggs 3)
