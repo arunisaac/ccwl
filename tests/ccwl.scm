@@ -16,8 +16,13 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (srfi srfi-64)
-             (ccwl ccwl))
+(use-modules (rnrs exceptions)
+             (srfi srfi-64)
+             (ccwl ccwl)
+             (ccwl conditions))
+
+(define input
+  (@@ (ccwl ccwl) input))
 
 (test-begin "ccwl")
 
@@ -46,5 +51,20 @@
                  (list (output-id output)
                        (output-type output)))
                (cwl-workflow-outputs cwl-workflow)))))
+
+(test-assert "input, when passed more than one positional argument, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (input #'(message string))))
+
+(test-assert "input, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (input #'(message #:foo string))))
+
+(test-assert "input, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (input #'(message #:type int string))))
 
 (test-end "ccwl")

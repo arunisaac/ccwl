@@ -23,6 +23,9 @@
 ;;; Code:
 
 (define-module (ccwl ccwl)
+  #:use-module ((rnrs conditions) #:select (condition
+                                            condition-irritants))
+  #:use-module ((rnrs exceptions) #:select (guard (raise . raise-exception)))
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-2)
   #:use-module (srfi srfi-9)
@@ -30,6 +33,7 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
   #:use-module (ice-9 match)
+  #:use-module (ccwl conditions)
   #:use-module (ccwl utils)
   #:use-module (yaml)
   #:export (command?
@@ -89,16 +93,46 @@
 (define (input input-spec)
   "Return syntax to build an <input> object from INPUT-SPEC."
   (syntax-case input-spec ()
-    ((id args ...) (identifier? #'id)
-     (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) #:key* other)
-              (let ((position #f)
-                    (prefix #f))
-                #`(make-input '#,id '#,type #,label
-                              #,(if (unspecified-default? default)
-                                    #'(make-unspecified-default)
-                                    default)
-                              #,position #,prefix '#,other)))
-            #'(id args ...)))
+    ((id args ...)
+     (guard (exception
+             ((unrecognized-keyword-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ((irritant _ ...)
+                  (condition (ccwl-violation irritant)
+                             (formatted-message "Unrecognized keyword argument ~a in input"
+                                                (syntax->datum irritant)))))))
+             ((invalid-keyword-arity-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ;; TODO: Report all extra arguments, not just the
+                 ;; first one.
+                 ((keyword _ extra _ ...)
+                  (condition (ccwl-violation extra)
+                             (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                (syntax->datum extra)
+                                                (syntax->datum keyword)))))))
+             ((invalid-positional-arguments-arity-assertion? exception)
+              (raise-exception
+               (match (condition-irritants exception)
+                 ;; TODO: Report all extra positional arguments, not
+                 ;; just the first one.
+                 ((id extra _ ...)
+                  (condition (ccwl-violation extra)
+                             (formatted-message "Unexpected extra positional argument ~a in input"
+                                                (syntax->datum extra))))
+                 (()
+                  (condition (ccwl-violation input-spec)
+                             (formatted-message "Input has no identifier")))))))
+       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) #:key* other)
+                (let ((position #f)
+                      (prefix #f))
+                  #`(make-input '#,id '#,type #,label
+                                #,(if (unspecified-default? default)
+                                      #'(make-unspecified-default)
+                                      default)
+                                #,position #,prefix '#,other)))
+              #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
     (_ (error "Invalid input:" (syntax->datum input-spec)))))
 
@@ -167,9 +201,15 @@ object."
   "Return the identifier symbol of INPUT-SPEC."
   (syntax->datum
    (syntax-case input-spec ()
-     ((id _ ...) (identifier? #'id) #'id)
+     ((id _ ...)
+      (if (not (identifier? #'id))
+          (raise-exception
+           (condition (ccwl-violation input-spec)
+                      (formatted-message "Input has no identifier")))
+          #'id))
      (id (identifier? #'id) #'id)
-     (_ (error "Invalid input:" (syntax->datum input-spec))))))
+     (_ (raise-exception (condition (ccwl-violation input-spec)
+                                    (formatted-message "Invalid input")))))))
 
 (define (run-arg-position input-id run-args)
   "Return the position of input identified by symbol INPUT-ID in
