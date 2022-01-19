@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -50,7 +50,7 @@ Download release tarballs.
                           release-file))
                 "refs/tags/v*")
   (insert "
-Download [[https://systemreboot.net/files/misc/arunisaac.pub][public signing key]].
+Download [[https://systemreboot.net/about/arunisaac.pub][public signing key]].
 
 Browse the [[https://github.com/arunisaac/ccwl][development version]] of ccwl hosted on GitHub.")
   ;; Fix tarball filenames.
