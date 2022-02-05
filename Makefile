@@ -152,14 +152,20 @@ distcheck: $(dist_archive)
 
 # Build website
 
-website: website/index.html
+website: website/index.html website/manual/dev/en
 
 website/index.html: README.org build-aux/build-home-page.el
 	$(EMACS) -Q --batch --load build-aux/build-home-page.el --funcall build-website
+
+website/manual/dev/en: $(doc_html)
+	rm -rf $@
+	mkdir -p $(dir $@)
+	cp -vr $^ $@
 
 # Clean
 
 clean:
 	rm -f $(objects) $(dist_archive) $(dist_archive).asc Makefile.include website/index.html \
               $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT) \
-	      $(doc_html) $(doc_info) doc/skribilo.go
+	      $(doc_info) doc/skribilo.go
+	rm -rf $(doc_html) website/manual
