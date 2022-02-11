@@ -62,7 +62,6 @@ build system scripts. You will have to ensure that the necessary
 dependencies (guile and guile-libyaml) are installed, and then run
 
 #+BEGIN_SRC shell
-  $ ./bootstrap.sh
   $ ./configure; make; make install
 #+END_SRC
 
