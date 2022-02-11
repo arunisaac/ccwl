@@ -59,7 +59,9 @@ by running
 
 You can also install ccwl more traditionally using the provided GNU
 build system scripts. You will have to ensure that the necessary
-dependencies (guile and guile-libyaml) are installed, and then run
+dependencies (guile and guile-libyaml are core dependencies; graphviz,
+cwltool and skribilo are required to build the manual) are installed,
+and then run
 
 #+BEGIN_SRC shell
   $ ./configure; make; make install
