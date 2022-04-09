@@ -58,7 +58,7 @@ godir = $(libdir)/guile/$(guile_effective_version)/site-ccache/$(top_level_modul
 all: $(objects)
 
 %.go: %.scm
-	$(GUILD) compile -L . -o $@ $<
+	GUILE_AUTO_COMPILE=0 $(GUILD) compile -L . -o $@ $<
 
 # Run tests
 
