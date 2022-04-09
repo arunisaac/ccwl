@@ -1,4 +1,4 @@
-#! /usr/bin/env guile
+#! /usr/bin/env guile --no-auto-compile
 !#
 ;;; ccwl --- Concise Common Workflow Language
 ;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
