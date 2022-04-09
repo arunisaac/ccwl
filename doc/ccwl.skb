@@ -20,6 +20,7 @@
              (doc skribilo))
 
 (document :title [Concise Common Workflow Language]
+  (toc)
   (chapter :title [Introduction]
     (p [,(abbr :short "CWL" :long "Common Workflow
 Language") is an open standard for describing analysis workflows and
