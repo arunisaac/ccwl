@@ -42,6 +42,7 @@ doc_info = $(doc_sources:.skb=.info)
 doc_html = $(doc_sources:.skb=.html)
 doc_data = doc/hello.c.gz doc/hello.tar doc/hello.txt \
            doc/spell-check-text.txt doc/dictionary
+fonts = $(addprefix $(GUIX_ENVIRONMENT)/share/fonts/web/, charter_regular.woff2 FiraCode-Regular.woff2 FiraCode-SemiBold.woff2)
 distribute_files = $(sources) $(scripts) $(tests) $(test_data) \
                    $(doc_sources) doc/skribilo.scm $(doc_data) $(DOC_SCM) $(DOC_OTHER) \
                    pre-inst-env guix.scm Makefile configure configure.scm \
@@ -152,7 +153,7 @@ distcheck: $(dist_archive)
 
 # Build website
 
-website: website/index.html website/manual/dev/en
+website: website/index.html website/manual/dev/en website/fonts
 
 website/index.html: README.org build-aux/build-home-page.el
 	$(EMACS) -Q --batch --load build-aux/build-home-page.el --funcall build-website
@@ -162,10 +163,15 @@ website/manual/dev/en: $(doc_html)
 	mkdir -p $(dir $@)
 	cp -vr $^ $@
 
+website/fonts: $(fonts)
+	rm -rf $@
+	mkdir -p $@
+	cp -v $^ $@/
+
 # Clean
 
 clean:
 	rm -f $(objects) $(dist_archive) $(dist_archive).asc Makefile.include website/index.html \
               $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT) \
 	      $(doc_info) doc/skribilo.go
-	rm -rf $(doc_html) website/manual
+	rm -rf $(doc_html) website/manual website/fonts
