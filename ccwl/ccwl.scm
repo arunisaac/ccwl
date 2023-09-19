@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -139,7 +139,7 @@
 (define-immutable-record-type <output>
   (make-output id type binding source other)
   output?
-  (id output-id)
+  (id output-id set-output-id)
   (type output-type)
   (binding output-binding)
   (source output-source set-output-source)
