@@ -539,13 +539,16 @@ a <key> object, in STEPS, a list of <step> objects. If no such
                                        (eq? (step-id step)
                                             (key-step key)))
                                      steps)))
-    (with-syntax ((key-cwl-id (datum->syntax #f (key-cwl-id key))))
-      #`(set-output-source (find (lambda (output)
-                                   (eq? (output-id output)
-                                        'key-cwl-id))
-                                 (function-outputs
-                                  #,(step-run step-with-output)))
-                           #,(cwl-key-address key)))))
+    (with-syntax ((key-name (datum->syntax #f (key-name key)))
+                  (key-cwl-id (datum->syntax #f (key-cwl-id key))))
+      #`(set-output-id
+         (set-output-source (find (lambda (output)
+                                    (eq? (output-id output)
+                                         'key-cwl-id))
+                                  (function-outputs
+                                   #,(step-run step-with-output)))
+                            #,(cwl-key-address key))
+         'key-name))))
 
 (define-syntax workflow
   (lambda (x)
