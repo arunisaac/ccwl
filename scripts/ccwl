@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# -*- mode: scheme; -*-
 exec guile --no-auto-compile -e main -s "$0" "$@"
 !#
 ;;; ccwl --- Concise Common Workflow Language
