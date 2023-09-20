@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -110,5 +110,22 @@
                #:run "echo" message
                #:outputs (stdout #:type stdout)
                #:stdin "foo" "bar"))))
+
+;; TODO: Define this in the lexical scope of the test that requires
+;; it.
+(define print
+  (command #:inputs (message #:type string)
+           #:run "echo" message
+           #:outputs (printed-message #:type stdout)))
+
+(test-equal "rename should work even on the final output of a workflow"
+  (map output-id
+       (workflow-outputs
+        (workflow ((message1 #:type string)
+                   (message2 #:type string))
+          (tee (pipe (print (print1) #:message message1)
+                     (rename #:out1 printed-message))
+               (print (print2) #:message message2)))))
+  (list 'out1 'printed-message))
 
 (test-end "ccwl")
