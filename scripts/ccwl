@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
-exec guile --no-auto-compile -s "$0" "$@"
+exec guile --no-auto-compile -e main -s "$0" "$@"
 !#
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -47,7 +47,7 @@ exec guile --no-auto-compile -s "$0" "$@"
             (acons 'help #t result))))
 
 (define main
-  (match-lambda*
+  (match-lambda
     ((program "compile" args ...)
      (let* ((args (args-fold args
                              (list (option (list #\t "to") #t #f
@@ -119,5 +119,3 @@ To get usage information for one of these sub-commands, run
                         program program)
                 (current-error-port))
        (exit (assq 'help args))))))
-
-(apply main (command-line))
