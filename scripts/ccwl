@@ -46,67 +46,81 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
           (lambda (opt name arg result)
             (acons 'help #t result))))
 
-(define main
-  (match-lambda
-    ((program "compile" args ...)
-     (let* ((args (args-fold args
-                             (list (option (list #\t "to") #t #f
-                                           (lambda (opt name arg result)
-                                             (let ((supported (list "cwl" "dot")))
-                                               (unless (member arg supported)
-                                                 (scm-error 'misc-error
-                                                            #f
-                                                            "Invalid target ~A argument ~S. Supported targets are ~A."
-                                                            (list (if (char? name)
-                                                                      (string #\- name)
-                                                                      (string-append "--" name))
-                                                                  arg
-                                                                  (string-join supported ", "))
-                                                            #f)))
-                                             (acons 'to arg result)))
-                                   %help-option)
-                             invalid-option
-                             (lambda (arg result)
-                               (acons 'source-file arg result))
-                             '((to . "cwl")))))
-       (when (or (assq 'help args)
-                 (not (assq-ref args 'source-file)))
-         (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
+(define (main args)
+  (with-exception-handler
+      (lambda (condition)
+        (display-backtrace (make-stack #t) (current-error-port))
+        (newline (current-error-port))
+        (write condition (current-error-port))
+        (newline (current-error-port))
+        (display "
+You have discovered a bug!
+Please report this to https://github.com/arunisaac/ccwl/issues
+Thank you!
+"
+                 (current-error-port))
+        (exit #f))
+    (lambda ()
+      (match args
+        ((program "compile" args ...)
+         (let* ((args (args-fold args
+                                 (list (option (list #\t "to") #t #f
+                                               (lambda (opt name arg result)
+                                                 (let ((supported (list "cwl" "dot")))
+                                                   (unless (member arg supported)
+                                                     (scm-error 'misc-error
+                                                                #f
+                                                                "Invalid target ~A argument ~S. Supported targets are ~A."
+                                                                (list (if (char? name)
+                                                                          (string #\- name)
+                                                                          (string-append "--" name))
+                                                                      arg
+                                                                      (string-join supported ", "))
+                                                                #f)))
+                                                 (acons 'to arg result)))
+                                       %help-option)
+                                 invalid-option
+                                 (lambda (arg result)
+                                   (acons 'source-file arg result))
+                                 '((to . "cwl")))))
+           (when (or (assq 'help args)
+                     (not (assq-ref args 'source-file)))
+             (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
 Compile SOURCE-FILE.
 
   -t, --to=TARGET    compile SOURCE-FILE to TARGET language;
                      Supported targets are cwl (default) and dot.
 
 "
-                          program)
-                  (current-error-port))
-         (exit (assq 'help args)))
-       ;; We don't need to compile ccwl files. Loading is sufficient
-       ;; for our purposes. Besides, compiling would fail since the
-       ;; workflow macro cannot access command definitions.
-       (set! %load-should-auto-compile #f)
-       (let ((to (assq-ref args 'to)))
-         ((cond
-           ((string=? to "cwl") workflow->cwl)
-           ((string=? to "dot") workflow->dot))
-          (guard (exception
-                  ;; Handle syntax violation exceptions by reporting
-                  ;; them and exiting.
-                  ((ccwl-violation? exception)
-                   (report-ccwl-violation exception)
-                   (exit #f)))
-            (load (canonicalize-path (assq-ref args 'source-file))
-                  read-syntax))
-          (current-output-port)))))
-    ((program args ...)
-     (let ((args (args-fold args
-                            (list %help-option)
-                            (lambda (opt name arg result)
-                              result)
-                            (lambda (arg result)
-                              result)
-                            '())))
-       (display (format "Usage: ~a COMMAND [OPTIONS] [ARGS]
+                              program)
+                      (current-error-port))
+             (exit (assq 'help args)))
+           ;; We don't need to compile ccwl files. Loading is sufficient
+           ;; for our purposes. Besides, compiling would fail since the
+           ;; workflow macro cannot access command definitions.
+           (set! %load-should-auto-compile #f)
+           (let ((to (assq-ref args 'to)))
+             ((cond
+               ((string=? to "cwl") workflow->cwl)
+               ((string=? to "dot") workflow->dot))
+              (guard (exception
+                      ;; Handle syntax violation exceptions by reporting
+                      ;; them and exiting.
+                      ((ccwl-violation? exception)
+                       (report-ccwl-violation exception)
+                       (exit #f)))
+                (load (canonicalize-path (assq-ref args 'source-file))
+                      read-syntax))
+              (current-output-port)))))
+        ((program args ...)
+         (let ((args (args-fold args
+                                (list %help-option)
+                                (lambda (opt name arg result)
+                                  result)
+                                (lambda (arg result)
+                                  result)
+                                '())))
+           (display (format "Usage: ~a COMMAND [OPTIONS] [ARGS]
 
 COMMAND must be one of the sub-commands listed below:
 
@@ -116,6 +130,6 @@ To get usage information for one of these sub-commands, run
   ~a COMMAND --help
 
 "
-                        program program)
-                (current-error-port))
-       (exit (assq 'help args))))))
+                            program program)
+                    (current-error-port))
+           (exit (assq 'help args))))))))
