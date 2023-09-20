@@ -406,6 +406,7 @@ object or a <cwl-workflow> object."
   "Return the ccwl function object (a <command> or a <cwl-workflow>
 object) described by syntax X. If such a ccwl function is not defined,
 return #f."
+  ;; TODO: What if function object is defined in lexical scope?
   (let ((var (module-variable (current-module)
                               (syntax->datum x))))
     (and var
