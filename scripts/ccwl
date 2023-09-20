@@ -30,6 +30,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
              (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
+             (ice-9 exceptions)
              (ccwl ccwl)
              (ccwl conditions)
              (ccwl cwl)
@@ -50,16 +51,21 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 (define (main args)
   (with-exception-handler
       (lambda (condition)
-        (display-backtrace (make-stack #t) (current-error-port))
-        (newline (current-error-port))
-        (write condition (current-error-port))
-        (newline (current-error-port))
-        (display "
+        ;; Catch uncaught exceptions, print their backtrace and
+        ;; request the user report an issue. Pass quit exceptions
+        ;; through since those may be raised by exceptions that have
+        ;; been handled.
+        (unless (quit-exception? condition)
+          (display-backtrace (make-stack #t) (current-error-port))
+          (newline (current-error-port))
+          (write condition (current-error-port))
+          (newline (current-error-port))
+          (display "
 You have discovered a bug!
 Please report this to https://github.com/arunisaac/ccwl/issues
 Thank you!
 "
-                 (current-error-port))
+                   (current-error-port)))
         (exit #f))
     (lambda ()
       (match args
