@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -28,7 +28,8 @@
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
-  #:export (workflow->cwl))
+  #:export (workflow->cwl
+            command->cwl))
 
 (define %cwl-version "v1.2")
 
@@ -100,6 +101,12 @@ association list."
                     (and (output-binding output)
                          (cons 'outputBinding (output-binding output)))))
     ,@(output-other output)))
+
+(define (command->cwl command port)
+  "Render @var{command}, a @code{<command>} object, to @var{port} as a
+CWL YAML specification."
+  (scm->yaml (command->cwl-scm command)
+             port))
 
 (define (command->cwl-scm command)
   "Render COMMAND, a <command> object, into a CWL tree."
