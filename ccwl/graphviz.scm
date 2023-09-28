@@ -33,7 +33,15 @@
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
   #:export (workflow->dot
-            command->dot))
+            command->dot
+            workflow-or-command->dot))
+
+(define workflow-or-command->dot
+  (match-lambda*
+    (((? workflow? workflow) port)
+     (workflow->dot workflow port))
+    (((? command? command) port)
+     (command->dot command port))))
 
 (define (workflow->dot workflow port)
   "Render WORKFLOW, a <workflow> object, to PORT in the graphviz dot
