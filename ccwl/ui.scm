@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -21,7 +21,18 @@
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-28)
   #:use-module (ccwl conditions)
-  #:export (report-ccwl-violation))
+  #:export (report-formatted-message
+            report-ccwl-violation))
+
+(define (report-formatted-message exception)
+  "Report @var{exception}, a @code{&formatted-message} condition to the
+user."
+  (display (apply format
+                  (formatted-message-format exception)
+                  (map (compose bold magenta)
+                       (formatted-message-arguments exception)))
+           (current-error-port))
+  (newline (current-error-port)))
 
 (define (repeat thunk n)
   "Call THUNK N times."
@@ -161,12 +172,8 @@ red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
     (display (bold (red "error:"))
              (current-error-port))
     (display " " (current-error-port))
-    (display (apply format
-                    (formatted-message-format exception)
-                    (map (compose bold magenta)
-                         (formatted-message-arguments exception)))
-             (current-error-port))
-    (newline (current-error-port))
+    (when (formatted-message? exception)
+      (report-formatted-message exception))
     (display-with-line-numbers (source-in-context file line column)
                                (current-error-port)
                                (max 1 line))))
