@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -32,7 +32,8 @@
   #:use-module (ice-9 string-fun)
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
-  #:export (workflow->dot))
+  #:export (workflow->dot
+            command->dot))
 
 (define (workflow->dot workflow port)
   "Render WORKFLOW, a <workflow> object, to PORT in the graphviz dot
@@ -89,11 +90,7 @@ language."
   "Convert WORKFLOW, a <workflow> object, to a <graph> object."
   (graph 'workflow
          #:properties '((bgcolor . "#eeeeee"))
-         #:nodes (map (lambda (step)
-                        (graph-node (step-id step)
-                                    '((fillcolor . "lightgoldenrodyellow")
-                                      (shape . "record")
-                                      (style . "filled"))))
+         #:nodes (map (compose step-node step-id)
                       (workflow-steps workflow))
          #:edges (append
                   ;; Connect steps and inputs to steps.
@@ -113,27 +110,71 @@ language."
                                  ((source _) source))
                                (output-id output)))
                        (workflow-outputs workflow)))
-         #:subgraphs (list (graph 'cluster_inputs
-                                  #:properties '((label . "Workflow Inputs")
-                                                 (rank . "same")
-                                                 (style . "dashed"))
-                                  #:nodes (map (lambda (input)
-                                                 (graph-node (input-id input)
-                                                             '((fillcolor . "#94ddf4")
-                                                               (shape . "record")
-                                                               (style . "filled"))))
-                                               (workflow-inputs workflow)))
-                           (graph 'cluster_outputs
-                                  #:properties '((label . "Workflow Outputs")
-                                                 (labelloc . "b")
-                                                 (rank . "same")
-                                                 (style . "dashed"))
-                                  #:nodes (map (lambda (output)
-                                                 (graph-node (output-id output)
-                                                             '((fillcolor . "#94ddf4")
-                                                               (shape . "record")
-                                                               (style . "filled"))))
-                                               (workflow-outputs workflow))))))
+         #:subgraphs (list (inputs-cluster (workflow-inputs workflow))
+                           (outputs-cluster (workflow-outputs workflow)))))
+
+(define (command->dot command port)
+  "Render @var{command}, a @code{<command>} object, to @var{port} in the
+graphviz dot language."
+  (graph->dot (command->graph command)
+              port))
+
+(define (command->graph command)
+  "Convert @var{command}, a @code{<command>} object, to a @code{<graph>}
+object."
+  (graph 'workflow
+         #:properties '((bgcolor . "#eeeeee"))
+         #:nodes (list (graph-node 'command
+                                   '((fillcolor . "lightgoldenrodyellow")
+                                     (shape . "record")
+                                     (style . "filled"))))
+         #:edges (append
+                  ;; Connect inputs to command.
+                  (map (lambda (input)
+                         (cons (input-id input)
+                               'command))
+                       (command-inputs command))
+                  ;; Connect command to outputs.
+                  (map (lambda (output)
+                         (cons 'command
+                               (output-id output)))
+                       (command-outputs command)))
+         #:subgraphs (list (inputs-cluster (command-inputs command))
+                           (outputs-cluster (command-outputs command)))))
+
+(define (step-node id)
+  "Return graph node describing step with @var{id}."
+  (graph-node id
+              '((fillcolor . "lightgoldenrodyellow")
+                (shape . "record")
+                (style . "filled"))))
+
+(define (inputs-cluster inputs)
+  "Return the subgraph clustering @var{inputs}."
+  (graph 'cluster_inputs
+         #:properties '((label . "Workflow Inputs")
+                        (rank . "same")
+                        (style . "dashed"))
+         #:nodes (map (lambda (input)
+                        (graph-node (input-id input)
+                                    '((fillcolor . "#94ddf4")
+                                      (shape . "record")
+                                      (style . "filled"))))
+                      inputs)))
+
+(define (outputs-cluster outputs)
+  "Return the subgraph clustering @var{outputs}."
+  (graph 'cluster_outputs
+         #:properties '((label . "Workflow Outputs")
+                        (labelloc . "b")
+                        (rank . "same")
+                        (style . "dashed"))
+         #:nodes (map (lambda (output)
+                        (graph-node (output-id output)
+                                    '((fillcolor . "#94ddf4")
+                                      (shape . "record")
+                                      (style . "filled"))))
+                      outputs)))
 
 (define (serialize object)
   "Serialize OBJECT according to graphviz dot syntax. OBJECT may a
