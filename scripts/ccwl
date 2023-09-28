@@ -55,7 +55,10 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
         ;; request the user report an issue. Pass quit exceptions
         ;; through since those may be raised by exceptions that have
         ;; been handled.
-        (unless (quit-exception? condition)
+        (cond
+         ((formatted-message? condition)
+          (report-formatted-message condition))
+         ((not (quit-exception? condition))
           (display-backtrace (make-stack #t) (current-error-port))
           (newline (current-error-port))
           (write condition (current-error-port))
@@ -65,7 +68,7 @@ You have discovered a bug!
 Please report this to https://github.com/arunisaac/ccwl/issues
 Thank you!
 "
-                   (current-error-port)))
+                   (current-error-port))))
         (exit #f))
     (lambda ()
       (match args
