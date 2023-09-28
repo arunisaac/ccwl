@@ -29,9 +29,17 @@
   #:use-module (ccwl utils)
   #:use-module (ccwl yaml)
   #:export (workflow->cwl
-            command->cwl))
+            command->cwl
+            workflow-or-command->cwl))
 
 (define %cwl-version "v1.2")
+
+(define workflow-or-command->cwl
+  (match-lambda*
+    (((? workflow? workflow) port)
+     (workflow->cwl workflow port))
+    (((? command? command) port)
+     (command->cwl command port))))
 
 (define (workflow->cwl workflow port)
   "Render WORKFLOW, a <workflow> object, to PORT as a CWL YAML
