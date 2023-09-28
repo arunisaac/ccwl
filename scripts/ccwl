@@ -26,7 +26,8 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 
 ;;; Code:
 
-(use-modules (rnrs exceptions)
+(use-modules (rnrs conditions)
+             (rnrs exceptions)
              (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
@@ -119,8 +120,14 @@ Compile SOURCE-FILE.
                       ((ccwl-violation? exception)
                        (report-ccwl-violation exception)
                        (exit #f)))
-                (load (canonicalize-path (assq-ref args 'source-file))
-                      read-syntax))
+                (let ((result (load (canonicalize-path (assq-ref args 'source-file))
+                                      read-syntax)))
+                  (if (or (command? result)
+                          (workflow? result))
+                      result
+                      (raise-exception
+                       (condition (formatted-message "Last expression in file ~a returns neither workflow nor command"
+                                                     (assq-ref args 'source-file)))))))
               (current-output-port)))))
         ((program args ...)
          (let ((args (args-fold args
