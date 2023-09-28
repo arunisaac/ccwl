@@ -111,8 +111,8 @@ Compile SOURCE-FILE.
            (set! %load-should-auto-compile #f)
            (let ((to (assq-ref args 'to)))
              ((cond
-               ((string=? to "cwl") workflow->cwl)
-               ((string=? to "dot") workflow->dot))
+               ((string=? to "cwl") workflow-or-command->cwl)
+               ((string=? to "dot") workflow-or-command->dot))
               (guard (exception
                       ;; Handle syntax violation exceptions by reporting
                       ;; them and exiting.
