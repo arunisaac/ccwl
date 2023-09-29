@@ -372,15 +372,20 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   (eq? (input-id input1)
        (input-id input2)))
 
+(define (function-inputs function)
+  "Return the list of inputs accepted by @var{function}, a
+@code{<command>} or @code{<cwl-workflow>} object."
+  ((cond
+    ((command? function) command-inputs)
+    ((cwl-workflow? function) cwl-workflow-inputs)
+    (else (error "Unrecognized ccwl function" function)))
+   function))
+
 (define (function-input-keys function)
   "Return the list of input keys accepted by FUNCTION, a <command>
 object or a <cwl-workflow> object."
   (map input-id
-       ((cond
-         ((command? function) command-inputs)
-         ((cwl-workflow? function) cwl-workflow-inputs)
-         (else (error "Unrecognized ccwl function" function)))
-        function)))
+       (function-inputs function)))
 
 (define-immutable-record-type <key>
   (make-key name cwl-id step)
@@ -474,7 +479,10 @@ represented by <step> objects."
        ;; TODO: Filter out optional parameters.
        (match (lset-difference
                eq?
-               (function-input-keys function-object)
+               (filter-map (lambda (input)
+                             (and (unspecified-default? (input-default input))
+                                  (input-id input)))
+                           (function-inputs function-object))
                (map (match-lambda
                       ((key . _) (keyword->symbol key)))
                     (syntax->datum (pairify #'(args ...)))))

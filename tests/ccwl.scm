@@ -128,4 +128,15 @@
                (print (print2) #:message message2)))))
   (list 'out1 'printed-message))
 
+;; TODO: Define this in the lexical scope of the test that requires
+;; it.
+(define print-with-default
+  (command #:inputs (message #:type string #:default "Hello")
+           #:run "echo" message
+           #:outputs (printed-message #:type stdout)))
+
+(test-assert "allow steps with unspecified default arguments"
+  (workflow ()
+    (print-with-default)))
+
 (test-end "ccwl")
