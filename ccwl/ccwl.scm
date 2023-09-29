@@ -476,10 +476,10 @@ represented by <step> objects."
                      (formatted-message "Undefined ccwl command ~a"
                                         (syntax->datum #'function)))))
        ;; Test for missing required parameters.
-       ;; TODO: Filter out optional parameters.
        (match (lset-difference
                eq?
                (filter-map (lambda (input)
+                             ;; Leave out inputs that have default values.
                              (and (unspecified-default? (input-default input))
                                   (input-id input)))
                            (function-inputs function-object))
