@@ -81,7 +81,7 @@
   (id input-id)
   (type input-type)
   (label input-label)
-  (default input-default)
+  (default input-default set-input-default)
   (position input-position set-input-position)
   (prefix input-prefix set-input-prefix)
   (other input-other))
@@ -188,7 +188,7 @@
 (define-immutable-record-type <command>
   (make-command inputs outputs args stdin other)
   command?
-  (inputs command-inputs)
+  (inputs command-inputs set-command-inputs)
   (outputs command-outputs)
   (args command-args)
   (stdin command-stdin)
@@ -407,6 +407,22 @@ object or a <cwl-workflow> object."
       ;; Global input/output
       (symbol->string (key-cwl-id key))))
 
+(define (apply-partially command partial-arguments)
+  "Return a new command that is a partial application of
+@var{partial-arguments} to @var{command}. @var{partial-arguments} is
+an association list mapping keyword arguments to their values."
+  (set-command-inputs command
+    (map (lambda (input)
+           (set-input-default input
+             (or (any (match-lambda
+                        ((arg . value)
+                         (and (eq? (input-id input)
+                                   (keyword->symbol arg))
+                              value)))
+                      partial-arguments)
+                 (input-default input))))
+         (command-inputs command))))
+
 (define (function-object x)
   "Return the ccwl function object (a <command> or a <cwl-workflow>
 object) described by syntax X. If such a ccwl function is not defined,
@@ -468,7 +484,7 @@ represented by <step> objects."
      ;; messages.
      (let ((input-key-symbols (map key-name input-keys))
            (function-object (function-object #'function))
-           (step-id (syntax->datum #'step-id)))
+           (step-id-symbol (syntax->datum #'step-id)))
        ;; Test for undefined command.
        (unless function-object
          (raise-exception
@@ -493,7 +509,7 @@ represented by <step> objects."
            ;; step.
            (condition (ccwl-violation #'function)
                       (formatted-message "Step ~a missing required parameters ~a"
-                                         step-id
+                                         step-id-symbol
                                          (map symbol->keyword missing-parameters))))))
        ;; Test for unknown keys.
        (for-each (match-lambda
@@ -506,33 +522,58 @@ represented by <step> objects."
                                   ;; TODO: Do not report accepted keys
                                   ;; that have already been satisfied.
                                   (formatted-message "Step ~a does not accept input key ~a. Accepted keys are ~a."
-                                                     step-id
+                                                     step-id-symbol
                                                      (syntax->datum arg)
                                                      (map symbol->keyword
                                                           (function-input-keys function-object))))))
-                    (unless (memq (syntax->datum value)
-                                  input-key-symbols)
+                    ;; If value is neither a literal nor a known key,
+                    ;; error out.
+                    (when (and (symbol? value)
+                               (not (memq (syntax->datum value)
+                                          input-key-symbols)))
                       (raise-exception
                        (condition (ccwl-violation value)
                                   (formatted-message "Step ~a supplied with unknown key ~a. Known keys at this step are ~a."
-                                                     step-id
+                                                     step-id-symbol
                                                      (syntax->datum value)
                                                      input-key-symbols))))))
                  (pairify #'(args ...)))
-       (values (append (remove key-step input-keys)
-                       (map (lambda (output)
-                              (key (output-id output) step-id))
-                            (function-outputs function-object)))
-               (list (make-step step-id
-                                #'function
-                                (map (match-lambda
-                                       ((arg . value)
-                                        (cons (keyword->symbol arg)
-                                              (cwl-key-address
-                                               (find (lambda (key)
-                                                       (eq? value (key-name key)))
-                                                     input-keys)))))
-                                     (pairify (syntax->datum #'(args ...)))))))))
+       (let ((symbolic-arguments
+              literal-arguments
+              (partition (match-lambda
+                           ((_ . value)
+                            (symbol? value)))
+                         (pairify (syntax->datum #'(args ...))))))
+         (match literal-arguments
+           ;; If there are no literal arguments, construct <step>
+           ;; object.
+           (()
+            (values (append (remove key-step input-keys)
+                            (map (lambda (output)
+                                   (key (output-id output) step-id-symbol))
+                                 (function-outputs function-object)))
+                    (list (make-step step-id-symbol
+                                     #'function
+                                     (map (match-lambda
+                                            ((arg . value)
+                                             (cons (keyword->symbol arg)
+                                                   (cwl-key-address
+                                                    (find (lambda (key)
+                                                            (eq? value (key-name key)))
+                                                          input-keys)))))
+                                          (pairify (syntax->datum #'(args ...))))))))
+           ;; If literal values are provided as arguments, partially
+           ;; apply those literal values to the command and recurse.
+           (_
+            (collect-steps #`(((module-ref (resolve-module '(ccwl ccwl))
+                                           'apply-partially)
+                               function '#,literal-arguments)
+                              (step-id)
+                              #,@(append-map (match-lambda
+                                               ((arg . value)
+                                                (list arg value)))
+                                             symbolic-arguments))
+                           input-keys))))))
     ;; ccwl functions with an implicit step identifier
     ((function args ...)
      ;; Ensure that steps with expression commands have identifiers.

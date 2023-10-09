@@ -163,4 +163,8 @@
                 #:message message)))
            #f)))
 
+(test-assert "allow literals as arguments"
+  (workflow ()
+    (print #:message "Hello")))
+
 (test-end "ccwl")
