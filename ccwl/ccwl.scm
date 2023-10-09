@@ -464,21 +464,6 @@ represented by <step> objects."
                         key))
                   input-keys)
              (list)))
-    ;; ccwl functions with only a single input when only a single key
-    ;; is available at this step and when no inputs are passed to it
-    ((function (step-id))
-     (and (function-object #'function)
-          (= (length input-keys) 1)
-          (= (length (function-input-keys
-                      (function-object #'function)))
-             1))
-     (collect-steps #`(function (step-id)
-                                #,(match (function-input-keys
-                                          (function-object #'function))
-                                    ((command-key) (symbol->keyword command-key)))
-                                #,(match input-keys
-                                    ((input-key) (key-name input-key))))
-                    input-keys))
     ((function (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
