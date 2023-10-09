@@ -58,58 +58,67 @@
 (test-assert "input, when passed more than one positional argument, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (input #'(message string))))
+    (begin (input #'(message string))
+           #f)))
 
 (test-assert "input, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (input #'(message #:foo string))))
+    (begin (input #'(message #:foo string))
+           #f)))
 
 (test-assert "input, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (input #'(message #:type int string))))
+    (begin (input #'(message #:type int string))
+           #f)))
 
 (test-assert "output, when passed more than one positional argument, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (output #'(message string))))
+    (begin (output #'(message string))
+           #f)))
 
 (test-assert "output, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (output #'(message #:foo string))))
+    (begin (output #'(message #:foo string))
+           #f)))
 
 (test-assert "output, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (output #'(message #:type int string))))
+    (begin (output #'(message #:type int string))
+           #f)))
 
 (test-assert "command, when passed positional arguments, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (macroexpand
-     '(command foo
-               #:inputs (message #:type string)
-               #:run "echo" message
-               #:outputs (stdout #:type stdout)))))
+    (begin (macroexpand
+            '(command foo
+                      #:inputs (message #:type string)
+                      #:run "echo" message
+                      #:outputs (stdout #:type stdout)))
+           #f)))
 
 (test-assert "command, when passed an unrecognized keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (macroexpand
-     '(command #:foo (message #:type string)
-               #:run "echo" message
-               #:outputs (stdout #:type stdout)))))
+    (begin (macroexpand
+            '(command #:foo (message #:type string)
+                      #:run "echo" message
+                      #:outputs (stdout #:type stdout)))
+           #f)))
 
 (test-assert "command, when passed multiple arguments to a unary keyword, must raise a &ccwl-violation condition"
   (guard (exception
           (else (ccwl-violation? exception)))
-    (macroexpand
-     '(command #:inputs (message #:type string)
-               #:run "echo" message
-               #:outputs (stdout #:type stdout)
-               #:stdin "foo" "bar"))))
+    (begin (macroexpand
+            '(command #:inputs (message #:type string)
+                      #:run "echo" message
+                      #:outputs (stdout #:type stdout)
+                      #:stdin "foo" "bar"))
+           #f)))
 
 ;; TODO: Define this in the lexical scope of the test that requires
 ;; it.
