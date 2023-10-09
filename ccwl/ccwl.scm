@@ -535,6 +535,12 @@ represented by <step> objects."
                                      (pairify (syntax->datum #'(args ...)))))))))
     ;; ccwl functions with an implicit step identifier
     ((function args ...)
+     ;; Ensure that steps with expression commands have identifiers.
+     (unless (symbol? (syntax->datum #'function))
+       (raise-exception
+        (condition (ccwl-violation #'function)
+                   (formatted-message "Step with expression ~a that evaluates to a command must have identifier"
+                                      (syntax->datum #'function)))))
      (collect-steps #'(function (function) args ...)
                     input-keys))
     ;; any other unrecognized syntax

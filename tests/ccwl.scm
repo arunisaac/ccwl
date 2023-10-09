@@ -145,4 +145,13 @@
      (print)
      #:message message)))
 
+(test-assert "step with expression that evaluates to a command but without a step identifier must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (begin (macroexpand
+            '(workflow ((message #:type string))
+               ((and #t print)
+                #:message message)))
+           #f)))
+
 (test-end "ccwl")
