@@ -139,4 +139,10 @@
   (workflow ()
     (print-with-default)))
 
+(test-assert "allow steps with expressions that evaluate to commands"
+  (workflow ((message #:type string))
+    ((and #t print)
+     (print)
+     #:message message)))
+
 (test-end "ccwl")

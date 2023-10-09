@@ -412,12 +412,12 @@ object or a <cwl-workflow> object."
 object) described by syntax X. If such a ccwl function is not defined,
 return #f."
   ;; TODO: What if function object is defined in lexical scope?
-  (let ((var (module-variable (current-module)
-                              (syntax->datum x))))
-    (and var
-         (or (command? (variable-ref var))
-             (cwl-workflow? (variable-ref var)))
-         (variable-ref var))))
+  (let ((result (false-if-exception
+                 (eval (syntax->datum x)
+                       (interaction-environment)))))
+    (and (or (command? result)
+             (cwl-workflow? result))
+         result)))
 
 (define (collect-steps x input-keys)
   "Traverse ccwl workflow body X and return two values---a list of
