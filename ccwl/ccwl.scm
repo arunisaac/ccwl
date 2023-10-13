@@ -615,5 +615,7 @@ a <key> object, in STEPS, a list of <step> objects. If no such
             (list #,@(filter-map (cut key->output <> steps)
                                  output-keys))
             '())))
-      (x (error "Unrecognized workflow syntax [expected (workflow (input ...) tree)]:"
-                (syntax->datum #'x))))))
+      (x
+       (raise-exception
+        (condition (ccwl-violation #'x)
+                   (formatted-message "Unrecognized workflow syntax [expected (workflow (input ...) tree)]")))))))

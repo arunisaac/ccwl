@@ -175,4 +175,14 @@
                (print #:message mess)))
            #f)))
 
+(test-assert "unrecognized workflow syntaxes must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (begin (macroexpand
+            '(workflow ((message1 #:type string)
+                        (message2 #:type string))
+               (print (print1) #:message message1)
+               (print (print2) #:message message2)))
+           #f)))
+
 (test-end "ccwl")
