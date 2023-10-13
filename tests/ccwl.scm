@@ -177,7 +177,19 @@
 
 (test-assert "unrecognized workflow syntaxes must raise a &ccwl-violation condition"
   (guard (exception
-          (else (ccwl-violation? exception)))
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Unrecognized workflow syntax [expected (workflow (input ...) tree)]"))))
+    (begin (macroexpand
+            '(workflow foo ((message #:type string))
+                       (print #:message message)))
+           #f)))
+
+(test-assert "multiple expressions in workflow body must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "More than one expression ~a in workflow body. Perhaps you need to combine them with a pipe or a tee?"))))
     (begin (macroexpand
             '(workflow ((message1 #:type string)
                         (message2 #:type string))

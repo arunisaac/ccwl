@@ -615,6 +615,18 @@ a <key> object, in STEPS, a list of <step> objects. If no such
             (list #,@(filter-map (cut key->output <> steps)
                                  output-keys))
             '())))
+      ;; Guess that these are multiple unconnected expressions in the
+      ;; workflow body, and try to produce a helpful error message.
+      ((_ (inputs ...) expressions ...)
+       (raise-exception
+        (condition
+         (ccwl-violation x)
+         (formatted-message "More than one expression ~a in workflow body. Perhaps you need to combine them with a pipe or a tee?"
+                            (string-join
+                             (map (lambda (expression)
+                                    (call-with-output-string
+                                      (cut write expression <>)))
+                                  (syntax->datum #'(expressions ...))))))))
       (x
        (raise-exception
         (condition (ccwl-violation #'x)
