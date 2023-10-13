@@ -167,4 +167,12 @@
   (workflow ()
     (print #:message "Hello")))
 
+(test-assert "step supplied with an unknown key must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (ccwl-violation? exception)))
+    (begin (macroexpand
+            '(workflow ((message #:type string))
+               (print #:message mess)))
+           #f)))
+
 (test-end "ccwl")
