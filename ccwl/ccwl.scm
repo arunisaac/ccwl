@@ -513,7 +513,7 @@ represented by <step> objects."
                                                           (function-input-keys function-object))))))
                     ;; If value is neither a literal nor a known key,
                     ;; error out.
-                    (when (and (symbol? value)
+                    (when (and (symbol? (syntax->datum value))
                                (not (memq (syntax->datum value)
                                           input-key-symbols)))
                       (raise-exception
