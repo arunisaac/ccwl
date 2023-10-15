@@ -13,7 +13,8 @@
 (define run
   (command #:inputs executable
            #:run executable
-           #:outputs (stdout #:type stdout)))
+           #:outputs (stdout #:type stdout)
+           #:stdout "run-output.txt"))
 
 (workflow ((compressed-source #:type File))
   (pipe (decompress #:compressed compressed-source)

@@ -19,7 +19,8 @@
 (define find-misspellings
   (command #:inputs words dictionary
            #:run "comm" "-23" words dictionary
-           #:outputs (misspellings #:type stdout)))
+           #:outputs (misspellings #:type stdout)
+           #:stdout "misspelt-words"))
 
 (workflow (text-file dictionary)
   (pipe (tee (pipe (split-words #:text text-file)

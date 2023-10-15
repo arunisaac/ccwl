@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -116,8 +116,9 @@ as follows. The expected output is also shown.])
       (p [Let us return to the ,(emph "Hello World") example in the
 previous section. But now, let us capture the standard output of the
 ,(code "print") command in an output object. The ccwl code is the same
-as earlier with only the addition of an ,(code "stdout") type output
-object to the command definition.])
+as earlier with the addition of an ,(code "stdout") type output object
+and an ,(code "#:stdout") parameter specifying the name of the file to
+capture standard output in.])
 
       (scheme-source "doc/capture-stdout.scm")
 
@@ -126,7 +127,7 @@ object to the command definition.])
 ,(file "capture-stdout.cwl"), and run it using ,(code "cwltool"). We
 might expect something like the output below. Notice how the standard
 output of the ,(code "print") command has been captured in the file
-,(file "51fe79d15e7790a9ded795304220d7a44aa84b48").])
+,(file "printed-message-output.txt").])
 
       (prog :line #f (source :file "doc/capture-stdout.out")))
 
@@ -220,8 +221,7 @@ following output.])
         (prog :line #f (source :file "doc/decompress-compile-run.out"))
 
         (p [The steps run in succession, and the stdout of the
-compiled executable is in
-,(file "c32c587f7afbdf87cf991c14a43edecf09cd93bf"). Success!]))
+compiled executable is in ,(file "run-output.txt"). Success!]))
 
       (subsection :title [tee]
         (p [Next, the tee topology. The following workflow computes
@@ -245,10 +245,8 @@ following output.])
 
         (prog :line #f (source :file "doc/checksum.out"))
 
-        (p [The MD5, SHA1 and SHA256 checksums are in the files
-,(file "112be1054505027982e64d56b0879049c12737c6"),
-,(file "d2f19c786fcd3feb329004c8747803fba581a02d") and
-,(file "0d2eaa5619c14b43326101200d0f27b0d8a1a4b1") respectively.])))
+        (p [The MD5, SHA1 and SHA256 checksums are in the files ,(file
+"md5"), ,(file "sha1") and ,(file "sha256") respectively.])))
 
     (section :title [Let's write a spell check workflow]
       (p [Finally, let's put together a complex workflow to understand

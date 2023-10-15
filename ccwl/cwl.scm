@@ -146,4 +146,10 @@ CWL YAML specification."
                                      (symbol->string
                                       (command-stdin command))
                                      ".path)")))
+          '())
+    ,@(if (command-stderr command)
+          `((stderr . ,(command-stderr command)))
+          '())
+    ,@(if (command-stdout command)
+          `((stdout . ,(command-stdout command)))
           '())))

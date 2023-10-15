@@ -42,6 +42,8 @@
             command-outputs
             command-args
             command-stdin
+            command-stderr
+            command-stdout
             command-other
             cwl-workflow?
             cwl-workflow
@@ -186,12 +188,14 @@
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
 (define-immutable-record-type <command>
-  (make-command inputs outputs args stdin other)
+  (make-command inputs outputs args stdin stderr stdout other)
   command?
   (inputs command-inputs set-command-inputs)
   (outputs command-outputs)
   (args command-args)
   (stdin command-stdin)
+  (stderr command-stderr)
+  (stdout command-stdout)
   (other command-other))
 
 (define-immutable-record-type <cwl-workflow>
@@ -300,7 +304,7 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                     (condition (ccwl-violation extra)
                                (formatted-message "Unexpected extra positional argument ~a in command definition"
                                                   (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key stdin #:key* inputs outputs run other)
+         (apply (syntax-lambda** (#:key stdin stderr stdout #:key* inputs outputs run other)
                   (when (null? run)
                     (raise-exception
                      (condition (ccwl-violation x)
@@ -332,6 +336,18 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                                                  (syntax->datum x)))))
                                    run))
                      #,(and stdin #`'#,stdin)
+                     #,(if (and stderr
+                                (not (string? (syntax->datum stderr))))
+                           (raise-exception
+                            (condition (ccwl-violation stderr)
+                                       (formatted-message "#:stderr parameter must be a string")))
+                           stderr)
+                     #,(if (and stdout
+                                (not (string? (syntax->datum stdout))))
+                           (raise-exception
+                            (condition (ccwl-violation stdout)
+                                       (formatted-message "#:stdout parameter must be a string")))
+                           stdout)
                      (list #,@other)))
                 #'(args ...)))))))
 
