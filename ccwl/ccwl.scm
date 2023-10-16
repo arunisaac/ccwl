@@ -347,8 +347,11 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                                           (begin
                                             (ensure-input-is-defined #'input)
                                             #''input))
-                                         (_ (error "Invalid command element:"
-                                                   (syntax->datum x)))))
+                                         (_
+                                          (raise-exception
+                                           (condition (ccwl-violation x)
+                                                      (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
+                                                                         (syntax->datum x)))))))
                                      run)))
                      #,(and stdin #`'#,stdin)
                      #,(if (and stderr

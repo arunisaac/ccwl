@@ -252,4 +252,13 @@
                       #:run "echo" ("-x" n)))
            #f)))
 
+(test-assert "command definitions with invalid #:run arguments must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Invalid command element ~a. Command elements must either be input identifiers or literal strings."))))
+    (begin (macroexpand
+            '(command #:run "echo" 42))
+           #f)))
+
 (test-end "ccwl")
