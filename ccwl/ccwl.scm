@@ -44,6 +44,7 @@
             command-stdin
             command-stderr
             command-stdout
+            command-requirements
             command-other
             cwl-workflow?
             cwl-workflow
@@ -188,7 +189,7 @@
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
 (define-immutable-record-type <command>
-  (make-command inputs outputs args stdin stderr stdout other)
+  (make-command inputs outputs args stdin stderr stdout requirements other)
   command?
   (inputs command-inputs set-command-inputs)
   (outputs command-outputs)
@@ -196,6 +197,7 @@
   (stdin command-stdin)
   (stderr command-stderr)
   (stdout command-stdout)
+  (requirements command-requirements)
   (other command-other))
 
 (define-immutable-record-type <cwl-workflow>
@@ -352,7 +354,7 @@ identifiers defined in the commands."
                     (condition (ccwl-violation extra)
                                (formatted-message "Unexpected extra positional argument ~a in command definition"
                                                   (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key stdin stderr stdout (other #''()) #:key* inputs outputs run)
+         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #''()) (other #''()) #:key* inputs outputs run)
                   (when (null? run)
                     (raise-exception
                      (condition (ccwl-violation x)
@@ -381,6 +383,7 @@ identifiers defined in the commands."
                             (condition (ccwl-violation stdout)
                                        (formatted-message "#:stdout parameter must be a string")))
                            stdout)
+                     #,requirements
                      #,other))
                 #'(args ...)))))))
 

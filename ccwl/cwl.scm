@@ -120,6 +120,7 @@ CWL YAML specification."
   "Render COMMAND, a <command> object, into a CWL tree."
   `((cwlVersion . ,%cwl-version)
     (class . CommandLineTool)
+    (requirements . ,(command-requirements command))
     ,@(command-other command)
     (arguments . ,(list->vector
                    ;; Put string arguments into the arguments array.
