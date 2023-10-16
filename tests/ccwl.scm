@@ -232,4 +232,24 @@
                       #:stdout captured-stdout))
            #f)))
 
+(test-assert "command definitions with undefined inputs in their #:run arguments must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Undefined input ~a"))))
+    (begin (macroexpand
+            '(command #:inputs (number #:type int)
+                      #:run "echo" n))
+           #f)))
+
+(test-assert "command definitions with undefined prefix inputs in their #:run arguments must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Undefined input ~a"))))
+    (begin (macroexpand
+            '(command #:inputs (number #:type int)
+                      #:run "echo" ("-x" n)))
+           #f)))
+
 (test-end "ccwl")

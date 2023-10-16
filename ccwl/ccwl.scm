@@ -319,22 +319,37 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                                           #,(run-arg-prefix id run))))
                                    inputs))
                      (list #,@(map output outputs))
-                     (list #,@(map (lambda (x)
-                                     (syntax-case x ()
-                                       ;; Replace input symbol with quoted symbol.
-                                       (input (identifier? #'input)
-                                              #''input)
-                                       ;; Leave string as is.
-                                       (string-arg (string? (syntax->datum #'string-arg))
-                                                   #'string-arg)
-                                       ;; Replace prefixed input symbol with
-                                       ;; quoted symbol.
-                                       ((prefix input) (and (string? (syntax->datum #'prefix))
-                                                            (identifier? #'input))
-                                        #''input)
-                                       (_ (error "Invalid command element:"
-                                                 (syntax->datum x)))))
-                                   run))
+                     (list #,@(let ((ensure-input-is-defined
+                                     ;; Ensure that specified input is
+                                     ;; defined in #:inputs of command
+                                     ;; definition.
+                                     (lambda (input)
+                                       (unless (memq (syntax->datum input)
+                                                     (map input-spec-id inputs))
+                                         (raise-exception
+                                          (condition (ccwl-violation input)
+                                                     (formatted-message "Undefined input ~a"
+                                                                        (syntax->datum input))))))))
+                                (map (lambda (x)
+                                       (syntax-case x ()
+                                         ;; Replace input symbol with quoted symbol.
+                                         (input (identifier? #'input)
+                                                (begin
+                                                  (ensure-input-is-defined #'input)
+                                                  #''input))
+                                         ;; Leave string as is.
+                                         (string-arg (string? (syntax->datum #'string-arg))
+                                                     #'string-arg)
+                                         ;; Replace prefixed input symbol with
+                                         ;; quoted symbol.
+                                         ((prefix input) (and (string? (syntax->datum #'prefix))
+                                                              (identifier? #'input))
+                                          (begin
+                                            (ensure-input-is-defined #'input)
+                                            #''input))
+                                         (_ (error "Invalid command element:"
+                                                   (syntax->datum x)))))
+                                     run)))
                      #,(and stdin #`'#,stdin)
                      #,(if (and stderr
                                 (not (string? (syntax->datum stderr))))
