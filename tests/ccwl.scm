@@ -264,4 +264,14 @@
 (test-assert "tolerate prefixed string arguments in command definitions"
   (command #:run "echo" ("-x" "foo")))
 
+(test-assert "command definitions with non-string prefixes in prefixed inputs must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Invalid prefix ~a. Prefixes must be strings."))))
+    (begin (macroexpand
+            '(command #:inputs (number #:type int)
+                      #:run "echo" (-x number)))
+           #f)))
+
 (test-end "ccwl")

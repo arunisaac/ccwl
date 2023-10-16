@@ -307,6 +307,12 @@ identifiers defined in the commands."
                     ((prefix string-arg) (and (string? (syntax->datum #'prefix))
                                               (string? (syntax->datum #'string-arg)))
                      (list #'prefix #'string-arg))
+                    ;; Prefixes that are not strings
+                    ((prefix _)
+                     (raise-exception
+                      (condition (ccwl-violation #'prefix)
+                                 (formatted-message "Invalid prefix ~a. Prefixes must be strings."
+                                                    (syntax->datum #'prefix)))))
                     (_
                      (raise-exception
                       (condition (ccwl-violation x)
