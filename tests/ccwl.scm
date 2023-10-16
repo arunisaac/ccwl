@@ -261,4 +261,7 @@
             '(command #:run "echo" 42))
            #f)))
 
+(test-assert "tolerate prefixed string arguments in command definitions"
+  (command #:run "echo" ("-x" "foo")))
+
 (test-end "ccwl")

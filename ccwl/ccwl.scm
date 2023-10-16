@@ -286,28 +286,33 @@ identifiers defined in the commands."
               (condition (ccwl-violation input)
                          (formatted-message "Undefined input ~a"
                                             (syntax->datum input))))))))
-    (map (lambda (x)
-           (syntax-case x ()
-             ;; Replace input symbol with quoted symbol.
-             (input (identifier? #'input)
-                    (begin
-                      (ensure-input-is-defined #'input)
-                      #''input))
-             ;; Leave string as is.
-             (string-arg (string? (syntax->datum #'string-arg))
-                         #'string-arg)
-             ;; Replace prefixed input symbol with quoted symbol.
-             ((prefix input) (and (string? (syntax->datum #'prefix))
-                                  (identifier? #'input))
-              (begin
-                (ensure-input-is-defined #'input)
-                #''input))
-             (_
-              (raise-exception
-               (condition (ccwl-violation x)
-                          (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
-                                             (syntax->datum x)))))))
-         run)))
+    (append-map (lambda (x)
+                  (syntax-case x ()
+                    ;; Replace input symbol with quoted symbol.
+                    (input (identifier? #'input)
+                           (begin
+                             (ensure-input-is-defined #'input)
+                             (list #''input)))
+                    ;; Leave string as is.
+                    (string-arg (string? (syntax->datum #'string-arg))
+                                (list #'string-arg))
+                    ;; Replace prefixed input symbol with quoted symbol.
+                    ((prefix input) (and (string? (syntax->datum #'prefix))
+                                         (identifier? #'input))
+                     (begin
+                       (ensure-input-is-defined #'input)
+                       (list #''input)))
+                    ;; Flatten prefixed string arguments. They have no
+                    ;; special meaning.
+                    ((prefix string-arg) (and (string? (syntax->datum #'prefix))
+                                              (string? (syntax->datum #'string-arg)))
+                     (list #'prefix #'string-arg))
+                    (_
+                     (raise-exception
+                      (condition (ccwl-violation x)
+                                 (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
+                                                    (syntax->datum x)))))))
+                run)))
 
 ;; TODO: Add fine-grained syntax checking.
 (define-syntax command
