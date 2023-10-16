@@ -163,9 +163,20 @@
                 #:message message)))
            #f)))
 
-(test-assert "allow literals as arguments"
+(test-assert "allow literal strings as arguments"
   (workflow ()
     (print #:message "Hello")))
+
+;; TODO: Define this in the lexical scope of the test that requires
+;; it.
+(define print-int
+  (command #:inputs (number #:type int)
+           #:run "echo" number
+           #:outputs (printed-number #:type stdout)))
+
+(test-assert "allow literal ints as arguments"
+  (workflow ()
+    (print-int #:number 42)))
 
 (test-assert "step supplied with an unknown key must raise a &ccwl-violation condition"
   (guard (exception
