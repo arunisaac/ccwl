@@ -383,13 +383,15 @@ identifiers defined in the commands."
                                 (not (string? (syntax->datum stderr))))
                            (raise-exception
                             (condition (ccwl-violation stderr)
-                                       (formatted-message "#:stderr parameter must be a string")))
+                                       (formatted-message "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"
+                                                          (syntax->datum stderr))))
                            stderr)
                      #,(if (and stdout
                                 (not (string? (syntax->datum stdout))))
                            (raise-exception
                             (condition (ccwl-violation stdout)
-                                       (formatted-message "#:stdout parameter must be a string")))
+                                       (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
+                                                          (syntax->datum stdout))))
                            stdout)
                      #,requirements
                      #,other))

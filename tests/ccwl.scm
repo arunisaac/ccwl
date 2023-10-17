@@ -212,7 +212,7 @@
   (guard (exception
           (else (and (ccwl-violation? exception)
                      (string=? (formatted-message-format exception)
-                               "#:stderr parameter must be a string"))))
+                               "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"))))
     (begin (macroexpand
             '(command #:inputs (message #:type string)
                       #:run "echo" message
@@ -224,7 +224,7 @@
   (guard (exception
           (else (and (ccwl-violation? exception)
                      (string=? (formatted-message-format exception)
-                               "#:stdout parameter must be a string"))))
+                               "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"))))
     (begin (macroexpand
             '(command #:inputs (message #:type string)
                       #:run "echo" message
