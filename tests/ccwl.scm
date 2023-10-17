@@ -274,4 +274,15 @@
                       #:run "echo" (-x number)))
            #f)))
 
+(test-assert "inputs with an invalid #:stage? parameter must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."))))
+    (begin (macroexpand
+            '(command #:inputs (file #:type File
+                                     #:stage? 42)
+                      #:run "cat" file))
+           #f)))
+
 (test-end "ccwl")

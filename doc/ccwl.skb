@@ -323,6 +323,15 @@ misspelt words appear at the output.]
          (prog :line #f (source :file "doc/spell-check.out")))))
 
   (chapter :title [Cookbook]
+    (section :title [Stage input files]
+      (p [When running command-line tools, CWL normally has separate
+directories for input and output files. But, some command-line tools
+expect their input and output files to be in the same directory, and
+this may not sit well with them. In such situations, we can tell CWL
+to ,(emph "stage") the input file into the output directory. We may
+express this in ccwl using the ,(code "#:stage?") parameter to the
+inputs to be staged. Here is a rather concocted example.]
+         (scheme-source "doc/staging-input-files.scm")))
     (section :title [Reuse external CWL workflows]
       (p [Even though you may be a ccwl convert (hurrah!), others may
 not be. And, you might have to work with CWL workflows written by

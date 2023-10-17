@@ -24,6 +24,7 @@
 ;;; Code:
 
 (define-module (ccwl cwl)
+  #:use-module (srfi srfi-1)
   #:use-module (ice-9 match)
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
@@ -120,7 +121,19 @@ CWL YAML specification."
   "Render COMMAND, a <command> object, into a CWL tree."
   `((cwlVersion . ,%cwl-version)
     (class . CommandLineTool)
-    (requirements . ,(command-requirements command))
+    (requirements
+     ,@(if (any input-stage? (command-inputs command))
+           ;; Stage any inputs that need to be.
+           `((InitialWorkDirRequirement
+              (listing . ,(list->vector
+                           (filter-map (lambda (input)
+                                         (and (input-stage? input)
+                                              (string-append "$(inputs."
+                                                             (symbol->string (input-id input))
+                                                             ")")))
+                                       (command-inputs command))))))
+           '())
+     ,@(command-requirements command))
     ,@(command-other command)
     (arguments . ,(list->vector
                    ;; Put string arguments into the arguments array.

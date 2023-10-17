@@ -64,6 +64,7 @@
             input-default
             input-position
             input-prefix
+            input-stage?
             input-other
             output?
             output-id
@@ -79,7 +80,7 @@
             unspecified-default?))
 
 (define-immutable-record-type <input>
-  (make-input id type label default position prefix other)
+  (make-input id type label default position prefix stage? other)
   input?
   (id input-id)
   (type input-type)
@@ -87,6 +88,7 @@
   (default input-default set-input-default)
   (position input-position set-input-position)
   (prefix input-prefix set-input-prefix)
+  (stage? input-stage?)
   (other input-other))
 
 (define-immutable-record-type <unspecified-default>
@@ -127,14 +129,20 @@
                  (()
                   (condition (ccwl-violation input-spec)
                              (formatted-message "Input has no identifier")))))))
-       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (other #''()))
+       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (stage? #'#f) (other #''()))
+                (unless (memq (syntax->datum stage?)
+                              (list #t #f))
+                  (raise-exception
+                   (condition (ccwl-violation stage?)
+                              (formatted-message "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."
+                                                 (syntax->datum stage?)))))
                 (let ((position #f)
                       (prefix #f))
                   #`(make-input '#,id '#,type #,label
                                 #,(if (unspecified-default? default)
                                       #'(make-unspecified-default)
                                       default)
-                                #,position #,prefix #,other)))
+                                #,position #,prefix #,stage? #,other)))
               #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
     (_ (error "Invalid input:" (syntax->datum input-spec)))))
@@ -413,7 +421,7 @@ identifiers defined in the commands."
     (make-cwl-workflow file
                        (map (match-lambda
                               ((id . type)
-                               (make-input id type #f #f #f #f #f)))
+                               (make-input id type #f #f #f #f #f #f)))
                             (parameters->id+type (assoc-ref yaml "inputs")))
                        (map (match-lambda
                               ((id . type)
