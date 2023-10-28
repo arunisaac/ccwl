@@ -129,7 +129,7 @@
                  (()
                   (condition (ccwl-violation input-spec)
                              (formatted-message "Input has no identifier")))))))
-       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (stage? #'#f) (other #''()))
+       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (stage? #'#f) (other #'()))
                 (unless (memq (syntax->datum stage?)
                               (list #t #f))
                   (raise-exception
@@ -142,7 +142,7 @@
                                 #,(if (unspecified-default? default)
                                       #'(make-unspecified-default)
                                       default)
-                                #,position #,prefix #,stage? #,other)))
+                                #,position #,prefix #,stage? '#,other)))
               #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
     (_ (error "Invalid input:" (syntax->datum input-spec)))))
@@ -190,8 +190,8 @@
                  (()
                   (condition (ccwl-violation output-spec)
                              (formatted-message "Output has no identifier")))))))
-       (apply (syntax-lambda** (id #:key (type #'File) binding source (other #''()))
-                #`(make-output '#,id '#,type #,binding #,source #,other))
+       (apply (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
+                #`(make-output '#,id '#,type #,binding #,source '#,other))
               #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
@@ -362,7 +362,7 @@ identifiers defined in the commands."
                     (condition (ccwl-violation extra)
                                (formatted-message "Unexpected extra positional argument ~a in command definition"
                                                   (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #''()) (other #''()) #:key* inputs outputs run)
+         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #''()) (other #'()) #:key* inputs outputs run)
                   (when (null? run)
                     (raise-exception
                      (condition (ccwl-violation x)
@@ -394,7 +394,7 @@ identifiers defined in the commands."
                                                           (syntax->datum stdout))))
                            stdout)
                      #,requirements
-                     #,other))
+                     '#,other))
                 #'(args ...)))))))
 
 (define (cwl-workflow file)
