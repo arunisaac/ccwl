@@ -20,6 +20,7 @@
   #:use-module (rnrs io ports)
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-28)
+  #:use-module (term ansi-color)
   #:use-module (ccwl conditions)
   #:export (report-formatted-message
             report-ccwl-violation))
@@ -29,7 +30,7 @@
 user."
   (display (apply format
                   (formatted-message-format exception)
-                  (map (compose bold magenta)
+                  (map (cut colorize-string <> 'BOLD 'MAGENTA)
                        (formatted-message-arguments exception)))
            (current-error-port))
   (newline (current-error-port)))
@@ -65,15 +66,6 @@ not affect the current port position."
 whitespace intact."
   (get-string-n port (- (read-end port)
                         (port-position port))))
-
-(define (color code str)
-  "Wrap STR in ANSI escape CODE, thus rendering it in color in a
-terminal."
-  (format "~a[~am~a~a[0m" #\esc code str #\esc))
-
-(define bold (cut color 1 <>))
-(define red (cut color 31 <>))
-(define magenta (cut color 35 <>))
 
 (define (count-lines str)
   "Count the number of lines in STR."
@@ -146,7 +138,7 @@ red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
       ;; Display syntax x in red.  Color each line separately to
       ;; help line oriented functions like
       ;; `display-with-line-numbers'.
-      (display (string-join (map (compose bold red)
+      (display (string-join (map (cut colorize-string <> 'BOLD 'RED)
                                  (string-split (read-sexp-string port)
                                                #\newline))
                             "\n")
@@ -163,9 +155,10 @@ red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
   (let ((file (ccwl-violation-file exception))
         (line (ccwl-violation-line exception))
         (column (ccwl-violation-column exception)))
-    (display (bold (format "~a:~a:~a: " file (1+ line) column))
+    (display (colorize-string (format "~a:~a:~a: " file (1+ line) column)
+                              'BOLD)
              (current-error-port))
-    (display (bold (red "error:"))
+    (display (colorize-string "error:" 'BOLD 'RED)
              (current-error-port))
     (display " " (current-error-port))
     (when (formatted-message? exception)

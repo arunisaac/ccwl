@@ -28,16 +28,17 @@
 (use-modules (ice-9 format)
              (ice-9 match)
              (srfi srfi-26)
-             (srfi srfi-64))
+             (srfi srfi-64)
+             (term ansi-color))
 
-(define (color code str color?)
+(define (color color-symbol str color?)
   (if color?
-      (format #f "~a[~am~a~a[0m" #\esc code str #\esc)
+      (colorize-string str color-symbol)
       str))
 
-(define red (cut color 31 <> <>))
-(define green (cut color 32 <> <>))
-(define magenta (cut color 35 <> <>))
+(define red (cut color 'RED <> <>))
+(define green (cut color 'GREEN <> <>))
+(define magenta (cut color 'MAGENTA <> <>))
 
 (define (my-gnu-runner color?)
   (let ((runner (test-runner-null)))
