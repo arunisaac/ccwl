@@ -35,4 +35,12 @@
 "
     (cut source-in-context <> 1 2)))
 
+(test-equal "display source in context on 0th line"
+  (string-append "(foo "
+                 (colorize-string "(bar)" 'BOLD 'RED)
+                 ")
+")
+  (call-with-input-string "(foo (bar))"
+    (cut source-in-context <> 0 5)))
+
 (test-end "ui")

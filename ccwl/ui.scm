@@ -124,14 +124,16 @@ with S-expression at LINE-NUMBER, COLUMN-NUMBER highlit in
 red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
   (call-with-output-string
     (lambda (out)
-      ;; Get to line preceding syntax x.
-      (repeat (cut get-line port)
-              (max 0 (1- line-number)))
-      ;; Display line preceding syntax x unless blank.
-      (let ((line (get-line port)))
-        (unless (or (zero? line-number)
-                    (string-blank? line))
-          (put-line line out)))
+      ;; Unless the 0th line is requested, display line preceding
+      ;; syntax x.
+      (unless (zero? line-number)
+        ;; Get to line preceding syntax x.
+        (repeat (cut get-line port)
+                (1- line-number))
+        ;; Display line preceding syntax x unless blank.
+        (let ((line (get-line port)))
+          (unless (string-blank? line)
+            (put-line line out))))
       ;; Display part of line before syntax x.
       (display (get-string-n port column-number)
                out)
