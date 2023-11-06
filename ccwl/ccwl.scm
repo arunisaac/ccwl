@@ -35,6 +35,7 @@
   #:use-module (ice-9 match)
   #:use-module (ccwl conditions)
   #:use-module (ccwl utils)
+  #:use-module (ccwl yaml)
   #:use-module (yaml)
   #:export (command?
             command
@@ -95,6 +96,15 @@
   (make-unspecified-default)
   unspecified-default?)
 
+(define (ensure-yaml-serializable tree)
+  "Raise an exception unless @var{tree} is serializable to YAML."
+  ;; TODO: If tree is a quoted expression, emit a warning.
+  (unless (false-if-exception
+           (scm->yaml-string (syntax->datum tree)))
+    (raise-exception
+     (condition (ccwl-violation tree)
+                (formatted-message "#:other parameter not serializable to YAML")))))
+
 (define (input input-spec)
   "Return syntax to build an <input> object from INPUT-SPEC."
   (syntax-case input-spec ()
@@ -136,6 +146,7 @@
                    (condition (ccwl-violation stage?)
                               (formatted-message "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."
                                                  (syntax->datum stage?)))))
+                (ensure-yaml-serializable other)
                 (let ((position #f)
                       (prefix #f))
                   #`(make-input '#,id '#,type #,label
@@ -191,6 +202,7 @@
                   (condition (ccwl-violation output-spec)
                              (formatted-message "Output has no identifier")))))))
        (apply (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
+                (ensure-yaml-serializable other)
                 #`(make-output '#,id '#,type #,binding #,source '#,other))
               #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
@@ -368,6 +380,7 @@ identifiers defined in the commands."
                      (condition (ccwl-violation x)
                                 (formatted-message "Missing ~a key in command definition"
                                                    #:run))))
+                  (ensure-yaml-serializable other)
                   #`(make-command
                      (list #,@(map (lambda (input-spec)
                                      (let ((id (input-spec-id input-spec)))

@@ -285,4 +285,36 @@
                       #:run "cat" file))
            #f)))
 
+(test-assert "inputs with #:other parameters that fail to evaluate must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "#:other parameter not serializable to YAML"))))
+    (begin (macroexpand
+            '(command #:inputs (file #:type File
+                                     #:other '((secondaryFiles . ".fai")))
+                      #:run "cat" file))
+           #f)))
+
+(test-assert "outputs with #:other parameters that fail to evaluate must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "#:other parameter not serializable to YAML"))))
+    (begin (macroexpand
+            '(command #:outputs (file #:type File
+                                      #:other '((secondaryFiles . ".fai")))
+                      #:run "cat" file))
+           #f)))
+
+(test-assert "commands with #:other parameters that fail to evaluate must raise a &ccwl-violation condition"
+  (guard (exception
+          (else (and (ccwl-violation? exception)
+                     (string=? (formatted-message-format exception)
+                               "#:other parameter not serializable to YAML"))))
+    (begin (macroexpand
+            '(command #:run "cat" file
+                      #:other '((secondaryFiles . ".fai"))))
+           #f)))
+
 (test-end "ccwl")
