@@ -126,42 +126,38 @@ number. Line numbers start from STARTING-LINE-NUMBER."
 return #t."
   (string-every char-set:whitespace str))
 
-(define (source-in-context file line-number column-number)
-  "Return source from FILE at LINE-NUMBER, COLUMN-NUMBER in context
+(define (source-in-context port line-number column-number)
+  "Return source from PORT at LINE-NUMBER, COLUMN-NUMBER in context
 with S-expression at LINE-NUMBER, COLUMN-NUMBER highlit in
 red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
   (call-with-output-string
     (lambda (out)
-      (call-with-input-file file
-        (lambda (in)
-          ;; Get to line preceding syntax x.
-          (repeat (cut get-line in)
-                  (max 0 (1- line-number)))
-          ;; Display line preceding syntax x unless blank.
-          (let ((line (get-line in)))
-            (unless (or (zero? line-number)
-                        (string-blank? line))
-              (put-line line out)))
-          ;; Display part of line before syntax x.
-          (display (get-string-n in column-number)
-                   out)
-          ;; Display syntax x in red.  Color each line separately to
-          ;; help line oriented functions like
-          ;; `display-with-line-numbers'.
-          (display (string-join (map (compose bold red)
-                                     (string-split (read-sexp-string in)
-                                                   #\newline))
-                                "\n")
-                   out)
-          ;; (display (bold (red (read-sexp-string in)))
-          ;;          out)
-          ;; Display part of line after syntax x.
-          (put-line (get-line in) out)
-          ;; Display line following syntax x unless blank.
-          (let ((line (get-line in)))
-            (unless (or (eof-object? line)
-                        (string-blank? line))
-              (put-line line out))))))))
+      ;; Get to line preceding syntax x.
+      (repeat (cut get-line port)
+              (max 0 (1- line-number)))
+      ;; Display line preceding syntax x unless blank.
+      (let ((line (get-line port)))
+        (unless (or (zero? line-number)
+                    (string-blank? line))
+          (put-line line out)))
+      ;; Display part of line before syntax x.
+      (display (get-string-n port column-number)
+               out)
+      ;; Display syntax x in red.  Color each line separately to
+      ;; help line oriented functions like
+      ;; `display-with-line-numbers'.
+      (display (string-join (map (compose bold red)
+                                 (string-split (read-sexp-string port)
+                                               #\newline))
+                            "\n")
+               out)
+      ;; Display part of line after syntax x.
+      (put-line (get-line port) out)
+      ;; Display line following syntax x unless blank.
+      (let ((line (get-line port)))
+        (unless (or (eof-object? line)
+                    (string-blank? line))
+          (put-line line out))))))
 
 (define (report-ccwl-violation exception)
   (let ((file (ccwl-violation-file exception))
@@ -174,6 +170,7 @@ red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
     (display " " (current-error-port))
     (when (formatted-message? exception)
       (report-formatted-message exception))
-    (display-with-line-numbers (source-in-context file line column)
+    (display-with-line-numbers (call-with-input-file file
+                                 (cut source-in-context <> line column))
                                (current-error-port)
                                (max 1 line))))
