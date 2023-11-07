@@ -25,6 +25,7 @@
 
 (define-module (ccwl cwl)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
   #:use-module (ice-9 match)
   #:use-module (ccwl ccwl)
   #:use-module (ccwl utils)
@@ -67,14 +68,7 @@ association list."
     ,@(workflow-other workflow)
     (inputs . ,(map input->cwl-scm
                     (workflow-inputs workflow)))
-    (outputs . ,(map (lambda (output)
-                       `(,(output-id output)
-                         (type . ,(match (output-type output)
-                                    ('stdout 'File)
-                                    (some-other-type some-other-type)))
-                         (outputSource . ,(match (output-source output)
-                                            ((? string? source) source)
-                                            ((? input? input) (input-id input))))))
+    (outputs . ,(map (cut output->cwl-scm <> #:workflow? #t)
                      (workflow-outputs workflow)))
     (steps . ,(map (lambda (step)
                      `(,(step-id step)
@@ -94,14 +88,27 @@ association list."
                                  (tree tree)))))
                    (workflow-steps workflow)))))
 
-(define (output->cwl-scm output)
-  "Render OUTPUT, a <output> object, into a CWL tree."
+(define* (output->cwl-scm output #:key workflow?)
+  "Render @var{output}, a @code{<output>} object, into a CWL tree. If
+@var{workflow?} is @code{#t}, this is a workflow output."
   `(,(output-id output)
-    ,@(filter identity
-              (list (and (output-type output)
-                         (cons 'type (output-type output)))
-                    (and (output-binding output)
-                         (cons 'outputBinding (output-binding output)))))
+    ,@(or (filter-alist
+           `(,@(cond
+                ;; In workflows, convert stdout outputs to File
+                ;; outputs.
+                ((and workflow?
+                      (eq? (output-type output) 'stdout))
+                 `((type . File)))
+                (else
+                 `((type . ,(output-type output)))))
+             ;; outputBinding is relevant only to commands, and
+             ;; outputSource is relevant only to workflows.
+             ,@(if workflow?
+                   `((outputSource . ,(match (output-source output)
+                                        ((? string? source) source)
+                                        ((? input? input) (input-id input)))))
+                   `((outputBinding . ,(output-binding output))))))
+          '())
     ,@(output-other output)))
 
 (define (command->cwl command port)
