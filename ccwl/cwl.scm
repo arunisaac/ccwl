@@ -65,14 +65,7 @@ association list."
     (class . Workflow)
     (requirements (SubworkflowFeatureRequirement))
     ,@(workflow-other workflow)
-    (inputs . ,(map (lambda (input)
-                      `(,(input-id input)
-                        ,@(filter-alist
-                           `((type . ,(input-type input))
-                             (label . ,(input-label input))
-                             (default . ,(and (not (unspecified-default? (input-default input)))
-                                              (input-default input)))))
-                        ,@(input-other input)))
+    (inputs . ,(map input->cwl-scm
                     (workflow-inputs workflow)))
     (outputs . ,(map (lambda (output)
                        `(,(output-id output)
@@ -117,6 +110,24 @@ CWL YAML specification."
   (scm->yaml (command->cwl-scm command)
              port))
 
+(define (input->cwl-scm input)
+  "Render @var{input}, a @code{<input>} object, into a CWL tree."
+  `(,(input-id input)
+    (type . ,(input-type input))
+    ,@(or (filter-alist
+           `((label . ,(input-label input))
+             (default . ,(and (not (unspecified-default? (input-default input)))
+                              (input-default input)))
+             ;; inputBinding is only relevant to commands, not
+             ;; workflows. But, the input position and prefix are not set
+             ;; for worklow inputs and therefore this sub-expression has
+             ;; no effect. So, leave this be.
+             (inputBinding . ,(filter-alist
+                               `((position . ,(input-position input))
+                                 (prefix . ,(input-prefix input)))))))
+          '())
+    ,@(input-other input)))
+
 (define (command->cwl-scm command)
   "Render COMMAND, a <command> object, into a CWL tree."
   `((cwlVersion . ,%cwl-version)
@@ -142,17 +153,7 @@ CWL YAML specification."
                                        `((position . ,index)
                                          (valueFrom . ,arg))))
                                 (command-args command))))
-    (inputs . ,(map (lambda (input)
-                      `(,(input-id input)
-                        ,@(filter-alist
-                           `((type . ,(input-type input))
-                             (label . ,(input-label input))
-                             (default . ,(and (not (unspecified-default? (input-default input)))
-                                              (input-default input)))
-                             (inputBinding . ,(filter-alist
-                                               `((position . ,(input-position input))
-                                                 (prefix . ,(input-prefix input)))))))
-                        ,@(input-other input)))
+    (inputs . ,(map input->cwl-scm
                     (command-inputs command)))
     (outputs . ,(map output->cwl-scm (command-outputs command)))
     ,@(if (command-stdin command)
