@@ -73,6 +73,8 @@
             output-binding
             output-source
             output-other
+            array-type?
+            array-type-member-type
             step?
             step-id
             step-run
@@ -92,6 +94,27 @@
   (stage? input-stage?)
   (other input-other))
 
+(define (memoize proc)
+  "Return a memoized version of @var{proc}. Arguments to @var{proc} are
+compared using @code{equal?}."
+  (let ((memoized-results (list)))
+    (lambda args
+      (unless (assoc args memoized-results)
+        (set! memoized-results
+              (acons args (apply proc args)
+                     memoized-results)))
+      (assoc-ref memoized-results args))))
+
+(define-immutable-record-type <array-type>
+  (-make-array-type member-type)
+  array-type?
+  (member-type array-type-member-type))
+
+;; We memoize the <array-type> constructor to enable easy comparison
+;; using eq?.
+(define make-array-type
+  (memoize -make-array-type))
+
 (define-immutable-record-type <unspecified-default>
   (make-unspecified-default)
   unspecified-default?)
@@ -104,6 +127,16 @@
     (raise-exception
      (condition (ccwl-violation tree)
                 (formatted-message "#:other parameter not serializable to YAML")))))
+
+(define (construct-type-syntax type-spec)
+  "Return syntax to build a type from @var{type-spec}."
+  ;; TODO: Does CWL support arrays of arrays? If so, support such
+  ;; recursive type definitions.
+  (syntax-case type-spec (array)
+    ((array member-type)
+     #'(make-array-type 'member-type))
+    (primitive-type
+     #''primitive-type)))
 
 (define (input input-spec)
   "Return syntax to build an <input> object from INPUT-SPEC."
@@ -149,7 +182,9 @@
                 (ensure-yaml-serializable other)
                 (let ((position #f)
                       (prefix #f))
-                  #`(make-input '#,id '#,type #,label
+                  #`(make-input '#,id
+                                #,(construct-type-syntax type)
+                                #,label
                                 #,(if (unspecified-default? default)
                                       #'(make-unspecified-default)
                                       default)
@@ -203,7 +238,9 @@
                              (formatted-message "Output has no identifier")))))))
        (apply (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
                 (ensure-yaml-serializable other)
-                #`(make-output '#,id '#,type #,binding #,source '#,other))
+                #`(make-output '#,id
+                               #,(construct-type-syntax type)
+                               #,binding #,source '#,other))
               #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))

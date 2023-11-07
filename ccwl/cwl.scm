@@ -94,6 +94,9 @@ association list."
   `(,(output-id output)
     ,@(or (filter-alist
            `(,@(cond
+                ((array-type? (output-type output))
+                 `((type . ((type . array)
+                            (items . ,(array-type-member-type (output-type output)))))))
                 ;; In workflows, convert stdout outputs to File
                 ;; outputs.
                 ((and workflow?
@@ -120,7 +123,10 @@ CWL YAML specification."
 (define (input->cwl-scm input)
   "Render @var{input}, a @code{<input>} object, into a CWL tree."
   `(,(input-id input)
-    (type . ,(input-type input))
+    ,@(if (array-type? (input-type input))
+          `((type . ((type . array)
+                     (items . ,(array-type-member-type (input-type input))))))
+          `((type . ,(input-type input))))
     ,@(or (filter-alist
            `((label . ,(input-label input))
              (default . ,(and (not (unspecified-default? (input-default input)))
