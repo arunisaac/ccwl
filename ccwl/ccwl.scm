@@ -443,10 +443,6 @@ identifiers defined in the commands."
                                (make-output id type #f #f #f)))
                             (parameters->id+type (assoc-ref yaml "outputs"))))))
 
-(define (input=? input1 input2)
-  (eq? (input-id input1)
-       (input-id input2)))
-
 (define (function-inputs function)
   "Return the list of inputs accepted by @var{function}, a
 @code{<command>} or @code{<cwl-workflow>} object."
