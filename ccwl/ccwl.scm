@@ -683,7 +683,9 @@ represented by <step> objects."
 (define (key->output key steps)
   "Return syntax to construct an <output> object corresponding to KEY,
 a <key> object, in STEPS, a list of <step> objects. If no such
-<output> object is found, return #f."
+<output> object is found, return #f. Note that the returned syntax is
+only applicable to construct <output> objects for workflows, not in
+commands."
   (and-let* ((step-with-output (find (lambda (step)
                                        (eq? (step-id step)
                                             (key-step key)))
