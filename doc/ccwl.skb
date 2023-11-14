@@ -332,6 +332,13 @@ to ,(emph "stage") the input file into the output directory. We may
 express this in ccwl using the ,(code "#:stage?") parameter to the
 inputs to be staged. Here is a rather concocted example.]
          (scheme-source "doc/staging-input-files.scm")))
+    (section :title [Scatter/gather]
+      (p [ccwl supports CWL's dotproduct scatter/gather feature using
+the following syntax. Here, the ,(code [other-messages]) input to the
+workflow is an array of strings that is scattered over the ,(code
+[print]) step. Each run of the ,(code [print]) step gets an element of
+,(code [other-messages]) as its ,(code [other-message]) argument.]
+         (scheme-source "doc/scatter-gather.scm")))
     (section :title [Reuse external CWL workflows]
       (p [Even though you may be a ccwl convert (hurrah!), others may
 not be. And, you might have to work with CWL workflows written by

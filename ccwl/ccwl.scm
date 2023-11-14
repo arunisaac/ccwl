@@ -80,6 +80,8 @@
             step-run
             step-in
             step-out
+            step-scattered-inputs
+            step-scatter-method
             unspecified-default?))
 
 (define-immutable-record-type <input>
@@ -274,11 +276,16 @@ object."
    function))
 
 (define-immutable-record-type <step>
-  (make-step id run in)
+  (-make-step id run in scattered-inputs scatter-method)
   step?
   (id step-id)
   (run step-run)
-  (in step-in))
+  (in step-in)
+  (scattered-inputs step-scattered-inputs set-step-scattered-inputs)
+  (scatter-method step-scatter-method set-step-scatter-method))
+
+(define* (make-step id run in #:key (scattered-inputs '()) (scatter-method 'dotproduct))
+  (-make-step id run in scattered-inputs scatter-method))
 
 (define step-out (compose function-outputs step-run))
 
@@ -543,12 +550,30 @@ return #f."
              (cwl-workflow? result))
          result)))
 
+(define (collect-scatter-step x input-keys scatter-method)
+  "Return a list of output keys and a list of steps from scatter workflow
+clause @var{x} and @var{scatter-method}. @var{input-keys} is a list of
+supplied input keys."
+  (syntax-case x ()
+    ((_ (function-spec ...) scattered-args ...)
+     (let ((keys steps
+                 (collect-steps #'(function-spec ... scattered-args ...)
+                                input-keys)))
+       (values keys
+               (map (lambda (step)
+                      (set-step-scattered-inputs
+                       (set-step-scatter-method step scatter-method)
+                       (map (match-lambda
+                              ((key . _) (keyword->symbol key)))
+                            (syntax->datum (pairify #'(scattered-args ...))))))
+                    steps))))))
+
 (define (collect-steps x input-keys)
   "Traverse ccwl workflow body X and return two values---a list of
 output keys and a list of steps. INPUT-KEYS is a list of supplied
 input keys. Keys are represented by <key> objects, and steps are
 represented by <step> objects."
-  (syntax-case x (pipe tee rename)
+  (syntax-case x (pipe tee rename scatter)
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
@@ -572,6 +597,9 @@ represented by <step> objects."
                         key))
                   input-keys)
              (list)))
+    ;; TODO: Support cross product scatter methods.
+    ((scatter _ ...)
+     (collect-scatter-step x input-keys 'dotproduct))
     ((function (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
@@ -706,9 +734,21 @@ commands."
                                  (cwl-key-address key))
               (key-name key))
              ;; Convert stdout type outputs to File type outputs.
-             (if (eq? (output-type output-for-key) 'stdout)
-                 'File
-                 (output-type output-for-key)))))
+             (let ((type
+                    (cond
+                     ((eq? (output-type output-for-key)
+                           'stdout)
+                      'File)
+                     ((and (array-type? (output-type output-for-key))
+                           (eq? (array-type-member-type (output-type output-for-key))
+                                'stdout))
+                      (make-array-type 'File))
+                     (else
+                      (output-type output-for-key)))))
+               ;; If step scatters, convert to an array type.
+               (if (null? (step-scattered-inputs step-with-output))
+                   type
+                   (make-array-type type))))))
       ;; Construct syntax to recreate output object.
       #`(make-output
          #,(with-syntax ((id (datum->syntax #f (output-id output))))
@@ -737,7 +777,13 @@ commands."
                                    #''id)
                                #,(step-run step)
                                #,(with-syntax ((in (datum->syntax #f (step-in step))))
-                                   #''in)))
+                                   #''in)
+                               #:scattered-inputs #,(with-syntax ((scattered-inputs
+                                                                   (datum->syntax #f (step-scattered-inputs step))))
+                                                      #''scattered-inputs)
+                               #:scatter-method #,(with-syntax ((scatter-method
+                                                                 (datum->syntax #f (step-scatter-method step))))
+                                                    #''scatter-method)))
                           steps))
             (list #,@(map input #'(inputs ...)))
             ;; Find the output object for each output

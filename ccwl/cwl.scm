@@ -64,7 +64,11 @@ association list."
   "Render WORKFLOW, a <workflow> object, into a CWL tree."
   `((cwlVersion . ,%cwl-version)
     (class . Workflow)
-    (requirements (SubworkflowFeatureRequirement))
+    (requirements . ((SubworkflowFeatureRequirement)
+                     ,@(if (every (compose null? step-scattered-inputs)
+                                  (workflow-steps workflow))
+                           '()
+                           '((ScatterFeatureRequirement)))))
     ,@(workflow-other workflow)
     (inputs . ,(map input->cwl-scm
                     (workflow-inputs workflow)))
@@ -85,7 +89,12 @@ association list."
                                   (command->cwl-scm command))
                                  ((? cwl-workflow? cwl-workflow)
                                   (cwl-workflow-file cwl-workflow))
-                                 (tree tree)))))
+                                 (tree tree)))
+                       ,@(match (step-scattered-inputs step)
+                           (() '())
+                           (scattered-inputs
+                            `((scatter . ,(list->vector scattered-inputs))
+                              (scatterMethod . ,(step-scatter-method step)))))))
                    (workflow-steps workflow)))))
 
 (define* (output->cwl-scm output #:key workflow?)
