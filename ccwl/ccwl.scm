@@ -688,16 +688,31 @@ a <key> object, in STEPS, a list of <step> objects. If no such
                                        (eq? (step-id step)
                                             (key-step key)))
                                      steps)))
-    (with-syntax ((key-name (datum->syntax #f (key-name key)))
-                  (key-cwl-id (datum->syntax #f (key-cwl-id key))))
-      #`(set-output-id
-         (set-output-source (find (lambda (output)
-                                    (eq? (output-id output)
-                                         'key-cwl-id))
-                                  (function-outputs
-                                   #,(step-run step-with-output)))
-                            #,(cwl-key-address key))
-         'key-name))))
+    (let* ((output-for-key
+            ;; Find output object that corresponds to key.
+            (find (lambda (output)
+                    (eq? (output-id output)
+                         (key-cwl-id key)))
+                  (function-outputs
+                   (function-object
+                    (step-run step-with-output)))))
+           (output
+            ;; Set output id and source fields from key.
+            (set-output-id
+             (set-output-source output-for-key
+                                (cwl-key-address key))
+             (key-name key))))
+      ;; Construct syntax to recreate output object.
+      #`(make-output
+         #,(with-syntax ((id (datum->syntax #f (output-id output))))
+             #''id)
+         #,(with-syntax ((type (datum->syntax #f (output-type output))))
+             #''type)
+         #,(with-syntax ((binding (datum->syntax #f (output-binding output))))
+             #''binding)
+         #,(output-source output)
+         #,(with-syntax ((other (datum->syntax #f (output-other output))))
+             #''other)))))
 
 (define-syntax workflow
   (lambda (x)
