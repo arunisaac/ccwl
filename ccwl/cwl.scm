@@ -93,17 +93,10 @@ association list."
 @var{workflow?} is @code{#t}, this is a workflow output."
   `(,(output-id output)
     ,@(or (filter-alist
-           `(,@(cond
-                ((array-type? (output-type output))
-                 `((type . ((type . array)
-                            (items . ,(array-type-member-type (output-type output)))))))
-                ;; In workflows, convert stdout outputs to File
-                ;; outputs.
-                ((and workflow?
-                      (eq? (output-type output) 'stdout))
-                 `((type . File)))
-                (else
-                 `((type . ,(output-type output)))))
+           `(,@(if (array-type? (output-type output))
+                   `((type . ((type . array)
+                              (items . ,(array-type-member-type (output-type output))))))
+                   `((type . ,(output-type output))))
              ;; outputBinding is relevant only to commands, and
              ;; outputSource is relevant only to workflows.
              ,@(if workflow?

@@ -197,7 +197,7 @@ compared using @code{equal?}."
   (make-output id type binding source other)
   output?
   (id output-id set-output-id)
-  (type output-type)
+  (type output-type set-output-type)
   (binding output-binding)
   (source output-source set-output-source)
   (other output-other))
@@ -697,11 +697,16 @@ a <key> object, in STEPS, a list of <step> objects. If no such
                    (function-object
                     (step-run step-with-output)))))
            (output
-            ;; Set output id and source fields from key.
-            (set-output-id
-             (set-output-source output-for-key
-                                (cwl-key-address key))
-             (key-name key))))
+            (set-output-type
+             ;; Set output id and source fields from key.
+             (set-output-id
+              (set-output-source output-for-key
+                                 (cwl-key-address key))
+              (key-name key))
+             ;; Convert stdout type outputs to File type outputs.
+             (if (eq? (output-type output-for-key) 'stdout)
+                 'File
+                 (output-type output-for-key)))))
       ;; Construct syntax to recreate output object.
       #`(make-output
          #,(with-syntax ((id (datum->syntax #f (output-id output))))
