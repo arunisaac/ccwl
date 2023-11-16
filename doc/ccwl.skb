@@ -332,6 +332,11 @@ to ,(emph "stage") the input file into the output directory. We may
 express this in ccwl using the ,(code "#:stage?") parameter to the
 inputs to be staged. Here is a rather concocted example.]
          (scheme-source "doc/staging-input-files.scm")))
+    (section :title [Array types]
+      (p [ccwl supports array types using the following syntax.]
+         (scheme-source "doc/array-types.scm"))
+      (p [Nested array types are also supported.]
+         (scheme-source "doc/nested-array-types.scm")))
     (section :title [Scatter/gather]
       (p [ccwl supports CWL's dotproduct scatter/gather feature using
 the following syntax. Here, the ,(code [other-messages]) input to the

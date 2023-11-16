@@ -27,6 +27,16 @@
 (define output
   (@@ (ccwl ccwl) output))
 
+(define make-array-type
+  (@@ (ccwl ccwl) make-array-type))
+
+(define-syntax construct-type-syntax-wrapper
+  (lambda (x)
+    (syntax-case x ()
+      ((_ type-spec)
+       ((@@ (ccwl ccwl) construct-type-syntax)
+        #'type-spec)))))
+
 (test-begin "ccwl")
 
 (test-assert "stdin input should not have inputBinding"
@@ -316,5 +326,17 @@
             '(command #:run "cat" file
                       #:other '((secondaryFiles . ".fai"))))
            #f)))
+
+(test-eq "construct-type-syntax on primitive types"
+  'File
+  (construct-type-syntax-wrapper File))
+
+(test-eq "construct-type-syntax on array types"
+  (make-array-type 'File)
+  (construct-type-syntax-wrapper (array File)))
+
+(test-eq "construct-type-syntax on nested array types"
+  (make-array-type (make-array-type 'File))
+  (construct-type-syntax-wrapper (array (array File))))
 
 (test-end "ccwl")

@@ -132,11 +132,9 @@ compared using @code{equal?}."
 
 (define (construct-type-syntax type-spec)
   "Return syntax to build a type from @var{type-spec}."
-  ;; TODO: Does CWL support arrays of arrays? If so, support such
-  ;; recursive type definitions.
   (syntax-case type-spec (array)
     ((array member-type)
-     #'(make-array-type 'member-type))
+     #`(make-array-type #,(construct-type-syntax #'member-type)))
     (primitive-type
      #''primitive-type)))
 
@@ -714,6 +712,14 @@ a <key> object, in STEPS, a list of <step> objects. If no such
 <output> object is found, return #f. Note that the returned syntax is
 only applicable to construct <output> objects for workflows, not in
 commands."
+  (define (stdout->file-type type)
+    "Recursively convert stdout types in @var{type} to File types."
+    (cond
+     ((array-type? type)
+      (make-array-type (stdout->file-type (array-type-member-type type))))
+     ((eq? type 'stdout) 'File)
+     (else type)))
+
   (and-let* ((step-with-output (find (lambda (step)
                                        (eq? (step-id step)
                                             (key-step key)))
@@ -734,17 +740,7 @@ commands."
                                  (cwl-key-address key))
               (key-name key))
              ;; Convert stdout type outputs to File type outputs.
-             (let ((type
-                    (cond
-                     ((eq? (output-type output-for-key)
-                           'stdout)
-                      'File)
-                     ((and (array-type? (output-type output-for-key))
-                           (eq? (array-type-member-type (output-type output-for-key))
-                                'stdout))
-                      (make-array-type 'File))
-                     (else
-                      (output-type output-for-key)))))
+             (let ((type (stdout->file-type (output-type output-for-key))))
                ;; If step scatters, convert to an array type.
                (if (null? (step-scattered-inputs step-with-output))
                    type

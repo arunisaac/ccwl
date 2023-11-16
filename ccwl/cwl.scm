@@ -97,15 +97,19 @@ association list."
                               (scatterMethod . ,(step-scatter-method step)))))))
                    (workflow-steps workflow)))))
 
+(define (type->cwl type)
+  "Render @var{type} into a CWL tree."
+  (if (array-type? type)
+      `((type . array)
+        (items . ,(type->cwl (array-type-member-type type))))
+      type))
+
 (define* (output->cwl-scm output #:key workflow?)
   "Render @var{output}, a @code{<output>} object, into a CWL tree. If
 @var{workflow?} is @code{#t}, this is a workflow output."
   `(,(output-id output)
     ,@(or (filter-alist
-           `(,@(if (array-type? (output-type output))
-                   `((type . ((type . array)
-                              (items . ,(array-type-member-type (output-type output))))))
-                   `((type . ,(output-type output))))
+           `((type . ,(type->cwl (output-type output)))
              ;; outputBinding is relevant only to commands, and
              ;; outputSource is relevant only to workflows.
              ,@(if workflow?
@@ -125,10 +129,7 @@ CWL YAML specification."
 (define (input->cwl-scm input)
   "Render @var{input}, a @code{<input>} object, into a CWL tree."
   `(,(input-id input)
-    ,@(if (array-type? (input-type input))
-          `((type . ((type . array)
-                     (items . ,(array-type-member-type (input-type input))))))
-          `((type . ,(input-type input))))
+    (type . ,(type->cwl (input-type input)))
     ,@(or (filter-alist
            `((label . ,(input-label input))
              (default . ,(and (not (unspecified-default? (input-default input)))
