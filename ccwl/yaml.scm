@@ -99,24 +99,29 @@ PORT. LEVEL is an internal recursion variable."
      (display-atom single-element port)
      (display "]" port)
      (newline port))
+    ;; General arrays
     (#(head tail ...)
      (display-array-element head port level)
      (for-each (lambda (element)
                  (indent-level port level)
                  (display-array-element element port level))
                tail))
+    ;; Empty arrays
     (#()
      (display "[]" port)
      (newline port))
+    ;; General dictionaries
     ((head tail ...)
      (display-dictionary-entry head port level)
      (for-each (lambda (entry)
                  (indent-level port level)
                  (display-dictionary-entry entry port level))
                tail))
+    ;; Empty dictionaries
     (()
      (display "{}" port)
      (newline port))
+    ;; Atoms
     (symbol
      (display-atom symbol port)
      (newline port))))
