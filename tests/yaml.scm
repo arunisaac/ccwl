@@ -31,12 +31,19 @@ bar: {}
 
 (test-equal "strings with hyphen characters should be escaped"
   "- \"-1\"
+- \"-2\"
 "
-  (scm->yaml-string #("-1")))
+  (scm->yaml-string #("-1" "-2")))
 
 (test-equal "strings with asterisk characters should be escaped"
   "- \"*foo\"
+- \"*bar\"
 "
-  (scm->yaml-string #("*foo")))
+  (scm->yaml-string #("*foo" "*bar")))
+
+(test-equal "single element vectors must be serialized on the same line"
+  "[foo]
+"
+  (scm->yaml-string #("foo")))
 
 (test-end "yaml")

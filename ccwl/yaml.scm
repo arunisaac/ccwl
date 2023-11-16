@@ -34,6 +34,14 @@
   #:export (scm->yaml
             scm->yaml-string))
 
+(define (atom? x)
+  "Return @code{#t} if @var{x} is a primitive element that can be
+serialized to YAML. Else, return @code{#f}."
+  (or (symbol? x)
+      (boolean? x)
+      (number? x)
+      (string? x)))
+
 (define (display-atom atom port)
   "Display ATOM in PORT."
   (cond
@@ -68,9 +76,11 @@
      (display-atom key port)
      (display ":" port)
      (match value
-       ;; If value is an empty array or dictionary, display it on the
-       ;; same line.
-       ((or #() ())
+       ;; Display on the same line if value is
+       ;; - an empty array
+       ;; - an empty dictionary
+       ;; - an array with an atom as its only element
+       ((or #() () #((? atom? _)))
         (display " " port)
         (scm->yaml value port level))
        ;; Else, display it on the next line.
@@ -83,6 +93,12 @@
   "Convert SCM, an S-expression tree, to YAML and display to
 PORT. LEVEL is an internal recursion variable."
   (match scm
+    ;; Display arrays with a single atomic element on the same line.
+    (#((? atom? single-element))
+     (display "[" port)
+     (display-atom single-element port)
+     (display "]" port)
+     (newline port))
     (#(head tail ...)
      (display-array-element head port level)
      (for-each (lambda (element)
