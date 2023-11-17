@@ -46,4 +46,9 @@ bar: {}
 "
   (scm->yaml-string #("foo")))
 
+(test-equal "dictionary keys that map to an atomic value must be serialized on the same line"
+  "foo: bar
+"
+  (scm->yaml-string '((foo . bar))))
+
 (test-end "yaml")

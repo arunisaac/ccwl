@@ -79,8 +79,9 @@ serialized to YAML. Else, return @code{#f}."
        ;; Display on the same line if value is
        ;; - an empty array
        ;; - an empty dictionary
+       ;; - an atom
        ;; - an array with an atom as its only element
-       ((or #() () #((? atom? _)))
+       ((or #() () (? atom? _) #((? atom? _)))
         (display " " port)
         (scm->yaml value port level))
        ;; Else, display it on the next line.
