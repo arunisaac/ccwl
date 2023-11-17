@@ -22,6 +22,7 @@
 (document :title [Concise Common Workflow Language]
   (toc)
   (chapter :title [Introduction]
+           :ident "chapter-introduction"
     (p [,(abbr :short "CWL" :long "Common Workflow
 Language") is an open standard for describing analysis workflows and
 tools in a way that makes them portable and scalable across a variety
@@ -36,12 +37,14 @@ from concise descriptions in ccwl. In the future, ccwl will also have
 a runtime whereby users can interactively execute workflows while
 developing them.]))
   (chapter :title [Tutorial]
+           :ident "chapter-tutorial"
     (p [This tutorial will introduce you to writing
 workflows in ccwl. Some knowledge of CWL is assumed. To learn about
 CWL, please see the ,(ref :url "https://www.commonwl.org/user_guide/"
 :text "Common Workflow Language User Guide")])
 
     (section :title [Important concepts]
+             :ident "section-important-concepts"
       (p [The CWL and ccwl workflow languages
 are statically typed programming languages where functions accept
 multiple named inputs and return multiple named outputs. Let 's break
@@ -71,6 +74,7 @@ function can return multiple output values as well. These multiple
 outputs are unordered and are each addressed by a unique name.])))
 
     (section :title [First example]
+             :ident "section-first-example"
       (p [As is tradition, let us start with a simple ,(emph "Hello
 World") workflow in ccwl. This workflow accepts a string input and
 prints that string.])
@@ -113,6 +117,7 @@ as follows. The expected output is also shown.])
       (prog :line #f (source :file "doc/hello-world.out")))
 
     (section :title [Capturing the standard output stream of a command]
+             :ident "section-capturing-stdout"
       (p [Let us return to the ,(emph "Hello World") example in the
 previous section. But now, let us capture the standard output of the
 ,(code "print") command in an output object. The ccwl code is the same
@@ -132,6 +137,7 @@ output of the ,(code "print") command has been captured in the file
       (prog :line #f (source :file "doc/capture-stdout.out")))
 
     (section :title [Capturing output files]
+             :ident "section-capturing-output-files"
       (p [In the previous section, we captured the standard output
 stream of a command. But, how do we capture any output files created
 by a command? Let us see.])
@@ -172,6 +178,7 @@ output.])
       (prog :line #f (source :file "doc/capture-output-file-with-parameter-reference.out")))
 
     (section :title [Passing input into the standard input stream of a command]
+             :ident "section-passing-input-into-stdin"
       (p [Some commands read input from their standard input
 stream. Let us do that from ccwl. The workflow below reports the size
 of a file by passing it into the standard input of
@@ -187,6 +194,7 @@ input of ,(command "wc"), and the file size reported in bytes.])
       (prog :line #f (source :file "doc/pass-stdin.out")))
 
     (section :title [Workflow with multiple steps]
+             :ident "section-workflow-with-multiple-steps"
       (p [Till now, we have only written trivial workflows with a
 single command. If we were only interested in executing single
 commands, we would hardly need a workflow language! So, in this
@@ -249,6 +257,7 @@ following output.])
 "md5"), ,(file "sha1") and ,(file "sha256") respectively.])))
 
     (section :title [Let's write a spell check workflow]
+             :ident "section-spell-check-workflow"
       (p [Finally, let's put together a complex workflow to understand
 how everything fits together. The workflow we will be attempting is a
 spell check workflow inspired by the founders of Unix,(footnote
@@ -323,7 +332,9 @@ misspelt words appear at the output.]
          (prog :line #f (source :file "doc/spell-check.out")))))
 
   (chapter :title [Cookbook]
+           :ident "chapter-cookbook"
     (section :title [Stage input files]
+             :ident "section-stage-input-files"
       (p [When running command-line tools, CWL normally has separate
 directories for input and output files. But, some command-line tools
 expect their input and output files to be in the same directory, and
@@ -333,11 +344,13 @@ express this in ccwl using the ,(code "#:stage?") parameter to the
 inputs to be staged. Here is a rather concocted example.]
          (scheme-source "doc/staging-input-files.scm")))
     (section :title [Array types]
+             :ident "section-array-types"
       (p [ccwl supports array types using the following syntax.]
          (scheme-source "doc/array-types.scm"))
       (p [Nested array types are also supported.]
          (scheme-source "doc/nested-array-types.scm")))
     (section :title [Scatter/gather]
+             :ident "section-scatter-gather"
       (p [ccwl supports CWL's dotproduct scatter/gather feature using
 the following syntax. Here, the ,(code [other-messages]) input to the
 workflow is an array of strings that is scattered over the ,(code
@@ -345,6 +358,7 @@ workflow is an array of strings that is scattered over the ,(code
 ,(code [other-messages]) as its ,(code [other-message]) argument.]
          (scheme-source "doc/scatter-gather.scm")))
     (section :title [Reuse external CWL workflows]
+             :ident "section-reuse-external-cwl-workflows"
       (p [Even though you may be a ccwl convert (hurrah!), others may
 not be. And, you might have to work with CWL workflows written by
 others. ccwl permits easy reuse of external CWL workflows, and free
@@ -360,6 +374,7 @@ the external CWL workflow.]
          (prog :line #f (source :file "doc/echo.cwl")))))
 
   (chapter :title [Contributing]
+           :ident "chapter-contributing"
     (p [ccwl is developed on GitHub at ,(ref
 :url "https://github.com/arunisaac/ccwl"). Feedback, suggestions,
 feature requests, bug reports and pull requests are all
