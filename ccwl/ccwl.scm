@@ -578,7 +578,7 @@ supplied input keys."
 output keys and a list of steps. INPUT-KEYS is a list of supplied
 input keys. Keys are represented by <key> objects, and steps are
 represented by <step> objects."
-  (syntax-case x (pipe tee rename scatter)
+  (syntax-case x (pipe tee rename scatter scatter-cross scatter-nested-cross)
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
@@ -605,6 +605,10 @@ represented by <step> objects."
     ;; TODO: Support cross product scatter methods.
     ((scatter _ ...)
      (collect-scatter-step x input-keys 'dotproduct))
+    ((scatter-cross _ ...)
+     (collect-scatter-step x input-keys 'flat_crossproduct))
+    ((scatter-nested-cross _ ...)
+     (collect-scatter-step x input-keys 'nested_crossproduct))
     ((function (step-id) args ...)
      ;; Run a whole bunch of tests so that we can produce useful error
      ;; messages.
@@ -749,9 +753,25 @@ commands."
              ;; Convert stdout type outputs to File type outputs.
              (let ((type (stdout->file-type (output-type output-for-key))))
                ;; If step scatters, convert to an array type.
-               (if (null? (step-scattered-inputs step-with-output))
-                   type
-                   (make-array-type type))))))
+               (cond
+                ((null? (step-scattered-inputs step-with-output))
+                 type)
+                (step-scatter-method step-with-output)
+                ;; For dot products and flat cross products, create a
+                ;; singly nested array type.
+                ((memq (step-scatter-method step-with-output)
+                       '(dotproduct flat_crossproduct))
+                 (make-array-type type))
+                ;; For nested cross products, create a sufficiently
+                ;; nested array type.
+                ((eq? (step-scatter-method step-with-output)
+                      'nested_crossproduct)
+                 (fold (lambda (_ result)
+                         (make-array-type result))
+                       type
+                       (step-scattered-inputs step-with-output)))
+                (else
+                 (error "This should not be possible!")))))))
       ;; Construct syntax to recreate output object.
       #`(make-output
          #,(with-syntax ((id (datum->syntax #f (output-id output))))
