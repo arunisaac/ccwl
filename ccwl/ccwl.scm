@@ -596,9 +596,19 @@ represented by <step> objects."
      (values (map (lambda (key)
                     (or (any (match-lambda
                                ((new . old)
-                                (and (eq? old (key-name key))
-                                     (set-key-name key (keyword->symbol new)))))
-                             (syntax->datum (pairify #'(mapping ...))))
+                                (unless (keyword? (syntax->datum new))
+                                  (raise-exception
+                                   (condition (ccwl-violation new)
+                                              (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
+                                (unless (symbol? (syntax->datum old))
+                                  (raise-exception
+                                   (condition (ccwl-violation old)
+                                              (formatted-message "Unknown key ~a. Known keys at this step are ~a."
+                                                                 (syntax->datum old)
+                                                                 (map key-name input-keys)))))
+                                (and (eq? (syntax->datum old) (key-name key))
+                                     (set-key-name key (keyword->symbol (syntax->datum new))))))
+                             (pairify #'(mapping ...)))
                         key))
                   input-keys)
              (list)))
