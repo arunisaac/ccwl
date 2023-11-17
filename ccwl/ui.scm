@@ -20,6 +20,7 @@
   #:use-module (rnrs io ports)
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-28)
+  #:use-module (ice-9 string-fun)
   #:use-module (term ansi-color)
   #:use-module (ccwl conditions)
   #:export (report-formatted-message
@@ -29,9 +30,17 @@
   "Report @var{exception}, a @code{&formatted-message} condition to the
 user."
   (display (apply format
-                  (formatted-message-format exception)
-                  (map (cut colorize-string <> 'BOLD 'MAGENTA)
-                       (formatted-message-arguments exception)))
+                  ;; We colorize the format specifiers instead of the
+                  ;; arguments because we cannot always be sure that
+                  ;; the arguments are strings.
+                  (string-replace-substring
+                   (string-replace-substring
+                    (formatted-message-format exception)
+                    "~a"
+                    (colorize-string "~a" 'BOLD 'MAGENTA))
+                   "~s"
+                   (colorize-string "~s" 'BOLD 'MAGENTA))
+                  (formatted-message-arguments exception))
            (current-error-port))
   (newline (current-error-port)))
 

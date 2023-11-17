@@ -17,7 +17,9 @@
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
 (use-modules (srfi srfi-64)
-             (term ansi-color))
+             (term ansi-color)
+             (ccwl ui)
+             (ccwl conditions))
 
 (define source-in-context
   (@@ (ccwl ui) source-in-context))
@@ -42,5 +44,13 @@
 ")
   (call-with-input-string "(foo (bar))"
     (cut source-in-context <> 0 5)))
+
+(test-assert "report-formatted-message must not fail on arguments that are not strings"
+  (call-with-output-string
+    (lambda (port)
+      (with-error-to-port port
+        (lambda ()
+          (report-formatted-message
+           (formatted-message "Foo ~a" 'bar)))))))
 
 (test-end "ui")
