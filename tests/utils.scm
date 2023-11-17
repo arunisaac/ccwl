@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -215,5 +215,9 @@
                     (iota 10)
                     0 0)))
     (list sum sum-of-squares)))
+
+(test-equal "pairify must ignore extra elements when list has an odd number of elements"
+  '((1 . 2) (3 . 4) (5 . 6))
+  (pairify (list 1 2 3 4 5 6 7)))
 
 (test-end "utils")

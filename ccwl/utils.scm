@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -48,12 +48,17 @@
   (display (make-string (* 2 level) #\space) port))
 
 (define (pairify lst)
-  "Return a list of pairs of successive elements of LST. For example,
+  "Return a list of pairs of successive elements of LST. Ignore extra
+elements when LST has an odd number of elements. For example,
 
 (pairify (list 1 2 3 4 5 6))
+=> ((1 . 2) (3 . 4) (5 . 6))
+
+(pairify (list 1 2 3 4 5 6 7))
 => ((1 . 2) (3 . 4) (5 . 6))"
   (match lst
     (() '())
+    ((single-element) '())
     ((first second tail ...)
      (cons (cons first second)
            (pairify tail)))))
