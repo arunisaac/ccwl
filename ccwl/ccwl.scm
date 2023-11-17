@@ -138,6 +138,13 @@ compared using @code{equal?}."
     (primitive-type
      #''primitive-type)))
 
+(define (type->syntax type)
+  "Return syntax to recreate @var{type}."
+  (if (array-type? type)
+      #`(make-array-type #,(type->syntax (array-type-member-type type)))
+      (with-syntax ((type (datum->syntax #f type)))
+        #''type)))
+
 (define (input input-spec)
   "Return syntax to build an <input> object from INPUT-SPEC."
   (syntax-case input-spec ()
@@ -749,8 +756,7 @@ commands."
       #`(make-output
          #,(with-syntax ((id (datum->syntax #f (output-id output))))
              #''id)
-         #,(with-syntax ((type (datum->syntax #f (output-type output))))
-             #''type)
+         #,(type->syntax (output-type output))
          #,(with-syntax ((binding (datum->syntax #f (output-binding output))))
              #''binding)
          #,(output-source output)
