@@ -498,13 +498,13 @@ identifiers defined in the commands."
                              ((id . type)
                               (with-syntax ((id (datum->syntax #f id))
                                             (type (datum->syntax #f type)))
-                                #`(make-input 'id 'type #f #f #f #f #f #f))))
+                                #`(make-input 'id 'type #f #f #f #f #f '()))))
                            (parameters->id+type (assoc-ref yaml "inputs"))))
               (list #,@(map (match-lambda
                              ((id . type)
                               (with-syntax ((id (datum->syntax #f id))
                                             (type (datum->syntax #f type)))
-                                #`(make-output 'id 'type #f #f #f))))
+                                #`(make-output 'id 'type '() #f '()))))
                            (parameters->id+type (assoc-ref yaml "outputs")))))))))))
 
 (define (function-inputs function)
