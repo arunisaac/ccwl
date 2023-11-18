@@ -695,6 +695,18 @@ represented by <step> objects."
                                                      (syntax->datum value)
                                                      input-key-symbols))))))
                  (pairify #'(args ...)))
+       ;; Test for arguments that have been supplied more than once.
+       (fold (match-lambda*
+               (((key-syntax . _) seen)
+                (let ((key (syntax->datum key-syntax)))
+                  (when (memq key seen)
+                    (raise-exception
+                     (condition (ccwl-violation key-syntax)
+                                (formatted-message "~a argument already supplied"
+                                                   key))))
+                  (cons key seen))))
+             (list)
+             (pairify #'(args ...)))
        (let ((symbolic-arguments
               literal-arguments
               (partition (match-lambda
