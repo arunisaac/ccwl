@@ -65,7 +65,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
           (write condition (current-error-port))
           (newline (current-error-port))
           (display "
-You have discovered a bug!
+You have discovered a bug! ccwl crashed! :-(
 Please report this to https://github.com/arunisaac/ccwl/issues
 Thank you!
 "
