@@ -89,6 +89,8 @@ association list."
                                   (command->cwl-scm command))
                                  ((? cwl-workflow? cwl-workflow)
                                   (cwl-workflow-file cwl-workflow))
+                                 ((? workflow? workflow)
+                                  (workflow->cwl-scm workflow))
                                  (tree tree)))
                        ,@(match (step-scattered-inputs step)
                            (() '())

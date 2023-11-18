@@ -274,12 +274,21 @@ compared using @code{equal?}."
   (inputs cwl-workflow-inputs)
   (outputs cwl-workflow-outputs))
 
+(define-immutable-record-type <workflow>
+  (make-workflow steps inputs outputs other)
+  workflow?
+  (steps workflow-steps)
+  (inputs workflow-inputs)
+  (outputs workflow-outputs)
+  (other workflow-other))
+
 (define (function-outputs function)
-  "Return the outputs of FUNCTION, a <command> or <cwl-workflow>
-object."
+  "Return the outputs of FUNCTION---a <command>, <cwl-workflow> or
+<workflow> object."
   ((cond
     ((command? function) command-outputs)
     ((cwl-workflow? function) cwl-workflow-outputs)
+    ((workflow? function) workflow-outputs)
     (else (error "Unrecognized ccwl function" function)))
    function))
 
@@ -296,14 +305,6 @@ object."
   (-make-step id run in scattered-inputs scatter-method))
 
 (define step-out (compose function-outputs step-run))
-
-(define-immutable-record-type <workflow>
-  (make-workflow steps inputs outputs other)
-  workflow?
-  (steps workflow-steps)
-  (inputs workflow-inputs)
-  (outputs workflow-outputs)
-  (other workflow-other))
 
 (define (input-spec-id input-spec)
   "Return the identifier symbol of INPUT-SPEC."
@@ -496,11 +497,12 @@ identifiers defined in the commands."
                             (parameters->id+type (assoc-ref yaml "outputs"))))))
 
 (define (function-inputs function)
-  "Return the list of inputs accepted by @var{function}, a
-@code{<command>} or @code{<cwl-workflow>} object."
+  "Return the list of inputs accepted by @var{function}---a
+@code{<command>}, @code{<cwl-workflow>} or @code{<workflow> object."
   ((cond
     ((command? function) command-inputs)
     ((cwl-workflow? function) cwl-workflow-inputs)
+    ((workflow? function) workflow-inputs)
     (else (error "Unrecognized ccwl function" function)))
    function))
 
@@ -547,15 +549,16 @@ an association list mapping keyword arguments to their values."
          (command-inputs command))))
 
 (define (function-object x)
-  "Return the ccwl function object (a <command> or a <cwl-workflow>
-object) described by syntax X. If such a ccwl function is not defined,
-return #f."
+  "Return the ccwl function object (a <command>, <cwl-workflow>
+or <workflow> object) described by syntax X. If such a ccwl function
+is not defined, return #f."
   ;; TODO: What if function object is defined in lexical scope?
   (let ((result (false-if-exception
                  (eval (syntax->datum x)
                        (interaction-environment)))))
     (and (or (command? result)
-             (cwl-workflow? result))
+             (cwl-workflow? result)
+             (workflow? result))
          result)))
 
 (define (collect-scatter-step x input-keys scatter-method)
