@@ -3,7 +3,7 @@
            #:run "tar" "--extract" "--file" archive
            #:outputs (extracted-file
                       #:type File
-                      #:binding '((glob . "hello.txt")))))
+                      #:binding ((glob . "hello.txt")))))
 
 (workflow ((archive #:type File))
   (extract #:archive archive))

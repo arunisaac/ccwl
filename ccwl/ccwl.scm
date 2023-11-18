@@ -121,14 +121,16 @@ compared using @code{equal?}."
   (make-unspecified-default)
   unspecified-default?)
 
-(define (ensure-yaml-serializable tree)
-  "Raise an exception unless @var{tree} is serializable to YAML."
+(define (ensure-yaml-serializable tree parameter-name)
+  "Raise an exception unless @var{tree} is serializable to YAML. Use
+@var{parameter-name} in @code{&formatted-message} condition."
   ;; TODO: If tree is a quoted expression, emit a warning.
   (unless (false-if-exception
            (scm->yaml-string (syntax->datum tree)))
     (raise-exception
      (condition (ccwl-violation tree)
-                (formatted-message "#:other parameter not serializable to YAML")))))
+                (formatted-message (string-append parameter-name
+                                                  " parameter not serializable to YAML"))))))
 
 (define (construct-type-syntax type-spec)
   "Return syntax to build a type from @var{type-spec}."
@@ -186,7 +188,7 @@ compared using @code{equal?}."
                    (condition (ccwl-violation stage?)
                               (formatted-message "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."
                                                  (syntax->datum stage?)))))
-                (ensure-yaml-serializable other)
+                (ensure-yaml-serializable other "#:other")
                 (let ((position #f)
                       (prefix #f))
                   #`(make-input '#,id
@@ -244,10 +246,11 @@ compared using @code{equal?}."
                   (condition (ccwl-violation output-spec)
                              (formatted-message "Output has no identifier")))))))
        (apply (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
-                (ensure-yaml-serializable other)
+                (ensure-yaml-serializable binding "#:binding")
+                (ensure-yaml-serializable other "#:other")
                 #`(make-output '#,id
                                #,(construct-type-syntax type)
-                               #,binding #,source '#,other))
+                               '#,binding #,source '#,other))
               #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
@@ -429,7 +432,7 @@ identifiers defined in the commands."
                      (condition (ccwl-violation x)
                                 (formatted-message "Missing ~a key in command definition"
                                                    #:run))))
-                  (ensure-yaml-serializable other)
+                  (ensure-yaml-serializable other "#:other")
                   #`(make-command
                      (list #,@(map (lambda (input-spec)
                                      (let ((id (input-spec-id input-spec)))

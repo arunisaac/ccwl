@@ -8,7 +8,7 @@
            #:run "gcc" "-x" "c" source
            #:outputs (executable
                       #:type File
-                      #:binding '((glob . "a.out")))))
+                      #:binding ((glob . "a.out")))))
 
 (define run
   (command #:inputs executable
