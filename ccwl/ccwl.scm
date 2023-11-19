@@ -795,7 +795,6 @@ commands."
                (cond
                 ((null? (step-scattered-inputs step-with-output))
                  type)
-                (step-scatter-method step-with-output)
                 ;; For dot products and flat cross products, create a
                 ;; singly nested array type.
                 ((memq (step-scatter-method step-with-output)
