@@ -725,10 +725,14 @@ represented by <step> objects."
            ;; If there are no literal arguments, construct <step>
            ;; object.
            (()
-            (values (append (remove key-step input-keys)
-                            (map (lambda (output)
-                                   (key (output-id output) step-id-symbol))
-                                 (function-outputs function-object)))
+            (values (append
+                     ;; Pass global workflow inputs through. Thus,
+                     ;; these are globally visible to all steps, and
+                     ;; are a kind of "global variable".
+                     (remove key-step input-keys)
+                     (map (lambda (output)
+                            (key (output-id output) step-id-symbol))
+                          (function-outputs function-object)))
                     (list (make-step step-id-symbol
                                      #'function
                                      (map (match-lambda
