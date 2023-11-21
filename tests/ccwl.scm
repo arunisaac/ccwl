@@ -294,4 +294,11 @@
   (make-array-type (make-array-type 'File))
   (construct-type-syntax-wrapper (array (array File))))
 
+(test-condition "rename with non-keyword arguments must raise a &ccwl-violation condition"
+  (ccwl-violation-with-message?
+   "Expected keyword (for example: #:foo, #:bar)")
+  (macroexpand
+   '(workflow ((message #:type string))
+      (rename (foo) #:foo message))))
+
 (test-end "ccwl")
