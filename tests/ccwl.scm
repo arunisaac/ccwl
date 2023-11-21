@@ -301,4 +301,11 @@
    '(workflow ((message #:type string))
       (rename (foo) #:foo message))))
 
+(test-condition "rename with unknown key must raise a &ccwl-violation condition"
+  (ccwl-violation-with-message?
+   "Unknown key ~a. Known keys at this step are ~a.")
+  (macroexpand
+   '(workflow ((foo #:type string))
+      (rename #:bar foobar))))
+
 (test-end "ccwl")

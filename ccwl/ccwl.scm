@@ -617,7 +617,8 @@ represented by <step> objects."
                                   (raise-exception
                                    (condition (ccwl-violation new)
                                               (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
-                                (unless (symbol? (syntax->datum old))
+                                (unless (memq (syntax->datum old)
+                                              (map key-name input-keys))
                                   (raise-exception
                                    (condition (ccwl-violation old)
                                               (formatted-message "Unknown key ~a. Known keys at this step are ~a."
