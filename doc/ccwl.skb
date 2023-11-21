@@ -307,11 +307,11 @@ command twice in our workflow. To distinguish the two invocations, CWL
 requires us to specify a unique step id for each invocation. We do
 this using the second element, ,(code "(sort-words)"). To avoid name
 conflicts, we also need to rename the output of the ,(code "sort")
-command. The last step,
-,(source-ref "ccwl/ccwl.scm" "\\(\\(rename" (code "rename")), a
-special ccwl construct that, is used to achieve this. In this case, it
-renames the ,(code "sorted") output of the ,(code "sort") command into
-,(code "sorted-words").]
+command. The last step, ,(source-ref "ccwl/ccwl.scm"
+"\\(\\(rename new-key old-key\\)" (code "rename")), a special ccwl
+construct that, is used to achieve this. In this case, it renames the
+,(code "sorted") output of the ,(code "sort") command into ,(code
+"sorted-words").]
          (scheme-source "doc/spell-check-workflow-1.scm"))
 
       (p [Next, we assemble the ,(code "split-dictionary") arm of the
