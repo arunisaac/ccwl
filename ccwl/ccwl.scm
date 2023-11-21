@@ -608,28 +608,35 @@ represented by <step> objects."
     ((tee expressions ...)
      (append-mapn (cut collect-steps <> input-keys)
                   #'(expressions ...)))
-    ;; rename keys
-    ((rename mapping ...)
-     (values (map (lambda (key)
-                    (or (any (match-lambda
-                               ((new . old)
-                                (unless (keyword? (syntax->datum new))
-                                  (raise-exception
-                                   (condition (ccwl-violation new)
-                                              (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
-                                (unless (memq (syntax->datum old)
-                                              (map key-name input-keys))
-                                  (raise-exception
-                                   (condition (ccwl-violation old)
-                                              (formatted-message "Unknown key ~a. Known keys at this step are ~a."
-                                                                 (syntax->datum old)
-                                                                 (map key-name input-keys)))))
-                                (and (eq? (syntax->datum old) (key-name key))
-                                     (set-key-name key (keyword->symbol (syntax->datum new))))))
-                             (pairify #'(mapping ...)))
-                        key))
-                  input-keys)
-             (list)))
+    ;; rename keys (base case)
+    ((rename new-key old-key)
+     (begin
+       ;; Error out on non-keyword arguments.
+       (unless (keyword? (syntax->datum #'new-key))
+         (raise-exception
+          (condition (ccwl-violation #'new-key)
+                     (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
+       ;; Ensure old key exists.
+       (unless (memq (syntax->datum #'old-key)
+                     (map key-name input-keys))
+         (raise-exception
+          (condition (ccwl-violation #'old-key)
+                     (formatted-message "Unknown key ~a. Known keys at this step are ~a."
+                                        (syntax->datum #'old-key)
+                                        (map key-name input-keys)))))
+       (values (map (lambda (key)
+                      ;; Rename one key. Pass the rest through.
+                      (or (and (eq? (syntax->datum #'old-key)
+                                    (key-name key))
+                               (set-key-name key (keyword->symbol (syntax->datum #'new-key))))
+                          key))
+                    input-keys)
+               (list))))
+    ;; rename keys (recurse)
+    ((rename new-key old-key other-mappings ...)
+     (collect-steps #'(pipe (rename new-key old-key)
+                            (rename other-mappings ...))
+                    input-keys))
     ;; TODO: Support cross product scatter methods.
     ((scatter _ ...)
      (collect-scatter-step x input-keys 'dotproduct))
