@@ -10,4 +10,5 @@
   (eval put 'set-command-inputs 'scheme-indent-function 1)
   (eval put 'set-input-default 'scheme-indent-function 1)
   (eval put 'syntax-lambda** 'scheme-indent-function 1)
+  (eval put 'test-condition 'scheme-indent-function 1)
   (eval put 'workflow 'scheme-indent-function 1)))
