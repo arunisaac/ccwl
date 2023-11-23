@@ -308,4 +308,11 @@
    '(workflow ((foo #:type string))
       (rename #:bar foobar))))
 
+(test-condition "commands with non-string #:separator parameters must raise a &ccwl-violation condition"
+  (ccwl-violation-with-message?
+   "Invalid #:separator parameter ~a. #:separator parameter must be a string.")
+  (macroexpand
+   '(command #:inputs (messages #:type (array string))
+             #:run "echo" (array messages #:separator foo))))
+
 (test-end "ccwl")

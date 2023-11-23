@@ -142,7 +142,8 @@ CWL YAML specification."
              ;; no effect. So, leave this be.
              (inputBinding . ,(filter-alist
                                `((position . ,(input-position input))
-                                 (prefix . ,(input-prefix input)))))))
+                                 (prefix . ,(input-prefix input))
+                                 (itemSeparator . ,(input-separator input)))))))
           '())
     ,@(input-other input)))
 

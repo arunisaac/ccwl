@@ -65,6 +65,7 @@
             input-default
             input-position
             input-prefix
+            input-separator
             input-stage?
             input-other
             output?
@@ -93,6 +94,7 @@
   (default input-default set-input-default)
   (position input-position set-input-position)
   (prefix input-prefix set-input-prefix)
+  (separator input-separator set-input-separator)
   (stage? input-stage?)
   (other input-other))
 
@@ -325,10 +327,18 @@ compared using @code{equal?}."
 RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   (list-index (lambda (run-arg)
                 (let ((run-arg-input
-                       (syntax-case run-arg ()
+                       (syntax-case run-arg (array)
+                         ;; input
                          (input (identifier? #'input)
                           (syntax->datum #'input))
+                         ;; prefixed input
                          ((_ input) (identifier? #'input)
+                          (syntax->datum #'input))
+                         ;; array input specifier
+                         ((array input _ ...) (identifier? #'input)
+                          (syntax->datum #'input))
+                         ;; prefixed array input specifier
+                         ((_ (array input _ ...)) (identifier? #'input)
                           (syntax->datum #'input))
                          (_ #f))))
                   (and run-arg-input
@@ -342,12 +352,31 @@ input, return #f."
     ((prefix _) #'prefix)
     (_ #f)))
 
+(define (run-arg-separator run-arg)
+  "Return the item separator specified in @var{run-arg} syntax."
+  (syntax-case run-arg (array)
+    ;; array input specifier
+    ((array _ args ...)
+     (apply (syntax-lambda** (#:key separator)
+              (if (and separator
+                       (not (string? (syntax->datum separator))))
+                (raise-exception
+                 (condition (ccwl-violation separator)
+                            (formatted-message "Invalid #:separator parameter ~a. #:separator parameter must be a string."
+                                               (syntax->datum separator))))
+                separator))
+            #'(args ...)))
+    ;; prefixed array input specifier
+    ((_ (array input args ...))
+     (run-arg-separator #'(array input args ...)))
+    (_ #f)))
+
 (define (run-args run defined-input-identifiers)
   "Return a list of run arguments specified in @var{run}
 syntax. @var{defined-input-identifiers} is the list of input
 identifiers defined in the commands."
   (define (syntax->run-arg x)
-    (syntax-case x ()
+    (syntax-case x (array)
       ;; Replace input symbol with quoted symbol.
       (input (identifier? #'input)
              ;; Ensure that specified input is defined in #:inputs of
@@ -363,6 +392,9 @@ identifiers defined in the commands."
       ;; Leave string as is.
       (string-arg (string? (syntax->datum #'string-arg))
                   (list #'string-arg))
+      ;; Extract input symbol from array input specifier.
+      ((array input _ ...) (identifier? #'input)
+       (syntax->run-arg #'input))
       ;; Flatten prefixed string arguments. They have no
       ;; special meaning.
       ((prefix string-arg) (and (string? (syntax->datum #'prefix))
@@ -431,11 +463,14 @@ identifiers defined in the commands."
                                             (position (run-arg-position id run))
                                             (run-arg (and position
                                                           (list-ref run position))))
-                                       #`(set-input-prefix
-                                          (set-input-position #,(input input-spec)
-                                                              #,position)
+                                       #`(set-input-separator
+                                          (set-input-prefix
+                                           (set-input-position #,(input input-spec)
+                                                               #,position)
+                                           #,(and run-arg
+                                                  (run-arg-prefix run-arg)))
                                           #,(and run-arg
-                                                 (run-arg-prefix run-arg)))))
+                                                 (run-arg-separator run-arg)))))
                                    inputs))
                      (list #,@(map output outputs))
                      (list #,@(run-args run (map input-spec-id inputs)))
