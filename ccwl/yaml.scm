@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -54,10 +54,13 @@ serialized to YAML. Else, return @code{#f}."
     ;; specification.
     ;; Escape string with double quotes if
     ;; - every character is a digit or period, and the unescaped
-    ;; string can therefore be misinterpreted as a number
-    ;; - string contains the colon, hyphen or asterisk characters
+    ;;   string can therefore be misinterpreted as a number
+    ;; - string contains indicator characters as mentioned in the YAML
+    ;;   spec https://yaml.org/spec/1.2.2/#53-indicator-characters
     (if (or (string-every (char-set-union char-set:digit (char-set #\.)) atom)
-            (string-any (char-set #\: #\- #\*) atom))
+            (string-any (char-set #\- #\? #\: #\, #\[ #\] #\{ #\} #\# #\&
+                                  #\* #\! #\| #\> #\' #\" #\% #\@ #\`)
+                        atom))
         (write atom port)
         (display atom port)))
    ((boolean? atom)
