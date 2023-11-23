@@ -351,49 +351,45 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
   "Return a list of run arguments specified in @var{run}
 syntax. @var{defined-input-identifiers} is the list of input
 identifiers defined in the commands."
-  (let ((ensure-input-is-defined
-         ;; Ensure that specified input is defined in #:inputs of
-         ;; command definition.
-         (lambda (input)
-           (unless (memq (syntax->datum input)
-                         defined-input-identifiers)
-             (raise-exception
-              (condition (ccwl-violation input)
-                         (formatted-message "Undefined input ~a"
-                                            (syntax->datum input))))))))
-    (append-map (lambda (x)
-                  (syntax-case x ()
-                    ;; Replace input symbol with quoted symbol.
-                    (input (identifier? #'input)
-                           (begin
-                             (ensure-input-is-defined #'input)
-                             (list #''input)))
-                    ;; Leave string as is.
-                    (string-arg (string? (syntax->datum #'string-arg))
-                                (list #'string-arg))
-                    ;; Replace prefixed input symbol with quoted symbol.
-                    ((prefix input) (and (string? (syntax->datum #'prefix))
-                                         (identifier? #'input))
-                     (begin
-                       (ensure-input-is-defined #'input)
-                       (list #''input)))
-                    ;; Flatten prefixed string arguments. They have no
-                    ;; special meaning.
-                    ((prefix string-arg) (and (string? (syntax->datum #'prefix))
-                                              (string? (syntax->datum #'string-arg)))
-                     (list #'prefix #'string-arg))
-                    ;; Prefixes that are not strings
-                    ((prefix _)
-                     (raise-exception
-                      (condition (ccwl-violation #'prefix)
-                                 (formatted-message "Invalid prefix ~a. Prefixes must be strings."
-                                                    (syntax->datum #'prefix)))))
-                    (_
-                     (raise-exception
-                      (condition (ccwl-violation x)
-                                 (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
-                                                    (syntax->datum x)))))))
-                run)))
+  (define (syntax->run-arg x)
+    (syntax-case x ()
+      ;; Replace input symbol with quoted symbol.
+      (input (identifier? #'input)
+             ;; Ensure that specified input is defined in #:inputs of
+             ;; command definition.
+             (begin
+               (unless (memq (syntax->datum #'input)
+                             defined-input-identifiers)
+                 (raise-exception
+                  (condition (ccwl-violation #'input)
+                             (formatted-message "Undefined input ~a"
+                                                (syntax->datum #'input)))))
+               (list #''input)))
+      ;; Leave string as is.
+      (string-arg (string? (syntax->datum #'string-arg))
+                  (list #'string-arg))
+      ;; Flatten prefixed string arguments. They have no
+      ;; special meaning.
+      ((prefix string-arg) (and (string? (syntax->datum #'prefix))
+                                (string? (syntax->datum #'string-arg)))
+       (list #'prefix #'string-arg))
+      ;; Recurse on prefixed inputs.
+      ((prefix input) (string? (syntax->datum #'prefix))
+       (syntax->run-arg #'input))
+      ;; Prefixes that are not strings
+      ((prefix _)
+       (raise-exception
+        (condition (ccwl-violation #'prefix)
+                   (formatted-message "Invalid prefix ~a. Prefixes must be strings."
+                                      (syntax->datum #'prefix)))))
+      (_
+       (raise-exception
+        (condition (ccwl-violation x)
+                   (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
+                                      (syntax->datum x)))))))
+
+  (append-map syntax->run-arg
+              run))
 
 ;; TODO: Add fine-grained syntax checking.
 (define-syntax command
