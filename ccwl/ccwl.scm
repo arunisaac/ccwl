@@ -335,17 +335,12 @@ RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
                        (eq? run-arg-input input-id))))
               run-args))
 
-(define (run-arg-prefix input-id run-args)
-  "Return the prefix of input identified by symbol INPUT-ID in
-RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
-  (any (lambda (x)
-         (syntax-case x ()
-           ((prefix input) (identifier? #'input)
-            (and (eq? (syntax->datum #'input)
-                      input-id)
-                 #'prefix))
-           (_ #f)))
-       run-args))
+(define (run-arg-prefix run-arg)
+  "Return the prefix specified in @var{run-arg} syntax. If not a prefixed
+input, return #f."
+  (syntax-case run-arg ()
+    ((prefix _) #'prefix)
+    (_ #f)))
 
 (define (run-args run defined-input-identifiers)
   "Return a list of run arguments specified in @var{run}
@@ -432,11 +427,15 @@ identifiers defined in the commands."
                   (ensure-yaml-serializable other "#:other")
                   #`(make-command
                      (list #,@(map (lambda (input-spec)
-                                     (let ((id (input-spec-id input-spec)))
+                                     (let* ((id (input-spec-id input-spec))
+                                            (position (run-arg-position id run))
+                                            (run-arg (and position
+                                                          (list-ref run position))))
                                        #`(set-input-prefix
                                           (set-input-position #,(input input-spec)
-                                                              #,(run-arg-position id run))
-                                          #,(run-arg-prefix id run))))
+                                                              #,position)
+                                          #,(and run-arg
+                                                 (run-arg-prefix run-arg)))))
                                    inputs))
                      (list #,@(map output outputs))
                      (list #,@(run-args run (map input-spec-id inputs)))
