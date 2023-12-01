@@ -382,7 +382,14 @@ the external CWL workflow.]
          (scheme-source "doc/external-cwl-workflow.scm")
          [,(file "echo.cwl") is defined as]
          ;; TODO: Syntax highlight doc/external-cwl-workflow.cwl.
-         (prog :line #f (source :file "doc/echo.cwl")))))
+         (prog :line #f (source :file "doc/echo.cwl"))))
+    (section :title [The ,(code [identity]) construct]
+             :ident "identity-construct"
+      (p [Sometimes, it is helpful for a step to simply copy all input
+keys forward to the output. This is what the ,(code [identity])
+construct is for. An example follows.]
+         (scheme-source "doc/identity-construct.scm")
+         (image :file "doc/identity-construct.png"))))
 
   (chapter :title [Contributing]
            :ident "chapter-contributing"

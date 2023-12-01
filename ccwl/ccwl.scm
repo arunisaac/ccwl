@@ -625,7 +625,7 @@ supplied input keys."
 output keys and a list of steps. INPUT-KEYS is a list of supplied
 input keys. Keys are represented by <key> objects, and steps are
 represented by <step> objects."
-  (syntax-case x (pipe tee rename scatter scatter-cross scatter-nested-cross)
+  (syntax-case x (pipe tee identity rename scatter scatter-cross scatter-nested-cross)
     ;; pipe
     ((pipe expressions ...)
      (foldn (lambda (expression input-keys steps)
@@ -638,6 +638,8 @@ represented by <step> objects."
     ((tee expressions ...)
      (append-mapn (cut collect-steps <> input-keys)
                   #'(expressions ...)))
+    ((identity)
+     (values input-keys (list)))
     ;; rename keys (base case)
     ((rename new-key old-key)
      (begin
