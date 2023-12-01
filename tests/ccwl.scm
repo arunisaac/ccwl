@@ -17,7 +17,9 @@
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
 (use-modules (rnrs exceptions)
+             (srfi srfi-1)
              (srfi srfi-64)
+             (srfi srfi-71)
              (ccwl ccwl)
              (ccwl conditions))
 
@@ -29,6 +31,12 @@
 
 (define make-array-type
   (@@ (ccwl ccwl) make-array-type))
+
+(define key
+  (@@ (ccwl ccwl) key))
+
+(define collect-steps
+  (@@ (ccwl ccwl) collect-steps))
 
 (define-syntax construct-type-syntax-wrapper
   (lambda (x)
@@ -133,7 +141,7 @@
            #:outputs (printed-message #:type stdout)))
 
 (test-equal "rename should work even on the final output of a workflow"
-  (list 'out1 'printed-message)
+  (list 'printed-message 'out1)
   (map output-id
        (workflow-outputs
         (workflow ((message1 #:type string)
@@ -314,5 +322,12 @@
   (macroexpand
    '(command #:inputs (messages #:type (array string))
              #:run "echo" (array messages #:separator foo))))
+
+(test-assert "tee must deduplicate global workflow input keys"
+  (let ((keys steps (collect-steps #'(tee (print #:message message)
+                                          (identity))
+                                   (list (key 'message)))))
+    (= (length (delete-duplicates keys eq?))
+       (length keys))))
 
 (test-end "ccwl")

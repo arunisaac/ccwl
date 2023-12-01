@@ -39,7 +39,6 @@
             lambda**
             syntax-lambda**
             mapn
-            append-mapn
             foldn
             filter-mapi))
 
@@ -328,24 +327,6 @@ number of lists are returned. For example,
                 (map (lambda (x)
                        (call-with-values (cut proc x) list))
                      lst))))
-
-(define (append-mapn proc lst)
-  "Map PROC over LST just as in mapn, but append the results
-together. PROC can return multiple values, in which case, an equal
-number of lists are returned.
-
-(append-mapn (lambda (n)
-               (values (list n (expt n 2))
-                       (list n (expt n 3))))
-      (iota 5))
-=> (0 0 1 1 2 4 3 9 4 16)
-=> (0 0 1 1 2 8 3 27 4 64)"
-  (call-with-values (cut mapn proc lst)
-    (lambda lists
-      (apply values
-             (map (lambda (lst)
-                    (apply append lst))
-                  lists)))))
 
 (define (foldn proc lst . inits)
   "Apply PROC to the elements of LST to build a result, and return

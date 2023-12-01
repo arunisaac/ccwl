@@ -636,8 +636,15 @@ represented by <step> objects."
             (list)))
     ;; tee
     ((tee expressions ...)
-     (append-mapn (cut collect-steps <> input-keys)
-                  #'(expressions ...)))
+     (let ((key-lists step-lists (mapn (cut collect-steps <> input-keys)
+                                       #'(expressions ...))))
+       (values
+        ;; Global workflow input keys may be duplicated across the
+        ;; branches of a tee. So, deduplicate them by treating key
+        ;; lists as sets. TODO: Error out if any keys other than
+        ;; global workflow inputs are duplicated.
+        (apply lset-union eq? key-lists)
+        (apply append step-lists))))
     ((identity)
      (values input-keys (list)))
     ;; rename keys (base case)

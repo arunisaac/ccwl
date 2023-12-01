@@ -197,15 +197,6 @@
                              (iota 5))))
     (list squares cubes)))
 
-(test-equal "append-mapn"
-  '((0 0 1 1 2 4 3 9 4 16)
-    (0 0 1 1 2 8 3 27 4 64))
-  (let ((squares cubes (append-mapn (lambda (n)
-                                      (values (list n (expt n 2))
-                                              (list n (expt n 3))))
-                                    (iota 5))))
-    (list squares cubes)))
-
 (test-equal "foldn"
   '(45 285)
   (let ((sum sum-of-squares
