@@ -133,14 +133,14 @@
            #:outputs (printed-message #:type stdout)))
 
 (test-equal "rename should work even on the final output of a workflow"
+  (list 'out1 'printed-message)
   (map output-id
        (workflow-outputs
         (workflow ((message1 #:type string)
                    (message2 #:type string))
           (tee (pipe (print (print1) #:message message1)
                      (rename #:out1 printed-message))
-               (print (print2) #:message message2)))))
-  (list 'out1 'printed-message))
+               (print (print2) #:message message2))))))
 
 ;; TODO: Define this in the lexical scope of the test that requires
 ;; it.
