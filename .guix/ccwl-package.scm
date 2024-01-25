@@ -20,7 +20,6 @@
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
   #:use-module ((gnu packages emacs) #:select (emacs-minimal))
   #:use-module ((gnu packages fonts) #:select (font-charter font-fira-code))
-  #:use-module ((gnu packages version-control) #:select (git-minimal))
   #:use-module ((guix build-system guile) #:select (%guile-build-system-modules))
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -37,11 +36,6 @@
                         #:select? (or (git-predicate (dirname (current-source-directory)))
                                       (const #t))))))
 
-(define ccwl-source-with-git-repo
-  (local-file ".."
-              "ccwl-checkout-with-git-repo"
-              #:recursive? #t))
-
 (define ccwl-website-gexp
   (let ((development-profile
          (profile
@@ -53,8 +47,7 @@
                        (guix build utils))
 
           (set-path-environment-variable
-           "PATH" (list "/bin") (list #$development-profile
-                                      #$emacs-minimal #$git-minimal))
+           "PATH" (list "/bin") (list #$development-profile #$emacs-minimal))
           (set-path-environment-variable
            "LIBRARY_PATH" (list "/lib") (list #$development-profile))
           (set-path-environment-variable
@@ -66,7 +59,7 @@
            "GUILE_LOAD_COMPILED_PATH"
            (list (string-append "/lib/guile/" (target-guile-effective-version) "/site-ccache"))
            (list #$development-profile))
-          (copy-recursively #$ccwl-source-with-git-repo
+          (copy-recursively #$(package-source ccwl)
                             (getcwd))
           ;; Emacs modifies README.org presumably for the contained
           ;; org dynamic block. So, grant write permissions.
