@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2022, 2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -121,7 +121,7 @@ arguments."
                          (string-append datarootdir "/info"))))))))
 
 (define version
-  (call-with-input-pipe (list "git" "tag" "--sort=taggerdate"
+  (call-with-input-pipe (list "git" "tag" "--sort=-taggerdate"
                               "--list" "v*")
     (lambda (port)
       (let ((line (get-line port)))
