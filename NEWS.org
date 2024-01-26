@@ -49,7 +49,7 @@ the exact context of errors in workflow descriptions.
 ** Other
 *** Serialize atomic YAML dictionary values on the same line
 *** Serialize YAML arrays with a single atomic value on the same line
-*** New guile-lib dependency for (term ansi-color)
+*** New guile-lib dependency for ~(term ansi-color)~
 
 * Changes in 0.2.0 (since 0.1.0)
 ** Documentation
