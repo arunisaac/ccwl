@@ -139,7 +139,8 @@ install: $(sources) $(objects) $(scripts) $(doc_info)
 
 dist_archive = $(project)-$(version).tar.lz
 
-dist: $(dist_archive) $(dist_archive).asc
+dist: $(dist_archive)
+distsign: $(dist_archive).asc
 
 $(dist_archive): .git/refs/heads/main
 	$(GIT) archive --prefix $(basename $(basename $@))/ --format=tar main $(distribute_files) \
