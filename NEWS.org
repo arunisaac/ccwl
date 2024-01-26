@@ -1,6 +1,55 @@
 #+TITLE: ccwl NEWS – History of user-visible changes
 
-Copyright © 2021 Arun Isaac <arunisaac@systemreboot.net>
+Copyright © 2021, 2024 Arun Isaac <arunisaac@systemreboot.net>
+
+* Changes in 0.3.0 (since 0.2.0)
+** Features
+*** New ~array~ construct to specify array types
+*** Allow specification of array input item separators
+*** New pass-through ~identity~ construct
+*** New scattering ~scatter~, ~scatter-cross~ and ~scatter-nested-cross~ constructs
+*** New ~#:stdout~ and ~#:stderr~ parameters in commands
+
+*** Support staging input files
+*** Support returning command objects, not just workflow objects, from ccwl files
+*** Allow literal values as arguments
+*** Add message requesting users report uncaught exceptions as bugs
+*** Allow steps with expressions that evaluate to commands
+*** Allow steps with unspecified default arguments
+*** Support specifying command requirements
+*** Tolerate prefixed strings in ~#:run~ parameters of commands
+*** Allow calling workflows inside other workflows
+*** Deprecate auto-connection of single-input commands
+** Compiler error messages
+ccwl now comes with significantly better error messages that highlight
+the exact context of errors in workflow descriptions.
+*** Error out if arguments have been supplied more than once
+*** Error out when ccwl file does not return supported object
+*** Error out when unknown keys were passed to rename
+*** Error out when workflow syntax is not recognized
+*** Error out when body of workflow has multiple expressions
+*** Error out on unrecognized keyword arguments to ~command~, ~input~ or ~output~
+*** Error out on unexpected extra argument to unary keyword argument of ~command~, ~input~ or ~output~
+*** Error out on unexpected positional argument to ~command~, ~input~ or ~output~
+*** Error out when external CWL workflow files do not exist
+*** Error out when undefined inputs are used in the ~#:run~ parameter of a command
+*** Error out when command is not defined
+*** Error out on argument prefixes that are not strings
+*** Error out when ~#:other~ and ~#:binding~ parameters are not YAML serializable trees
+*** Error out when workflow step is missing required parameters
+*** Error out when workflow step does not accept input key
+*** Error out when workflow step is supplied with unknown key
+*** Error out when ~#:run~ argument to command is invalid
+*** Error out when rename mappings are not an alternating sequence of keywords and symbols
+** Noteworthy bug fixes
+*** Escape all indicator characters when serializing YAML
+*** Do not escape backslashes when serializing graphviz dot
+*** When key is renamed, rename the corresponding CWL output ID too
+*** Rename final workflow output correctly
+** Other
+*** Serialize atomic YAML dictionary values on the same line
+*** Serialize YAML arrays with a single atomic value on the same line
+*** New guile-lib dependency for (term ansi-color)
 
 * Changes in 0.2.0 (since 0.1.0)
 ** Documentation
