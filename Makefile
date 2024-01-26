@@ -1,5 +1,5 @@
 # ccwl --- Concise Common Workflow Language
-# Copyright © 2022 Arun Isaac <arunisaac@systemreboot.net>
+# Copyright © 2022, 2024 Arun Isaac <arunisaac@systemreboot.net>
 #
 # This file is part of ccwl.
 #
@@ -171,7 +171,8 @@ website/fonts: $(fonts)
 # Clean
 
 clean:
-	rm -f $(objects) $(dist_archive) $(dist_archive).asc Makefile.include website/index.html \
+	rm -f .$(objects) $(dist_archive) $(dist_archive).asc \
+	      .depends Makefile.include website/index.html \
               $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT) \
 	      $(doc_info) doc/skribilo.go
 	rm -rf $(doc_html) website/manual website/fonts
