@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -41,14 +41,15 @@
 Download release tarballs.
 
 ")
-  (call-process "git" nil t nil
-                "for-each-ref" "--sort=-taggerdate"
-                (let ((release-file "./releases/ccwl-%(refname:short).tar.lz"))
-                  (format "--format=- %%(taggerdate:short) [[%s][%s]] [[%s.asc][GPG Signature]]"
-                          release-file
-                          (file-name-nondirectory release-file)
-                          release-file))
-                "refs/tags/v*")
+  (dolist (release '(("2021-11-05" "0.2.0")
+                     ("2021-07-06" "0.1.0")))
+    (pcase release
+      (`(,date ,version)
+       (insert (format "- %s [[./releases/ccwl-%s.tar.lz][ccwl-%s.tar.lz]] [[./releases/ccwl-%s.tar.lz.asc][GPG Signature]]\n"
+                       date
+                       version
+                       version
+                       version)))))
   (insert "
 Download [[https://systemreboot.net/about/arunisaac.pub][public signing key]].
 
