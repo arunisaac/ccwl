@@ -41,7 +41,8 @@
 Download release tarballs.
 
 ")
-  (dolist (release '(("2021-11-05" "0.2.0")
+  (dolist (release '(("2024-01-26" "0.3.0")
+                     ("2021-11-05" "0.2.0")
                      ("2021-07-06" "0.1.0")))
     (pcase release
       (`(,date ,version)
