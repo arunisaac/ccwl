@@ -322,28 +322,29 @@ compared using @code{equal?}."
      (_ (raise-exception (condition (ccwl-violation input-spec)
                                     (formatted-message "Invalid input")))))))
 
-(define (run-arg-position input-id run-args)
-  "Return the position of input identified by symbol INPUT-ID in
-RUN-ARGS. If such an input is not present in RUN-ARGS, return #f."
-  (list-index (lambda (run-arg)
-                (let ((run-arg-input
-                       (syntax-case run-arg (array)
-                         ;; input
-                         (input (identifier? #'input)
+(define (find-run-arg input-id run-args)
+  "Return run argument specification identified by symbol @var{input-id} in
+@var{run-args}. If such an input is not present in @var{run-args},
+return @code{#f}."
+  (find (lambda (run-arg)
+          (let ((run-arg-input
+                 (syntax-case run-arg (array)
+                   ;; input
+                   (input (identifier? #'input)
                           (syntax->datum #'input))
-                         ;; prefixed input
-                         ((_ input) (identifier? #'input)
-                          (syntax->datum #'input))
-                         ;; array input specifier
-                         ((array input _ ...) (identifier? #'input)
-                          (syntax->datum #'input))
-                         ;; prefixed array input specifier
-                         ((_ (array input _ ...)) (identifier? #'input)
-                          (syntax->datum #'input))
-                         (_ #f))))
-                  (and run-arg-input
-                       (eq? run-arg-input input-id))))
-              run-args))
+                   ;; prefixed input
+                   ((_ input) (identifier? #'input)
+                    (syntax->datum #'input))
+                   ;; array input specifier
+                   ((array input _ ...) (identifier? #'input)
+                    (syntax->datum #'input))
+                   ;; prefixed array input specifier
+                   ((_ (array input _ ...)) (identifier? #'input)
+                    (syntax->datum #'input))
+                   (_ #f))))
+            (and run-arg-input
+                 (eq? run-arg-input input-id))))
+        run-args))
 
 (define (run-arg-prefix run-arg)
   "Return the prefix specified in @var{run-arg} syntax. If not a prefixed
@@ -461,9 +462,7 @@ identifiers defined in the commands."
                     #`(make-command
                        (list #,@(map (lambda (input-spec)
                                        (let* ((id (input-spec-id input-spec))
-                                              (position (run-arg-position id run))
-                                              (run-arg (and position
-                                                            (list-ref run position))))
+                                              (run-arg (find-run-arg id run)))
                                          #`(set-input-separator
                                             (set-input-prefix
                                              (set-input-position
