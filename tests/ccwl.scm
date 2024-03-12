@@ -330,4 +330,12 @@
     (= (length (delete-duplicates keys eq?))
        (length keys))))
 
+(test-equal "count argument positions correctly when left-flanked by prefixed string arguments"
+  3
+  ;; Input `in' should be counted as position 3, not 2.
+  (match (command-inputs
+          (command #:inputs in
+                   #:run "foo" ("--bar" "bar") in))
+    ((in) (input-position in))))
+
 (test-end "ccwl")

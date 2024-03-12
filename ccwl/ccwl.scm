@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -457,40 +457,48 @@ identifiers defined in the commands."
                                 (formatted-message "Missing ~a key in command definition"
                                                    #:run))))
                   (ensure-yaml-serializable other "#:other")
-                  #`(make-command
-                     (list #,@(map (lambda (input-spec)
-                                     (let* ((id (input-spec-id input-spec))
-                                            (position (run-arg-position id run))
-                                            (run-arg (and position
-                                                          (list-ref run position))))
-                                       #`(set-input-separator
-                                          (set-input-prefix
-                                           (set-input-position #,(input input-spec)
-                                                               #,position)
-                                           #,(and run-arg
-                                                  (run-arg-prefix run-arg)))
-                                          #,(and run-arg
-                                                 (run-arg-separator run-arg)))))
-                                   inputs))
-                     (list #,@(map output outputs))
-                     (list #,@(run-args run (map input-spec-id inputs)))
-                     #,(and stdin #`'#,stdin)
-                     #,(if (and stderr
-                                (not (string? (syntax->datum stderr))))
-                           (raise-exception
-                            (condition (ccwl-violation stderr)
-                                       (formatted-message "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"
-                                                          (syntax->datum stderr))))
-                           stderr)
-                     #,(if (and stdout
-                                (not (string? (syntax->datum stdout))))
-                           (raise-exception
-                            (condition (ccwl-violation stdout)
-                                       (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
-                                                          (syntax->datum stdout))))
-                           stdout)
-                     #,requirements
-                     '#,other))
+                  (let ((flattened-args (run-args run (map input-spec-id inputs))))
+                    #`(make-command
+                       (list #,@(map (lambda (input-spec)
+                                       (let* ((id (input-spec-id input-spec))
+                                              (position (run-arg-position id run))
+                                              (run-arg (and position
+                                                            (list-ref run position))))
+                                         #`(set-input-separator
+                                            (set-input-prefix
+                                             (set-input-position
+                                              #,(input input-spec)
+                                              ;; `run-args' returns inputs as quoted symbols.
+                                              ;; So, we add quote.
+                                              #,(list-index (match-lambda
+                                                              (`(quote ,input)
+                                                               (eq? input id))
+                                                              (_ #f))
+                                                            (syntax->datum flattened-args)))
+                                             #,(and run-arg
+                                                    (run-arg-prefix run-arg)))
+                                            #,(and run-arg
+                                                   (run-arg-separator run-arg)))))
+                                     inputs))
+                       (list #,@(map output outputs))
+                       (list #,@flattened-args)
+                       #,(and stdin #`'#,stdin)
+                       #,(if (and stderr
+                                  (not (string? (syntax->datum stderr))))
+                             (raise-exception
+                              (condition (ccwl-violation stderr)
+                                         (formatted-message "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"
+                                                            (syntax->datum stderr))))
+                             stderr)
+                       #,(if (and stdout
+                                  (not (string? (syntax->datum stdout))))
+                             (raise-exception
+                              (condition (ccwl-violation stdout)
+                                         (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
+                                                            (syntax->datum stdout))))
+                             stdout)
+                       #,requirements
+                       '#,other)))
                 #'(args ...)))))))
 
 (define-syntax cwl-workflow
