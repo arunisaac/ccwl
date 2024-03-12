@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -279,7 +279,7 @@
   (ccwl-violation-with-message?
    "#:other parameter not serializable to YAML")
   (macroexpand
-   '(command #:outputs (file #:type File
+   '(command #:inputs (file #:type File
                              #:other '((secondaryFiles . ".fai")))
              #:run "cat" file)))
 
