@@ -3,7 +3,7 @@
 exec guile --no-auto-compile -e main -s "$0" "$@"
 !#
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -112,8 +112,8 @@ Compile SOURCE-FILE.
            (set! %load-should-auto-compile #f)
            (let ((to (assq-ref args 'to)))
              ((cond
-               ((string=? to "cwl") workflow-or-command->cwl)
-               ((string=? to "dot") workflow-or-command->dot))
+               ((string=? to "cwl") function->cwl)
+               ((string=? to "dot") function->dot))
               (guard (exception
                       ;; Handle syntax violation exceptions by reporting
                       ;; them and exiting.

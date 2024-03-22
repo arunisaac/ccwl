@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -34,9 +34,9 @@
   #:use-module (ccwl utils)
   #:export (workflow->dot
             command->dot
-            workflow-or-command->dot))
+            function->dot))
 
-(define workflow-or-command->dot
+(define function->dot
   (match-lambda*
     (((? workflow? workflow) port)
      (workflow->dot workflow port))
