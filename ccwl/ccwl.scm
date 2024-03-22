@@ -47,6 +47,13 @@
             command-stdout
             command-requirements
             command-other
+            js-expression?
+            js-expression
+            js-expression-inputs
+            js-expression-expression
+            js-expression-outputs
+            js-expression-requirements
+            js-expression-other
             cwl-workflow?
             cwl-workflow
             cwl-workflow-file
@@ -269,6 +276,15 @@ compared using @code{equal?}."
   (requirements command-requirements)
   (other command-other))
 
+(define-immutable-record-type <js-expression>
+  (make-js-expression inputs expression outputs requirements other)
+  js-expression?
+  (inputs js-expression-inputs)
+  (expression js-expression-expression)
+  (outputs js-expression-outputs)
+  (requirements js-expression-requirements)
+  (other js-expression-other))
+
 (define-immutable-record-type <cwl-workflow>
   (make-cwl-workflow file inputs outputs)
   cwl-workflow?
@@ -285,10 +301,11 @@ compared using @code{equal?}."
   (other workflow-other))
 
 (define (function-outputs function)
-  "Return the outputs of FUNCTION---a <command>, <cwl-workflow> or
-<workflow> object."
+  "Return the outputs of FUNCTION---a <command>, <js-expression>,
+<cwl-workflow> or <workflow> object."
   ((cond
     ((command? function) command-outputs)
+    ((js-expression? function) js-expression-outputs)
     ((cwl-workflow? function) cwl-workflow-outputs)
     ((workflow? function) workflow-outputs)
     (else (error "Unrecognized ccwl function" function)))
@@ -500,6 +517,52 @@ identifiers defined in the commands."
                        '#,other)))
                 #'(args ...)))))))
 
+(define-syntax js-expression
+  (lambda (x)
+    (syntax-case x ()
+      ((_ args ...)
+       (guard (exception
+               ((unrecognized-keyword-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ((irritant _ ...)
+                    (condition (ccwl-violation irritant)
+                               (formatted-message "Unrecognized keyword argument ~a in js-expression definition"
+                                                  (syntax->datum irritant)))))))
+               ((invalid-keyword-arity-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ;; TODO: Report all extra arguments, not just the
+                   ;; first one.
+                   ((keyword _ extra _ ...)
+                    (condition (ccwl-violation extra)
+                               (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                  (syntax->datum extra)
+                                                  (syntax->datum keyword)))))))
+               ((invalid-positional-arguments-arity-assertion? exception)
+                (raise-exception
+                 (match (condition-irritants exception)
+                   ;; TODO: Report all extra positional arguments, not
+                   ;; just the first one.
+                   ((extra _ ...)
+                    (condition (ccwl-violation extra)
+                               (formatted-message "Unexpected extra positional argument ~a in js-expression definition"
+                                                  (syntax->datum extra))))))))
+         (apply (syntax-lambda** (#:key expression (requirements #''()) (other #'()) #:key* inputs outputs)
+                  (unless expression
+                    (raise-exception
+                     (condition (ccwl-violation x)
+                                (formatted-message "Missing ~a key in command definition"
+                                                   #:expression))))
+                  (ensure-yaml-serializable other "#:other")
+                  #`(make-js-expression
+                     (list #,@(map input inputs))
+                     #,expression
+                     (list #,@(map output outputs))
+                     #,requirements
+                     '#,other))
+                #'(args ...)))))))
+
 (define-syntax cwl-workflow
   (lambda (x)
     (syntax-case x ()
@@ -546,17 +609,19 @@ identifiers defined in the commands."
 
 (define (function-inputs function)
   "Return the list of inputs accepted by @var{function}---a
-@code{<command>}, @code{<cwl-workflow>} or @code{<workflow> object."
+@code{<command>}, @code{<js-expression>}, @code{<cwl-workflow>} or
+@code{<workflow> object."
   ((cond
     ((command? function) command-inputs)
+    ((js-expression? function) js-expression-inputs)
     ((cwl-workflow? function) cwl-workflow-inputs)
     ((workflow? function) workflow-inputs)
     (else (error "Unrecognized ccwl function" function)))
    function))
 
 (define (function-input-keys function)
-  "Return the list of input keys accepted by FUNCTION, a <command>
-object or a <cwl-workflow> object."
+  "Return the list of input keys accepted by FUNCTION, a <command>,
+<js-expression>, <cwl-workflow> or <workflow> object."
   (map input-id
        (function-inputs function)))
 
@@ -597,14 +662,15 @@ an association list mapping keyword arguments to their values."
          (command-inputs command))))
 
 (define (function-object x)
-  "Return the ccwl function object (a <command>, <cwl-workflow>
-or <workflow> object) described by syntax X. If such a ccwl function
-is not defined, return #f."
+  "Return the ccwl function object (a <command>, <js-expression>,
+<cwl-workflow> or <workflow> object) described by syntax X. If such a
+ccwl function is not defined, return #f."
   ;; TODO: What if function object is defined in lexical scope?
   (let ((result (false-if-exception
                  (eval (syntax->datum x)
                        (interaction-environment)))))
     (and (or (command? result)
+             (js-expression? result)
              (cwl-workflow? result)
              (workflow? result))
          result)))

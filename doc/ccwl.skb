@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2024 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -389,7 +389,15 @@ the external CWL workflow.]
 keys forward to the output. This is what the ,(code [identity])
 construct is for. An example follows.]
          (scheme-source "doc/identity-construct.scm")
-         (image :file "doc/identity-construct.png"))))
+         (image :file "doc/identity-construct.png")))
+    (section :title [Javascript expressions via ExpressionTool]
+             :ident "javascript-expressions-via-expressiontool"
+      (p [ccwl supports CWL's ,(samp "ExpressionTool") using its
+,(code "js-expression") construct. The ,(code "js-expression")
+construct may be invoked from within workflows just like ,(code
+"command") constructs can be. Here's a workflow that uses ,(code
+"js-expression") to construct an array of numbers from 0 to n-1.]
+         (scheme-source "doc/js-expression-iota.scm"))))
 
   (chapter :title [Contributing]
            :ident "chapter-contributing"

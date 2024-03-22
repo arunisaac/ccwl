@@ -123,10 +123,11 @@ Compile SOURCE-FILE.
                 (let ((result (load (canonicalize-path (assq-ref args 'source-file))
                                       read-syntax)))
                   (if (or (command? result)
+                          (js-expression? result)
                           (workflow? result))
                       result
                       (raise-exception
-                       (condition (formatted-message "Last expression in file ~a returns neither workflow nor command"
+                       (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
                                                      (assq-ref args 'source-file)))))))
               (current-output-port)))))
         ((program args ...)

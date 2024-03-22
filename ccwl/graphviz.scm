@@ -41,7 +41,9 @@
     (((? workflow? workflow) port)
      (workflow->dot workflow port))
     (((? command? command) port)
-     (command->dot command port))))
+     (command->dot command port))
+    (((? js-expression? expression) port)
+     (js-expression->dot expression port))))
 
 (define (workflow->dot workflow port)
   "Render WORKFLOW, a <workflow> object, to PORT in the graphviz dot
@@ -121,6 +123,30 @@ language."
          #:subgraphs (list (inputs-cluster (workflow-inputs workflow))
                            (outputs-cluster (workflow-outputs workflow)))))
 
+(define (single-node-workflow->graph node-name inputs outputs)
+  "Convert a single node workflow (usually a @code{<command>} or
+@code{<js-expression>}) with @var{node-name}, @var{inputs} and
+@var{outputs}, to a @code{<graph>} object."
+  (graph 'workflow
+         #:properties '((bgcolor . "#eeeeee"))
+         #:nodes (list (graph-node node-name
+                                   '((fillcolor . "lightgoldenrodyellow")
+                                     (shape . "record")
+                                     (style . "filled"))))
+         #:edges (append
+                  ;; Connect inputs to command.
+                  (map (lambda (input)
+                         (cons (input-id input)
+                               node-name))
+                       inputs)
+                  ;; Connect command to outputs.
+                  (map (lambda (output)
+                         (cons node-name
+                               (output-id output)))
+                       outputs))
+         #:subgraphs (list (inputs-cluster inputs)
+                           (outputs-cluster outputs))))
+
 (define (command->dot command port)
   "Render @var{command}, a @code{<command>} object, to @var{port} in the
 graphviz dot language."
@@ -130,25 +156,22 @@ graphviz dot language."
 (define (command->graph command)
   "Convert @var{command}, a @code{<command>} object, to a @code{<graph>}
 object."
-  (graph 'workflow
-         #:properties '((bgcolor . "#eeeeee"))
-         #:nodes (list (graph-node 'command
-                                   '((fillcolor . "lightgoldenrodyellow")
-                                     (shape . "record")
-                                     (style . "filled"))))
-         #:edges (append
-                  ;; Connect inputs to command.
-                  (map (lambda (input)
-                         (cons (input-id input)
-                               'command))
-                       (command-inputs command))
-                  ;; Connect command to outputs.
-                  (map (lambda (output)
-                         (cons 'command
-                               (output-id output)))
-                       (command-outputs command)))
-         #:subgraphs (list (inputs-cluster (command-inputs command))
-                           (outputs-cluster (command-outputs command)))))
+  (single-node-workflow->graph 'command
+                               (command-inputs command)
+                               (command-outputs command)))
+
+(define (js-expression->dot expression port)
+  "Render @var{expression}, a @code{<js-expression>} object, to
+@var{port} in the graphviz dot language."
+  (graph->dot (js-expression->graph expression)
+              port))
+
+(define (js-expression->graph expression)
+  "Convert @var{expression}, a @code{<js-expression>} object, to a
+@code{<graph>} object."
+  (single-node-workflow->graph 'js-expression
+                               (js-expression-inputs expression)
+                               (js-expression-outputs expression)))
 
 (define (step-node id)
   "Return graph node describing step with @var{id}."

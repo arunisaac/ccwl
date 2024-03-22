@@ -41,7 +41,9 @@
     (((? workflow? workflow) port)
      (workflow->cwl workflow port))
     (((? command? command) port)
-     (command->cwl command port))))
+     (command->cwl command port))
+    (((? js-expression? expression) port)
+     (js-expression->cwl expression port))))
 
 (define (workflow->cwl workflow port)
   "Render WORKFLOW, a <workflow> object, to PORT as a CWL YAML
@@ -87,6 +89,8 @@ association list."
                        (run . ,(match (step-run step)
                                  ((? command? command)
                                   (command->cwl-scm command))
+                                 ((? js-expression? expression)
+                                  (js-expression->cwl-scm expression))
                                  ((? cwl-workflow? cwl-workflow)
                                   (cwl-workflow-file cwl-workflow))
                                  ((? workflow? workflow)
@@ -147,22 +151,27 @@ CWL YAML specification."
           '())
     ,@(input-other input)))
 
+(define (staging-requirements inputs)
+  "Return @samp{InitialWorkDirRequirement} to stage any @var{inputs} that
+must be staged."
+  (if (any input-stage? inputs)
+      ;; Stage any inputs that need to be.
+      `((InitialWorkDirRequirement
+         (listing . ,(list->vector
+                      (filter-map (lambda (input)
+                                    (and (input-stage? input)
+                                         (string-append "$(inputs."
+                                                        (symbol->string (input-id input))
+                                                        ")")))
+                                  inputs)))))
+      '()))
+
 (define (command->cwl-scm command)
   "Render COMMAND, a <command> object, into a CWL tree."
   `((cwlVersion . ,%cwl-version)
     (class . CommandLineTool)
     (requirements
-     ,@(if (any input-stage? (command-inputs command))
-           ;; Stage any inputs that need to be.
-           `((InitialWorkDirRequirement
-              (listing . ,(list->vector
-                           (filter-map (lambda (input)
-                                         (and (input-stage? input)
-                                              (string-append "$(inputs."
-                                                             (symbol->string (input-id input))
-                                                             ")")))
-                                       (command-inputs command))))))
-           '())
+     ,@(staging-requirements (command-inputs command))
      ,@(command-requirements command))
     ,@(command-other command)
     (arguments . ,(list->vector
@@ -187,3 +196,25 @@ CWL YAML specification."
     ,@(if (command-stdout command)
           `((stdout . ,(command-stdout command)))
           '())))
+
+(define (js-expression->cwl expression port)
+  "Render @var{expression}, a @code{<js-expression>} object, to
+@var{port} as a CWL YAML specification."
+  (scm->yaml (js-expression->cwl-scm expression)
+             port))
+
+(define (js-expression->cwl-scm expression)
+  "Render @var{expression}, a @code{<js-expression>} object, into
+a CWL tree."
+  `((cwlVersion . ,%cwl-version)
+    (class . ExpressionTool)
+    (requirements
+     (InlineJavascriptRequirement)
+     ,@(staging-requirements (js-expression-inputs expression))
+     ,@(js-expression-requirements expression))
+    ,@(js-expression-other expression)
+    (inputs . ,(map input->cwl-scm
+                    (js-expression-inputs expression)))
+    (outputs . ,(map output->cwl-scm
+                     (js-expression-outputs expression)))
+    (expression . ,(js-expression-expression expression))))
