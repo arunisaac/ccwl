@@ -396,7 +396,8 @@ construct is for. An example follows.]
 ,(code "js-expression") construct. The ,(code "js-expression")
 construct may be invoked from within workflows just like ,(code
 "command") constructs can be. Here's a workflow that uses ,(code
-"js-expression") to construct an array of numbers from 0 to n-1.]
+"js-expression") to construct an array of numbers from ,(code "0") to
+,(code "n-1").]
          (scheme-source "doc/js-expression-iota.scm"))))
 
   (chapter :title [Contributing]
