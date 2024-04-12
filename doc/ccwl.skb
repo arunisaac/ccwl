@@ -47,7 +47,7 @@ CWL, please see the ,(ref :url "https://www.commonwl.org/user_guide/"
              :ident "section-important-concepts"
       (p [The CWL and ccwl workflow languages
 are statically typed programming languages where functions accept
-multiple named inputs and return multiple named outputs. Let 's break
+multiple named inputs and return multiple named outputs. Let’s break
 down what that means.])
       (subsection :title [Static typing]
         (p [In CWL, the type of arguments accepted by a function and
@@ -127,7 +127,7 @@ capture standard output in.])
 
       (scheme-source "doc/capture-stdout.scm")
 
-      (p [Let's write this code to a file
+      (p [Let’s write this code to a file
 ,(file "capture-stdout.scm"), generate CWL, write the generated CWL to
 ,(file "capture-stdout.cwl"), and run it using ,(code "cwltool"). We
 might expect something like the output below. Notice how the standard
@@ -256,9 +256,9 @@ following output.])
         (p [The MD5, SHA1 and SHA256 checksums are in the files ,(file
 "md5"), ,(file "sha1") and ,(file "sha256") respectively.])))
 
-    (section :title [Let's write a spell check workflow]
+    (section :title [Let’s write a spell check workflow]
              :ident "section-spell-check-workflow"
-      (p [Finally, let's put together a complex workflow to understand
+      (p [Finally, let’s put together a complex workflow to understand
 how everything fits together. The workflow we will be attempting is a
 spell check workflow inspired by the founders of Unix,(footnote
 ["UNIX: Making Computers Easier to Use" has a ,(ref
@@ -267,7 +267,7 @@ spell check workflow inspired by the founders of Unix,(footnote
 pipes")]) and by dgsh,(footnote [dgsh, a shell supporting general
 directed graph pipelines, has a ,(ref
 :url "https://www.spinellis.gr/sw/dgsh/#spell-highlight" :text "spell
-check example").]). The workflow is pictured below. Let's start by
+check example").]). The workflow is pictured below. Let’s start by
 coding each of the steps required by the workflow.])
 
       (image :file "doc/spell-check.png")
@@ -299,7 +299,7 @@ dictionary to identify the misspellings. We do this using the
          (scheme-source-form "doc/spell-check.scm"
                              "\\(define find-misspellings"))
 
-      (p [Now, let's wire up the workflow. First, we assemble the
+      (p [Now, let’s wire up the workflow. First, we assemble the
 ,(code "split-words")-,(code "downcase")-,(code "sort-words") arm of
 the workflow. This arm is just a linear chain that can be assembled
 using ,(code "pipe"). We will need to invoke the ,(code "sort")
@@ -362,7 +362,7 @@ separator, you could do]
 foo,bar,aal,vel").]))
     (section :title [Scatter/gather]
              :ident "section-scatter-gather"
-      (p [ccwl supports CWL's dotproduct scatter/gather feature using
+      (p [ccwl supports CWL’s dotproduct scatter/gather feature using
 the following syntax. Here, the ,(code [other-messages]) input to the
 workflow is an array of strings that is scattered over the ,(code
 [print]) step. Each run of the ,(code [print]) step gets an element of
@@ -392,10 +392,10 @@ construct is for. An example follows.]
          (image :file "doc/identity-construct.png")))
     (section :title [Javascript expressions via ExpressionTool]
              :ident "javascript-expressions-via-expressiontool"
-      (p [ccwl supports CWL's ,(samp "ExpressionTool") using its
+      (p [ccwl supports CWL’s ,(samp "ExpressionTool") using its
 ,(code "js-expression") construct. The ,(code "js-expression")
 construct may be invoked from within workflows just like ,(code
-"command") constructs can be. Here's a workflow that uses ,(code
+"command") constructs can be. Here’s a workflow that uses ,(code
 "js-expression") to construct an array of numbers from ,(code "0") to
 ,(code "n-1").]
          (scheme-source "doc/js-expression-iota.scm"))))
