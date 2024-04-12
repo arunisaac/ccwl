@@ -400,10 +400,72 @@ construct may be invoked from within workflows just like ,(code
 ,(code "n-1").]
          (scheme-source "doc/js-expression-iota.scm"))))
 
-  (chapter :title [Contributing]
-           :ident "chapter-contributing"
-    (p [ccwl is developed on GitHub at ,(ref
+  (chapter :title [Guide to the source code]
+           :ident "chapter-guide-to-the-source-code"
+    (p [This chapter is a guide to reading, understanding and hacking
+on the ccwl source code. You do not need to read this chapter to
+merely use ccwl to write your workflows. You only need to read this if
+you wish to understand and maybe improve the implementation of ccwl.])
+    (section :title [Important objects and functions]
+             :ident "section-important-objects-and-functions"
+      (p [As described in the ,(ref :ident "section-important-concepts"
+:text [Important Concepts]) section, ccwl is a statically typed
+expression oriented language in which functions take one or more
+arguments (either positional or named) and return one or more
+outputs. There are different kinds of functions—namely commands,
+javascript expressions, workflows and external CWL workflows. These
+are represented by ,(source-ref "ccwl/ccwl.scm"
+"\\(define-immutable-record-type <command>" (code [<command>])),
+,(source-ref "ccwl/ccwl.scm" "\\(define-immutable-record-type <js-expression>"
+(code [<js-expression>])), ,(source-ref "ccwl/ccwl.scm"
+"\\(define-immutable-record-type <workflow>" (code [<workflow>])) and
+,(source-ref "ccwl/ccwl.scm" "\\(define-immutable-record-type <cwl-workflow>"
+(code [<cwl-workflow>])) objects respectively. Inputs and outputs of
+these functions are represented by ,(source-ref "ccwl/ccwl.scm"
+"\\(define-immutable-record-type <input>" (code [<input>]))
+and ,(source-ref "ccwl/ccwl.scm" "\\(define-immutable-record-type <output>"
+(code [<output>])) objects respectively. Special macros—
+,(source-ref "ccwl/ccwl.scm" "\\(define-syntax command" (code [command])),
+,(source-ref "ccwl/ccwl.scm" "\\(define-syntax js-expression" (code [js-expression])),
+,(source-ref "ccwl/ccwl.scm" "\\(define-syntax workflow" (code [workflow]))
+and ,(source-ref "ccwl/ccwl.scm" "\\(define-syntax cwl-workflow" (code [cwl-workflow]))
+are provided to define ,(code [<command>]), ,(code [<js-expression>]),
+,(code [<workflow>]) and ,(code [<cwl-workflow>]) objects
+respectively. These macros provide syntax validation and present a
+more concise interface to users. ,(code [<input>]) and ,(code
+[<output>]) objects are never defined on their own by the user, but
+rather are inferred by the aforementioned macros.])
+      (p [ccwl introduces the notion of a ,(source-ref "ccwl/ccwl.scm"
+"\\(define-immutable-record-type <key>" (code [<key>])) that is a
+generalization of ,(code [<input>]) and ,(code [<output>])
+objects. Keys flow through workflow steps and string them
+together. Keys in the ccwl DSL are analogous to variable names in a
+regular programming language. The ,(source-ref "ccwl/ccwl.scm"
+"\\(define \\(collect-steps" (code [collect-steps])) function
+traverses workflow expression trees and produces a list of CWL
+steps. ccwl constructs such as ,(code [pipe]), ,(code [tee]), ,(code
+[identity]), ,(code [rename]), ,(code [scatter]), etc. are implemented
+in the collect-steps function.]))
+    (section :title [Source tree organization]
+             :ident "section-source-tree-organization"
+      (p [Here’s a short summary of what some important files in the
+source tree contain.]
+         (description
+          (item :key (file "ccwl/ccwl.scm")
+                [Core functionality—the functions, keys, input/output
+objects, etc.— of the ccwl DSL])
+          (item :key [,(file "ccwl/cwl.scm") and ,(file "ccwl/graphviz.scm")]
+                [Serialization concerns to CWL and dot respectively])
+          (item :key (file "ccwl/yaml.scm")
+                [Library to serialize scheme trees to YAML in the manner of
+guile-json to JSON])
+          (item :key (file "ccwl/ui.scm")
+                [Command-line reporting of errors in the context of the
+user’s workflow description]))))
+    (section :title [Contributing]
+             :ident "section-contributing"
+      (p [ccwl is developed on GitHub at ,(ref
 :url "https://github.com/arunisaac/ccwl"). Feedback, suggestions,
 feature requests, bug reports and pull requests are all
 welcome. Unclear and unspecific error messages are considered a
-bug. Do report them!])))
+bug. Do report them!]))))
