@@ -468,12 +468,13 @@ identifiers defined in the commands."
                     (condition (ccwl-violation extra)
                                (formatted-message "Unexpected extra positional argument ~a in command definition"
                                                   (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #''()) (other #'()) #:key* inputs outputs run)
+         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #'()) (other #'()) #:key* inputs outputs run)
                   (when (null? run)
                     (raise-exception
                      (condition (ccwl-violation x)
                                 (formatted-message "Missing ~a key in command definition"
                                                    #:run))))
+                  (ensure-yaml-serializable requirements "#:requirements")
                   (ensure-yaml-serializable other "#:other")
                   (let ((flattened-args (run-args run (map input-spec-id inputs))))
                     #`(make-command
@@ -513,7 +514,7 @@ identifiers defined in the commands."
                                          (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
                                                             (syntax->datum stdout))))
                              stdout)
-                       #,requirements
+                       '#,requirements
                        '#,other)))
                 #'(args ...)))))))
 
@@ -548,18 +549,19 @@ identifiers defined in the commands."
                     (condition (ccwl-violation extra)
                                (formatted-message "Unexpected extra positional argument ~a in js-expression definition"
                                                   (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key expression (requirements #''()) (other #'()) #:key* inputs outputs)
+         (apply (syntax-lambda** (#:key expression (requirements #'()) (other #'()) #:key* inputs outputs)
                   (unless expression
                     (raise-exception
                      (condition (ccwl-violation x)
                                 (formatted-message "Missing ~a key in command definition"
                                                    #:expression))))
+                  (ensure-yaml-serializable requirements "#:requirements")
                   (ensure-yaml-serializable other "#:other")
                   #`(make-js-expression
                      (list #,@(map input inputs))
                      #,expression
                      (list #,@(map output outputs))
-                     #,requirements
+                     '#,requirements
                      '#,other))
                 #'(args ...)))))))
 
