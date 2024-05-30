@@ -343,6 +343,19 @@ to ,(emph "stage") the input file into the output directory. We may
 express this in ccwl using the ,(code "#:stage?") parameter to the
 inputs to be staged. Here is a rather concocted example.]
          (scheme-source "doc/staging-input-files.scm")))
+    (section :title [Pass in arbitrary CWL Requirements]
+             :ident "section-pass-in-arbitrary-cwl-requirements"
+      (p [Sometimes it is necessary to pass in arbitrary CWL
+Requirments that are not explicitly supported by ccwl. You can do this
+using the ,(code "#:requirements") parameter. The ,(code
+"#:requirements") parameter must be a scheme tree that is serializable
+to YAML (to put it more bluntly, a tree that ,(ref :url
+"https://github.com/mwette/guile-libyaml/" :text "guile-libyaml") will
+accept). Here are a couple of examples passing in an ,(code
+"InlineJavascriptRequirement") and a ,(code "ResourceRequirement")
+respectively.]
+         (scheme-source "doc/inline-javascript-requirement.scm")
+         (scheme-source "doc/resource-requirement.scm")))
     (section :title [Array types]
              :ident "section-array-types"
       (p [ccwl supports array types using the following syntax.]
