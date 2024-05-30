@@ -356,6 +356,13 @@ accept). Here are a couple of examples passing in an ,(code
 respectively.]
          (scheme-source "doc/inline-javascript-requirement.scm")
          (scheme-source "doc/resource-requirement.scm")))
+    (section :title [Prefix arguments]
+      :ident "prefix-arguments"
+      (p [You want to be able to associate arguments of a command to a
+prefix. For example, in the following example, we associate the input
+,(code "output_filename") to the prefix ,(code "-o"). Notice the
+parentheses around ,(code "-o output_filename").]
+         (scheme-source "doc/prefix-arguments.scm")))
     (section :title [Array types]
              :ident "section-array-types"
       (p [ccwl supports array types using the following syntax.]
