@@ -1,6 +1,16 @@
 #+TITLE: ccwl NEWS – History of user-visible changes
 
-Copyright © 2021, 2024 Arun Isaac <arunisaac@systemreboot.net>
+Copyright © 2021, 2024, 2025 Arun Isaac <arunisaac@systemreboot.net>
+
+* Changes in 0.4.0 (since 0.3.0)
+** Documentation
+*** New "Prefix arguments" section in cookbook
+*** New "Pass in arbitrary CWL Requirements" section in cookbook
+*** New "Guide to the source code" chapter in the manual
+** Features
+*** New ~js-expression~ construct to describe ~ExpressionTool~ class workflows
+** Noteworthy bug fixes
+*** Count argument positions correctly when left-flanked by prefixed string arguments
 
 * Changes in 0.3.0 (since 0.2.0)
 ** Features
