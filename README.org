@@ -36,14 +36,14 @@ Download the Docker image from [[https://github.com/arunisaac/ccwl/releases][the
 it. Then, run ccwl with command-line arguments of your choice.
 #+BEGIN_SRC shell
   $ docker load -i ccwl-docker.tar.gz
-  $ docker run ccwl [ARGS...]
+  $ docker run ccwl ccwl [ARGS...]
 #+END_SRC
 
 When passing files into the Docker container, remember to share the
 filesystem. The following command is one way to share the current
 directory with the container.
 #+BEGIN_SRC shell
-  $ docker run -v "$PWD:$PWD" -w "$PWD" ccwl compile foo.scm
+  $ docker run -v "$PWD:$PWD" -w "$PWD" ccwl ccwl compile foo.scm
 #+END_SRC
 
 ** Using Guix
