@@ -80,8 +80,9 @@ introduction to ccwl.
 * Contributing
 
 Feedback, suggestions, feature requests, bug reports and pull requests
-are all welcome. Unclear and unspecific error messages are considered
-a bug. Do report them!
+are all welcome. Please write to [[mailto:ccwl@systemreboot.net][ccwl@systemreboot.net]]. You may also
+browse the [[https://lists.systemreboot.net/ccwl][archives]] of previous discussions. Unclear and unspecific
+error messages are considered a bug. Do report them!
 
 To hack on ccwl, you can use GNU Guix to quickly drop into a
 development environment by running
