@@ -84,6 +84,8 @@ are all welcome. Please write to [[mailto:ccwl@systemreboot.net][ccwl@systemrebo
 browse the [[https://lists.systemreboot.net/ccwl][archives]] of previous discussions. Unclear and unspecific
 error messages are considered a bug. Do report them!
 
+We do not accept issues or pull requests on GitHub. Thank you!
+
 To hack on ccwl, you can use GNU Guix to quickly drop into a
 development environment by running
 #+BEGIN_SRC shell
