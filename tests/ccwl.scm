@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -20,6 +20,7 @@
              (srfi srfi-1)
              (srfi srfi-64)
              (srfi srfi-71)
+             (ice-9 match)
              (ccwl ccwl)
              (ccwl conditions))
 

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -16,7 +16,8 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (srfi srfi-64)
+(use-modules (srfi srfi-26)
+             (srfi srfi-64)
              (term ansi-color)
              (ccwl ui)
              (ccwl conditions))

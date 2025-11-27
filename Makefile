@@ -1,5 +1,5 @@
 # ccwl --- Concise Common Workflow Language
-# Copyright © 2022, 2024 Arun Isaac <arunisaac@systemreboot.net>
+# Copyright © 2022, 2024–2025 Arun Isaac <arunisaac@systemreboot.net>
 #
 # This file is part of ccwl.
 #
@@ -24,12 +24,12 @@ GIT = git
 GPG = gpg
 GUILD = guild
 GUILE = guile
+GUILE_RUN64 = guile-run64
 LZIP = lzip
 SKRIBILO = skribilo
 
 FIND_DEPENDENCIES = build-aux/find-dependencies.scm
 GENERATE_CWL_OUTPUT = build-aux/generate-cwl-output.sh
-TEST_DRIVER = build-aux/test-driver.scm
 
 top_level_module_dir = $(project)
 sources = $(wildcard $(top_level_module_dir)/*.scm)
@@ -46,7 +46,7 @@ fonts = $(addprefix $(GUIX_ENVIRONMENT)/share/fonts/web/, charter_regular.woff2 
 distribute_files = $(sources) $(scripts) $(tests) $(test_data) \
                    $(doc_sources) doc/skribilo.scm $(doc_data) $(DOC_SCM) $(DOC_OTHER) \
                    pre-inst-env guix.scm Makefile configure configure.scm \
-		   $(FIND_DEPENDENCIES) $(GENERATE_CWL_OUTPUT) $(TEST_DRIVER) \
+		   $(FIND_DEPENDENCIES) $(GENERATE_CWL_OUTPUT) \
 		   COPYING NEWS.org README.org
 
 scmdir = $(datarootdir)/guile/site/$(guile_effective_version)/$(top_level_module_dir)
@@ -63,8 +63,8 @@ all: $(objects)
 
 # Run tests
 
-check: $(tests) $(TEST_DRIVER)
-	$(GUILE) --no-auto-compile -L . $(TEST_DRIVER) $(tests)
+check:
+	./pre-inst-env $(GUILE_RUN64) $(tests)
 
 # Build documentation
 

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023–2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -20,6 +20,7 @@
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
   #:use-module ((gnu packages emacs) #:select (emacs-minimal))
   #:use-module ((gnu packages fonts) #:select (font-charter font-fira-code))
+  #:use-module ((gnu packages guile-xyz) #:select (guile-run64))
   #:use-module ((guix build-system guile) #:select (%guile-build-system-modules))
   #:use-module (guix gexp)
   #:use-module (guix git-download)
@@ -34,7 +35,10 @@
                         "ccwl-checkout"
                         #:recursive? #t
                         #:select? (or (git-predicate (dirname (current-source-directory)))
-                                      (const #t))))))
+                                      (const #t))))
+    (native-inputs
+     (modify-inputs (package-native-inputs guix:ccwl)
+       (prepend guile-run64)))))
 
 (define ccwl-website-gexp
   (let ((development-profile
