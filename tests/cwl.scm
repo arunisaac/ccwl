@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -17,6 +17,12 @@
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
 (use-modules (srfi srfi-64))
+
+(define make-input
+  (@@ (ccwl ccwl) make-input))
+
+(define input->cwl-scm
+  (@@ (ccwl cwl) input->cwl-scm))
 
 (define type->cwl
   (@@ (ccwl cwl) type->cwl))
@@ -40,5 +46,13 @@
     (items . ((type . array)
               (items . File))))
   (type->cwl (make-array-type (make-array-type 'File))))
+
+(test-equal "Serialize #f defaults in input values"
+  '("foo"
+    (type . boolean)
+    (default . #f)
+    (label . "foo"))
+  (input->cwl-scm
+   (make-input "foo" 'boolean "foo" #f #f #f #f '())))
 
 (test-end "cwl")

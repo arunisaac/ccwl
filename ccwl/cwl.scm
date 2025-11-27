@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023–2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -136,10 +136,13 @@ CWL YAML specification."
   "Render @var{input}, a @code{<input>} object, into a CWL tree."
   `(,(input-id input)
     (type . ,(type->cwl (input-type input)))
+    ;; The default property is special because a value of #f is
+    ;; meaningful and must be serialized.
+    ,@(if (unspecified-default? (input-default input))
+          '()
+          `((default . ,(input-default input))))
     ,@(or (filter-alist
            `((label . ,(input-label input))
-             (default . ,(and (not (unspecified-default? (input-default input)))
-                              (input-default input)))
              ;; inputBinding is only relevant to commands, not
              ;; workflows. But, the input position and prefix are not set
              ;; for worklow inputs and therefore this sub-expression has
