@@ -28,6 +28,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 
 (use-modules (rnrs conditions)
              (rnrs exceptions)
+             (srfi srfi-26)
              (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
@@ -65,11 +66,14 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                                  #f)))
                   (acons 'to (string->symbol arg)
                          result)))
+        (option (list #\o "output") #t #f
+                (lambda (opt name arg result)
+                  (acons 'output-file arg result)))
         %help-option))
 
-(define (ccwl-compile source to)
-  "Compile @var{source} file to @var{to} format. @var{to} is either
-@code{'cwl} or @code{'dot}."
+(define (ccwl-compile source to port)
+  "Compile @var{source} file to @var{to} format writing output to
+@var{port}. @var{to} is either @code{'cwl} or @code{'dot}."
   ;; We don't need to compile ccwl files. Loading is sufficient for
   ;; our purposes. Besides, compiling would fail since the workflow
   ;; macro cannot access command definitions.
@@ -92,7 +96,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
          (raise-exception
           (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
                                         source)))))
-   (current-output-port)))
+   port))
 
 (define (main args)
   (with-exception-handler
@@ -130,6 +134,7 @@ Thank you!
              (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
 Compile SOURCE-FILE.
 
+  -o, --output=FILE  write compiled output to file
   -t, --to=TARGET    compile SOURCE-FILE to TARGET language;
                      Supported targets are cwl (default) and dot.
 
@@ -137,8 +142,15 @@ Compile SOURCE-FILE.
                               program)
                       (current-error-port))
              (exit (assq 'help args)))
-           (ccwl-compile (assq-ref args 'source-file)
-                         (assq-ref args 'to))))
+           (if (assq-ref args 'output-file)
+               (call-with-output-file (assq-ref args 'output-file)
+                 (cut ccwl-compile
+                      (assq-ref args 'source-file)
+                      (assq-ref args 'to)
+                      <>))
+               (ccwl-compile (assq-ref args 'source-file)
+                             (assq-ref args 'to)
+                             (current-output-port)))))
         ((program args ...)
          (let ((args (args-fold args
                                 (list %help-option)
