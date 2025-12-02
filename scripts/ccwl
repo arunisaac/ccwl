@@ -63,8 +63,36 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                                        arg
                                        (string-join supported ", "))
                                  #f)))
-                  (acons 'to arg result)))
+                  (acons 'to (string->symbol arg)
+                         result)))
         %help-option))
+
+(define (ccwl-compile source to)
+  "Compile @var{source} file to @var{to} format. @var{to} is either
+@code{'cwl} or @code{'dot}."
+  ;; We don't need to compile ccwl files. Loading is sufficient for
+  ;; our purposes. Besides, compiling would fail since the workflow
+  ;; macro cannot access command definitions.
+  (set! %load-should-auto-compile #f)
+  ((case to
+     ((cwl) function->cwl)
+     ((dot) function->dot))
+   (guard (exception
+           ;; Handle syntax violation exceptions by reporting them and
+           ;; exiting.
+           ((ccwl-violation? exception)
+            (report-ccwl-violation exception)
+            (exit #f)))
+     (let ((result (load (canonicalize-path source)
+                         read-syntax)))
+       (if (or (command? result)
+               (js-expression? result)
+               (workflow? result))
+           result
+           (raise-exception
+            (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
+                                          source))))))
+   (current-output-port)))
 
 (define (main args)
   (with-exception-handler
@@ -96,7 +124,7 @@ Thank you!
                                  invalid-option
                                  (lambda (arg result)
                                    (acons 'source-file arg result))
-                                 '((to . "cwl")))))
+                                 '((to . cwl)))))
            (when (or (assq 'help args)
                      (not (assq-ref args 'source-file)))
              (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
@@ -109,30 +137,8 @@ Compile SOURCE-FILE.
                               program)
                       (current-error-port))
              (exit (assq 'help args)))
-           ;; We don't need to compile ccwl files. Loading is sufficient
-           ;; for our purposes. Besides, compiling would fail since the
-           ;; workflow macro cannot access command definitions.
-           (set! %load-should-auto-compile #f)
-           (let ((to (assq-ref args 'to)))
-             ((cond
-               ((string=? to "cwl") function->cwl)
-               ((string=? to "dot") function->dot))
-              (guard (exception
-                      ;; Handle syntax violation exceptions by reporting
-                      ;; them and exiting.
-                      ((ccwl-violation? exception)
-                       (report-ccwl-violation exception)
-                       (exit #f)))
-                (let ((result (load (canonicalize-path (assq-ref args 'source-file))
-                                      read-syntax)))
-                  (if (or (command? result)
-                          (js-expression? result)
-                          (workflow? result))
-                      result
-                      (raise-exception
-                       (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
-                                                     (assq-ref args 'source-file)))))))
-              (current-output-port)))))
+           (ccwl-compile (assq-ref args 'source-file)
+                         (assq-ref args 'to))))
         ((program args ...)
          (let ((args (args-fold args
                                 (list %help-option)
