@@ -94,8 +94,8 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
              (workflow? result))
          result
          (raise-exception
-          (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
-                                        source)))))
+          (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
+                             source))))
    port))
 
 (define (main args)
