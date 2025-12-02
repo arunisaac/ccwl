@@ -77,21 +77,21 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
   ((case to
      ((cwl) function->cwl)
      ((dot) function->dot))
-   (guard (exception
-           ;; Handle syntax violation exceptions by reporting them and
-           ;; exiting.
-           ((ccwl-violation? exception)
-            (report-ccwl-violation exception)
-            (exit #f)))
-     (let ((result (load (canonicalize-path source)
-                         read-syntax)))
-       (if (or (command? result)
-               (js-expression? result)
-               (workflow? result))
-           result
-           (raise-exception
-            (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
-                                          source))))))
+   (let ((result (guard (exception
+                         ;; Handle syntax violation exceptions by
+                         ;; reporting them and exiting.
+                         ((ccwl-violation? exception)
+                          (report-ccwl-violation exception)
+                          (exit #f)))
+                   (load (canonicalize-path source)
+                         read-syntax))))
+     (if (or (command? result)
+             (js-expression? result)
+             (workflow? result))
+         result
+         (raise-exception
+          (condition (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
+                                        source)))))
    (current-output-port)))
 
 (define (main args)
