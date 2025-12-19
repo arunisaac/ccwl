@@ -61,17 +61,14 @@
 
 (test-begin "ccwl")
 
-(test-assert "stdin input should not have inputBinding"
-  (not (assoc-ref
-        (assoc-ref
-         (assoc-ref
-          ((@@ (ccwl cwl) command->cwl-scm)
-           (command #:inputs (file #:type File)
-                    #:run "wc" "-c"
-                    #:stdin file))
-          'inputs)
-         'file)
-        'inputBinding)))
+(test-equal "stdin input should not have inputBinding"
+  '((file (type . File)))
+  (assoc-ref
+   ((@@ (ccwl cwl) command->cwl-scm)
+    (command #:inputs (file #:type File)
+             #:run "wc" "-c"
+             #:stdin file))
+   'inputs))
 
 (test-equal "read all forms of inputs and outputs from a CWL workflow"
   '(((spam string))
