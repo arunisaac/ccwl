@@ -51,16 +51,34 @@ specification."
   (scm->yaml (workflow->cwl-scm workflow)
              port))
 
-(define (filter-alist alist)
-  "Filter ALIST removing entries with #f as the value. If the
-resulting association list is empty, return #f. Else, return that
-association list."
-  (match (filter (match-lambda
-                   ((_ . #f) #f)
-                   (_ #t))
-                 alist)
-    (() #f)
-    (result result)))
+(define (vector-filter-map proc vec)
+  "Map @var{proc} over @var{vec} and return a vector of the results that
+are not @code{#f}."
+  (list->vector (filter-map proc (vector->list vec))))
+
+(define (prune-tree tree)
+  "Prune JSON-like @var{tree} removing dictionary keys without a mapping."
+  (match tree
+    ;; Array
+    (#(elements ...)
+     (vector-filter-map (lambda (element)
+                          (match (prune-tree element)
+                            (() #f)
+                            (pruned-element pruned-element)))
+                        tree))
+    ;; Dictionary
+    ((pairs ...)
+     (filter-map (match-lambda
+                   ;; Key with a mapping
+                   ((key . value)
+                    (match (prune-tree value)
+                      (() #f)
+                      (pruned-value (cons key pruned-value))))
+                   ;; Key without a mapping
+                   ((key) #f))
+                 pairs))
+    ;; Atom
+    (atom atom)))
 
 (define* (workflow->cwl-scm workflow)
   "Render WORKFLOW, a <workflow> object, into a CWL tree."
@@ -114,17 +132,17 @@ association list."
   "Render @var{output}, a @code{<output>} object, into a CWL tree. If
 @var{workflow?} is @code{#t}, this is a workflow output."
   `(,(output-id output)
-    ,@(or (filter-alist
-           `((type . ,(type->cwl (output-type output)))
-             ;; outputBinding is relevant only to commands, and
-             ;; outputSource is relevant only to workflows.
-             ,@(if workflow?
-                   `((outputSource . ,(match (output-source output)
-                                        ((? string? source) source)
-                                        ((? input? input) (input-id input)))))
-                   `((outputBinding . ,(output-binding output))))))
-          '())
-    ,@(output-other output)))
+    ,@(prune-tree
+       `((type . ,(type->cwl (output-type output)))
+         ;; outputBinding is relevant only to commands, and
+         ;; outputSource is relevant only to workflows.
+         ,@(if workflow?
+               `((outputSource . ,(match (output-source output)
+                                    ((? string? source) source)
+                                    ((? input? input) (input-id input)))))
+               `((outputBinding . ,(or (output-binding output)
+                                       '()))))
+         ,@(output-other output)))))
 
 (define (command->cwl command port)
   "Render @var{command}, a @code{<command>} object, to @var{port} as a
@@ -135,24 +153,25 @@ CWL YAML specification."
 (define (input->cwl-scm input)
   "Render @var{input}, a @code{<input>} object, into a CWL tree."
   `(,(input-id input)
-    (type . ,(type->cwl (input-type input)))
-    ;; The default property is special because a value of #f is
-    ;; meaningful and must be serialized.
-    ,@(if (unspecified-default? (input-default input))
-          '()
-          `((default . ,(input-default input))))
-    ,@(or (filter-alist
-           `((label . ,(input-label input))
-             ;; inputBinding is only relevant to commands, not
-             ;; workflows. But, the input position and prefix are not set
-             ;; for worklow inputs and therefore this sub-expression has
-             ;; no effect. So, leave this be.
-             (inputBinding . ,(filter-alist
-                               `((position . ,(input-position input))
-                                 (prefix . ,(input-prefix input))
-                                 (itemSeparator . ,(input-separator input)))))))
-          '())
-    ,@(input-other input)))
+    ,@(prune-tree
+       `((type . ,(type->cwl (input-type input)))
+         (default . ,(if (unspecified-default? (input-default input))
+                         '()
+                         (input-default input)))
+         (label . ,(or (input-label input)
+                       '()))
+         ;; inputBinding is only relevant to commands, not workflows.
+         ;; But, the input position and prefix are not set for worklow
+         ;; inputs and therefore this sub-expression has no effect.
+         ;; So, leave this be.
+         (inputBinding
+          (position . ,(or (input-position input)
+                           '()))
+          (prefix . ,(or (input-prefix input)
+                         '()))
+          (itemSeparator . ,(or (input-separator input)
+                                '())))
+         ,@(input-other input)))))
 
 (define (staging-requirements inputs)
   "Return @samp{InitialWorkDirRequirement} to stage any @var{inputs} that
