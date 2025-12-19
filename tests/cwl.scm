@@ -53,6 +53,6 @@
     (default . #f)
     (label . "foo"))
   (input->cwl-scm
-   (make-input "foo" 'boolean "foo" #f #f #f #f #f '())))
+   (make-input "foo" 'boolean "foo" #f #f #f #t #f #f '())))
 
 (test-end "cwl")

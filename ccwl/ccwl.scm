@@ -72,6 +72,7 @@
             input-default
             input-position
             input-prefix
+            input-separate?
             input-separator
             input-stage?
             input-other
@@ -93,7 +94,7 @@
             unspecified-default?))
 
 (define-immutable-record-type <input>
-  (make-input id type label default position prefix separator stage? other)
+  (make-input id type label default position prefix separate? separator stage? other)
   input?
   (id input-id)
   (type input-type)
@@ -101,6 +102,7 @@
   (default input-default set-input-default)
   (position input-position set-input-position)
   (prefix input-prefix set-input-prefix)
+  (separate? input-separate? set-input-separate?)
   (separator input-separator set-input-separator)
   (stage? input-stage?)
   (other input-other))
@@ -206,7 +208,7 @@ compared using @code{equal?}."
                                 #,(if (unspecified-default? default)
                                       #'(make-unspecified-default)
                                       default)
-                                #,position #,prefix #f
+                                #,position #,prefix #f #f
                                 #,stage? '#,other)))
               #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
@@ -372,6 +374,25 @@ input, return #f."
      #'prefix)
     (_ #f)))
 
+(define (validate-separate? separate?)
+  "Validate @var{separate?} and raise an exception if it is not valid."
+  (unless (boolean? separate?)
+    (raise-exception
+     (condition (ccwl-violation separate?)
+                (formatted-message "Invalid #:separate? flag ~a. #:separate? flag must be a boolean."
+                                   (syntax->datum separate?))))))
+
+(define (run-arg-separate? run-arg)
+  "Return the separate? specified in @var{run-arg} syntax. If not a
+prefixed input, return #f."
+  (syntax-case run-arg (array)
+    ((prefix _ args ...) (string? (syntax->datum #'prefix))
+     (apply (syntax-lambda** (#:key (separate? #'#t))
+              (validate-separate? (syntax->datum separate?))
+              separate?)
+            #'(args ...)))
+    (_ #f)))
+
 (define (run-arg-separator run-arg)
   "Return the item separator specified in @var{run-arg} syntax."
   (syntax-case run-arg (array)
@@ -417,9 +438,15 @@ identifiers defined in the commands."
        (syntax->run-arg #'input))
       ;; Flatten prefixed string arguments. They have no
       ;; special meaning.
-      ((prefix string-arg _ ...) (and (string? (syntax->datum #'prefix))
-                                      (string? (syntax->datum #'string-arg)))
-       (list #'prefix #'string-arg))
+      ((prefix string-arg args ...) (and (string? (syntax->datum #'prefix))
+                                         (string? (syntax->datum #'string-arg)))
+       (apply (syntax-lambda** (#:key (separate? #'#t))
+                (validate-separate? (syntax->datum separate?))
+                (if (syntax->datum separate?)
+                    (list #'prefix #'string-arg)
+                    (list #`#,(string-append (syntax->datum #'prefix)
+                                             (syntax->datum #'string-arg)))))
+              #'(args ...)))
       ;; Recurse on prefixed inputs.
       ((prefix input _ ...) (string? (syntax->datum #'prefix))
        (syntax->run-arg #'input))
@@ -484,18 +511,21 @@ identifiers defined in the commands."
                                        (let* ((id (input-spec-id input-spec))
                                               (run-arg (find-run-arg id run)))
                                          #`(set-input-separator
-                                            (set-input-prefix
-                                             (set-input-position
-                                              #,(input input-spec)
-                                              ;; `run-args' returns inputs as quoted symbols.
-                                              ;; So, we add quote.
-                                              #,(list-index (match-lambda
-                                                              (`(quote ,input)
-                                                               (eq? input id))
-                                                              (_ #f))
-                                                            (syntax->datum flattened-args)))
+                                            (set-input-separate?
+                                             (set-input-prefix
+                                              (set-input-position
+                                               #,(input input-spec)
+                                               ;; `run-args' returns inputs as quoted symbols.
+                                               ;; So, we add quote.
+                                               #,(list-index (match-lambda
+                                                               (`(quote ,input)
+                                                                (eq? input id))
+                                                               (_ #f))
+                                                             (syntax->datum flattened-args)))
+                                              #,(and run-arg
+                                                     (run-arg-prefix run-arg)))
                                              #,(and run-arg
-                                                    (run-arg-prefix run-arg)))
+                                                    (run-arg-separate? run-arg)))
                                             #,(and run-arg
                                                    (run-arg-separator run-arg)))))
                                      inputs))
@@ -602,7 +632,7 @@ identifiers defined in the commands."
                              ((id . type)
                               (with-syntax ((id (datum->syntax #f id))
                                             (type (datum->syntax #f type)))
-                                #`(make-input 'id 'type #f #f #f #f #f #f '()))))
+                                #`(make-input 'id 'type #f #f #f #f #f #f #f '()))))
                            (parameters->id+type (assoc-ref yaml "inputs"))))
               (list #,@(map (match-lambda
                              ((id . type)

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023–2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -363,6 +363,14 @@ prefix. For example, in the following example, we associate the input
 ,(code "output_filename") to the prefix ,(code "-o"). Notice the
 parentheses around ,(code "-o output_filename").]
          (scheme-source "doc/prefix-arguments.scm")))
+    (section :title [Unseparated prefix arguments]
+             :ident "section-unseparated-prefix-arguments"
+      (p [Some programs don't like it when you separate arguments from
+their prefixes. You can specify this using the ,(code [#:separate?])
+flag.]
+         (scheme-source "doc/unseparated-prefix-arguments.scm")
+         [This is executed as ,(samp [gcc foo.c -ofoo]), rather than
+as ,(samp [gcc foo.c -o foo]).]))
     (section :title [Array types]
              :ident "section-array-types"
       (p [ccwl supports array types using the following syntax.]

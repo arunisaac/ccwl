@@ -169,6 +169,11 @@ CWL YAML specification."
                            '()))
           (prefix . ,(or (input-prefix input)
                          '()))
+          ;; separate? has a meaningful value only with prefix.
+          (separate . ,(if (input-prefix input)
+                           (and (input-separate? input)
+                                '())
+                           '()))
           (itemSeparator . ,(or (input-separator input)
                                 '())))
          ,@(input-other input)))))
