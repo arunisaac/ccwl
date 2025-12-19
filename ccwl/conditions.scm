@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2022 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2022, 2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -63,7 +63,7 @@
   (arguments formatted-message-arguments))
 
 (define (formatted-message format-string . arguments)
-  "Return &ccwl-message condition for FORMAT-STRING with ARGUMENTS."
+  "Return &formatted-message condition for FORMAT-STRING with ARGUMENTS."
   (make-formatted-message (apply format format-string arguments)
                           format-string
                           arguments))
