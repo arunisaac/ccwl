@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -93,7 +93,7 @@
             unspecified-default?))
 
 (define-immutable-record-type <input>
-  (make-input id type label default position prefix stage? other)
+  (make-input id type label default position prefix separator stage? other)
   input?
   (id input-id)
   (type input-type)
@@ -206,7 +206,8 @@ compared using @code{equal?}."
                                 #,(if (unspecified-default? default)
                                       #'(make-unspecified-default)
                                       default)
-                                #,position #,prefix #,stage? '#,other)))
+                                #,position #,prefix #f
+                                #,stage? '#,other)))
               #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
     (_ (error "Invalid input:" (syntax->datum input-spec)))))
@@ -600,7 +601,7 @@ identifiers defined in the commands."
                              ((id . type)
                               (with-syntax ((id (datum->syntax #f id))
                                             (type (datum->syntax #f type)))
-                                #`(make-input 'id 'type #f #f #f #f #f '()))))
+                                #`(make-input 'id 'type #f #f #f #f #f #f '()))))
                            (parameters->id+type (assoc-ref yaml "inputs"))))
               (list #,@(map (match-lambda
                              ((id . type)
