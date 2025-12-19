@@ -351,13 +351,13 @@ return @code{#f}."
                    (input (identifier? #'input)
                           (syntax->datum #'input))
                    ;; prefixed input
-                   ((_ input) (identifier? #'input)
+                   ((_ input _ ...) (identifier? #'input)
                     (syntax->datum #'input))
                    ;; array input specifier
                    ((array input _ ...) (identifier? #'input)
                     (syntax->datum #'input))
                    ;; prefixed array input specifier
-                   ((_ (array input _ ...)) (identifier? #'input)
+                   ((_ (array input _ ...) _ ...) (identifier? #'input)
                     (syntax->datum #'input))
                    (_ #f))))
             (and run-arg-input
@@ -368,7 +368,8 @@ return @code{#f}."
   "Return the prefix specified in @var{run-arg} syntax. If not a prefixed
 input, return #f."
   (syntax-case run-arg ()
-    ((prefix _) #'prefix)
+    ((prefix _ ...) (string? (syntax->datum #'prefix))
+     #'prefix)
     (_ #f)))
 
 (define (run-arg-separator run-arg)
@@ -386,7 +387,7 @@ input, return #f."
                 separator))
             #'(args ...)))
     ;; prefixed array input specifier
-    ((_ (array input args ...))
+    ((_ (array input args ...) _ ...)
      (run-arg-separator #'(array input args ...)))
     (_ #f)))
 
@@ -416,14 +417,14 @@ identifiers defined in the commands."
        (syntax->run-arg #'input))
       ;; Flatten prefixed string arguments. They have no
       ;; special meaning.
-      ((prefix string-arg) (and (string? (syntax->datum #'prefix))
-                                (string? (syntax->datum #'string-arg)))
+      ((prefix string-arg _ ...) (and (string? (syntax->datum #'prefix))
+                                      (string? (syntax->datum #'string-arg)))
        (list #'prefix #'string-arg))
       ;; Recurse on prefixed inputs.
-      ((prefix input) (string? (syntax->datum #'prefix))
+      ((prefix input _ ...) (string? (syntax->datum #'prefix))
        (syntax->run-arg #'input))
       ;; Prefixes that are not strings
-      ((prefix _)
+      ((prefix _ ...)
        (raise-exception
         (condition (ccwl-violation #'prefix)
                    (formatted-message "Invalid prefix ~a. Prefixes must be strings."
