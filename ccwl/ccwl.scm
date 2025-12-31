@@ -743,7 +743,7 @@ represented by <step> objects."
             (list)))
     ;; tee
     ((tee expressions ...)
-     (let ((key-lists step-lists (mapn (cut collect-steps <> input-keys)
+     (let ((key-lists step-lists (map2 (cut collect-steps <> input-keys)
                                        #'(expressions ...))))
        (values
         ;; Global workflow input keys may be duplicated across the

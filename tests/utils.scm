@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -194,7 +194,17 @@
   (let ((squares cubes (mapn (lambda (n)
                                (values (expt n 2)
                                        (expt n 3)))
-                             (iota 5))))
+                             (iota 5)
+                             2)))
+    (list squares cubes)))
+
+(test-equal "mapn on an empty list"
+  '(() ())
+  (let ((squares cubes (mapn (lambda (n)
+                               (values (expt n 2)
+                                       (expt n 3)))
+                             '()
+                             2)))
     (list squares cubes)))
 
 (test-equal "foldn"

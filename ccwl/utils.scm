@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -39,6 +39,7 @@
             lambda**
             syntax-lambda**
             mapn
+            map2
             foldn
             filter-mapi))
 
@@ -311,22 +312,31 @@ element. For example,
               lst
               (iota (length lst))))
 
-(define (mapn proc lst)
+(define (mapn proc lst n)
   "Map the procedure PROC over list LST and return a list containing
-the results. PROC can return multiple values, in which case, an equal
-number of lists are returned. For example,
+the results. PROC must return N values, in which case, N lists are
+returned. For example,
 
 (mapn (lambda (n)
         (values (expt n 2)
                 (expt n 3)))
-      (iota 5))
+      (iota 5)
+      2)
 => (0 1 4 9 16)
 => (0 1 8 27 64)"
   (apply values
-         (apply zip
-                (map (lambda (x)
-                       (call-with-values (cut proc x) list))
-                     lst))))
+         (match lst
+           ;; With an empty list, we cannot know the number of values
+           ;; proc would return. Hence this special case.
+           (() (make-list n '()))
+           (_
+            (apply zip
+                   (map (lambda (x)
+                          (call-with-values (cut proc x) list))
+                        lst))))))
+
+(define map2
+  (cut mapn <> <> 2))
 
 (define (foldn proc lst . inits)
   "Apply PROC to the elements of LST to build a result, and return
