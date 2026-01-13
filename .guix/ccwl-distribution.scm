@@ -59,9 +59,9 @@
           (invoke "make" "dist")
           (match (scandir (getcwd) (cut string-suffix? ".tar.lz" <>))
             ((tarball)
-             (install-file tarball #$output)))))))
+             (copy-file tarball #$output)))))))
 
 (define-public ccwl-distribution
-  (computed-file "ccwl-distribution" ccwl-distribution-gexp))
+  (computed-file "ccwl.tar.lz" ccwl-distribution-gexp))
 
 ccwl-distribution
