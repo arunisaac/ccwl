@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023–2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -19,10 +19,26 @@
 (define-module (ccwl-package)
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
   #:use-module ((gnu packages guile-xyz) #:select (guile-run64))
+  #:use-module ((gnu packages skribilo)
+                #:select (skribilo) #:prefix guix:)
+  #:use-module (guix download)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
   #:use-module (guix packages)
   #:use-module (guix utils))
+
+(define skribilo
+  (package
+    (inherit guix:skribilo)
+    (name "skribilo")
+    (version "0.10.0")
+    (source (origin
+             (method url-fetch)
+             (uri (string-append "mirror://savannah/skribilo/skribilo-"
+                                 version ".tar.gz"))
+             (sha256
+              (base32
+               "03pm2a9a5k0wkj10ywh6xi8flawm8sd396k4698gvvbc2zp4izwc"))))))
 
 (define-public ccwl
   (package
@@ -34,6 +50,7 @@
                                       (const #t))))
     (native-inputs
      (modify-inputs (package-native-inputs guix:ccwl)
-       (prepend guile-run64)))))
+       (prepend guile-run64)
+       (replace "skribilo" skribilo)))))
 
 ccwl
