@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2024, 2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2022, 2024–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -41,7 +41,8 @@
 Download release tarballs.
 
 ")
-  (dolist (release '(("2025-01-28" "0.4.0")
+  (dolist (release '(("2026-01-13" "0.5.0")
+                     ("2025-01-28" "0.4.0")
                      ("2024-01-26" "0.3.0")
                      ("2021-11-05" "0.2.0")
                      ("2021-07-06" "0.1.0")))
