@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2024 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2024, 2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -54,7 +54,7 @@
            "GUILE_LOAD_COMPILED_PATH"
            (list (string-append "/lib/guile/" (target-guile-effective-version) "/site-ccache"))
            (list #$development-profile))
-          (invoke "git" "clone" #$ccwl-git-repo (getcwd))
+          (invoke "git" "clone" (string-append "file://" #$ccwl-git-repo) (getcwd))
           (invoke "sh" "configure")
           (invoke "make" "dist")
           (match (scandir (getcwd) (cut string-suffix? ".tar.lz" <>))
