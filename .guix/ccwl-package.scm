@@ -18,7 +18,6 @@
 
 (define-module (ccwl-package)
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
-  #:use-module ((gnu packages guile-xyz) #:select (guile-run64))
   #:use-module ((gnu packages skribilo)
                 #:select (skribilo) #:prefix guix:)
   #:use-module (guix download)
@@ -50,7 +49,6 @@
                                       (const #t))))
     (native-inputs
      (modify-inputs (package-native-inputs guix:ccwl)
-       (prepend guile-run64)
        (replace "skribilo" skribilo)))))
 
 ccwl
