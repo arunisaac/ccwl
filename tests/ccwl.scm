@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -186,6 +186,16 @@
 (test-assert "allow literal ints as arguments"
   (workflow ()
     (print-int #:number 42)))
+
+;; TODO: Define this in the lexical scope of the test that requires
+;; it.
+(define print-workflow
+  (workflow ((message #:type string))
+    (print #:message message)))
+
+(test-assert "allow literals as arguments to workflows"
+  (workflow ()
+    (print-workflow #:message "foo")))
 
 (test-condition "step supplied with an unknown key must raise a &ccwl-violation condition"
   ccwl-violation?

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -282,7 +282,7 @@ compared using @code{equal?}."
 (define-immutable-record-type <js-expression>
   (make-js-expression inputs expression outputs requirements other)
   js-expression?
-  (inputs js-expression-inputs)
+  (inputs js-expression-inputs set-js-expression-inputs)
   (expression js-expression-expression)
   (outputs js-expression-outputs)
   (requirements js-expression-requirements)
@@ -292,14 +292,14 @@ compared using @code{equal?}."
   (make-cwl-workflow file inputs outputs)
   cwl-workflow?
   (file cwl-workflow-file)
-  (inputs cwl-workflow-inputs)
+  (inputs cwl-workflow-inputs set-cwl-workflow-inputs)
   (outputs cwl-workflow-outputs))
 
 (define-immutable-record-type <workflow>
   (make-workflow steps inputs outputs other)
   workflow?
   (steps workflow-steps)
-  (inputs workflow-inputs)
+  (inputs workflow-inputs set-workflow-inputs)
   (outputs workflow-outputs)
   (other workflow-other))
 
@@ -653,6 +653,21 @@ identifiers defined in the commands."
     (else (error "Unrecognized ccwl function" function)))
    function))
 
+(define (set-function-inputs function inputs)
+  "Set inputs of @var{function} to @var{inputs}---a
+@code{<command>}, @code{<js-expression>}, @code{<cwl-workflow>} or
+@code{<workflow> object. @code{set-function-inputs} is purely
+functional. It returns a copy of @var{function}. @var{function} is not
+mutated."
+  ((cond
+    ((command? function) set-command-inputs)
+    ((js-expression? function) set-js-expression-inputs)
+    ((cwl-workflow? function) set-cwl-workflow-inputs)
+    ((workflow? function) set-workflow-inputs)
+    (else (error "Unrecognized ccwl function" function)))
+   function
+   inputs))
+
 (define (function-input-keys function)
   "Return the list of input keys accepted by FUNCTION, a <command>,
 <js-expression>, <cwl-workflow> or <workflow> object."
@@ -679,11 +694,11 @@ identifiers defined in the commands."
       ;; Global input/output
       (symbol->string (key-cwl-id key))))
 
-(define (apply-partially command partial-arguments)
-  "Return a new command that is a partial application of
-@var{partial-arguments} to @var{command}. @var{partial-arguments} is
+(define (apply-partially function partial-arguments)
+  "Return a new function that is a partial application of
+@var{partial-arguments} to @var{function}. @var{partial-arguments} is
 an association list mapping keyword arguments to their values."
-  (set-command-inputs command
+  (set-function-inputs function
     (map (lambda (input)
            (set-input-default input
              (or (any (match-lambda
@@ -693,7 +708,7 @@ an association list mapping keyword arguments to their values."
                               value)))
                       partial-arguments)
                  (input-default input))))
-         (command-inputs command))))
+         (function-inputs function))))
 
 (define (function-object x)
   "Return the ccwl function object (a <command>, <js-expression>,
@@ -890,7 +905,9 @@ represented by <step> objects."
                                                           input-keys)))))
                                           (pairify (syntax->datum #'(args ...))))))))
            ;; If literal values are provided as arguments, partially
-           ;; apply those literal values to the command and recurse.
+           ;; apply those literal values to the function object
+           ;; (command, workflow, js-expression, cwl-workflow) and
+           ;; recurse.
            (_
             (collect-steps #`(((module-ref (resolve-module '(ccwl ccwl))
                                            'apply-partially)
