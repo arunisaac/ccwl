@@ -644,7 +644,7 @@ identifiers defined in the commands."
 (define (function-inputs function)
   "Return the list of inputs accepted by @var{function}---a
 @code{<command>}, @code{<js-expression>}, @code{<cwl-workflow>} or
-@code{<workflow> object."
+@code{<workflow>} object."
   ((cond
     ((command? function) command-inputs)
     ((js-expression? function) js-expression-inputs)
