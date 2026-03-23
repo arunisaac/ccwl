@@ -18,26 +18,10 @@
 
 (define-module (ccwl-package)
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
-  #:use-module ((gnu packages skribilo)
-                #:select (skribilo) #:prefix guix:)
-  #:use-module (guix download)
   #:use-module (guix gexp)
   #:use-module (guix git-download)
   #:use-module (guix packages)
   #:use-module (guix utils))
-
-(define skribilo
-  (package
-    (inherit guix:skribilo)
-    (name "skribilo")
-    (version "0.10.0")
-    (source (origin
-             (method url-fetch)
-             (uri (string-append "mirror://savannah/skribilo/skribilo-"
-                                 version ".tar.gz"))
-             (sha256
-              (base32
-               "03pm2a9a5k0wkj10ywh6xi8flawm8sd396k4698gvvbc2zp4izwc"))))))
 
 (define-public ccwl
   (package
@@ -46,9 +30,7 @@
                         "ccwl-checkout"
                         #:recursive? #t
                         #:select? (or (git-predicate (dirname (current-source-directory)))
-                                      (const #t))))
-    (native-inputs
-     (modify-inputs (package-native-inputs guix:ccwl)
-       (replace "skribilo" skribilo)))))
+                                      (const #t))))))
+
 
 ccwl
