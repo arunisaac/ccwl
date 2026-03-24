@@ -3,7 +3,7 @@
 exec guile --no-auto-compile -e main -s "$0" "$@"
 !#
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021–2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -46,7 +46,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
   (error "Invalid argument" arg))
 
 (define %help-option
-  (option (list "help") #f #t
+  (option (list #\h "help") #f #t
           (lambda (opt name arg result)
             (acons 'help #t result))))
 
