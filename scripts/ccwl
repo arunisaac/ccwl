@@ -42,9 +42,6 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 (define (invalid-option opt name arg result)
   (error "Invalid option" name))
 
-(define (invalid-operand arg result)
-  (error "Invalid argument" arg))
-
 (define %help-option
   (option (list #\h "help") #f #t
           (lambda (opt name arg result)
