@@ -2,7 +2,7 @@
 
 Drop into a development environment using `guix shell`.
 ```
-guix shell -Df guix.scm
+guix shell -L .guix -m manifest.scm
 ```
 
 # Make a release

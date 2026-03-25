@@ -89,7 +89,7 @@ We do not accept issues or pull requests on GitHub. Thank you!
 To hack on ccwl, you can use GNU Guix to quickly drop into a
 development environment by running
 #+BEGIN_SRC shell
-  $ guix shell -Df guix.scm
+  $ guix shell -L .guix -m manifest.scm
 #+END_SRC
 
 * License
