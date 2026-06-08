@@ -1,0 +1,1 @@
+{"author":{"id":"bf52274e4b8baa03d436abcc532c02b6a719b9a772a7e952e18fcc8627570e5f"},"ops":[{"type":1,"timestamp":1780935104,"nonce":"r9JvoMOWmmsuCzi/Qj4w2Fw4Thg=","title":"Report parenthesis mismatches gracefully","message":"ccwl crashes with a backtrace when there is a parenthesis mismatch in the source file. Catch and report this gracefully.","files":null}]}
