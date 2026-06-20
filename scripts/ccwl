@@ -43,7 +43,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
   (error "Invalid option" name))
 
 (define %help-option
-  (option (list #\h "help") #f #t
+  (option (list #\h "help") #f #f
           (lambda (opt name arg result)
             (acons 'help #t result))))
 
