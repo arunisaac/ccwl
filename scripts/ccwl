@@ -100,24 +100,23 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 (define (main args)
   (with-exception-handler
       (lambda (condition)
-        ;; Catch uncaught exceptions, print their backtrace and
-        ;; request the user report an issue. Pass quit exceptions
-        ;; through since those may be raised by exceptions that have
-        ;; been handled.
+        ;; Catch uncaught exceptions, request the user report an
+        ;; issue, and re-raise the exception so the default exception
+        ;; handler can deal with it. Pass quit exceptions through
+        ;; since those may be raised by exceptions that have been
+        ;; handled.
         (cond
          ((formatted-message? condition)
           (report-formatted-message condition))
          ((not (quit-exception? condition))
-          (display-backtrace (make-stack #t) (current-error-port))
-          (newline (current-error-port))
+          (display "You have discovered a bug! ccwl crashed! :-(
+Please report this to https://github.com/arunisaac/ccwl/issues
+Thank you!\n\n"
+                   (current-error-port))
           (write condition (current-error-port))
           (newline (current-error-port))
-          (display "
-You have discovered a bug! ccwl crashed! :-(
-Please report this to https://github.com/arunisaac/ccwl/issues
-Thank you!
-"
-                   (current-error-port))))
+          (newline (current-error-port))
+          (raise-exception condition)))
         (exit #f))
     (lambda ()
       (match args
