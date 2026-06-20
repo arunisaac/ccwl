@@ -73,6 +73,10 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
   ;; our purposes. Besides, compiling would fail since the workflow
   ;; macro cannot access command definitions.
   (set! %load-should-auto-compile #f)
+  (unless (file-exists? source)
+    (raise-exception
+     (formatted-message "File ~a does not exist"
+                        source)))
   ((case to
      ((cwl) function->cwl)
      ((dot) function->dot))
