@@ -118,12 +118,12 @@ Thank you!
     (lambda ()
       (match args
         ((program "compile" args ...)
-         (let* ((args (args-fold args
-                                 %options
-                                 invalid-option
-                                 (lambda (arg result)
-                                   (acons 'source-file arg result))
-                                 '((to . cwl)))))
+         (let ((args (args-fold args
+                                %options
+                                invalid-option
+                                (lambda (arg result)
+                                  (acons 'source-file arg result))
+                                '((to . cwl)))))
            (when (or (assq 'help args)
                      (not (assq-ref args 'source-file)))
              (display (format "Usage: ~a compile [OPTIONS] SOURCE-FILE
