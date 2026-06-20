@@ -136,7 +136,7 @@ Compile SOURCE-FILE.
   -o, --output=FILE  write compiled output to file
   -t, --to=TARGET    compile SOURCE-FILE to TARGET language;
                      Supported targets are cwl (default) and dot.
-
+  --help             display this help and exit
 "
                               program)
                       (current-error-port))
