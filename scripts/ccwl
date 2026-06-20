@@ -108,6 +108,17 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
         (cond
          ((formatted-message? condition)
           (report-formatted-message condition))
+         ((and (eq? (exception-kind condition)
+                    'read-error)
+               (message-condition? condition)
+               (irritants-condition? condition))
+          ;; TODO: Once https://codeberg.org/guile/guile/issues/206 is
+          ;; fixed, report error in source context using
+          ;; report-ccwl-violation.
+          (report-formatted-message
+           (apply formatted-message
+                  (condition-message condition)
+                  (condition-irritants condition))))
          ((not (quit-exception? condition))
           (display "You have discovered a bug! ccwl crashed! :-(
 Please report this to https://github.com/arunisaac/ccwl/issues
