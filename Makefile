@@ -1,5 +1,5 @@
 # ccwl --- Concise Common Workflow Language
-# Copyright © 2022, 2024–2025 Arun Isaac <arunisaac@systemreboot.net>
+# Copyright © 2022, 2024–2026 Arun Isaac <arunisaac@systemreboot.net>
 #
 # This file is part of ccwl.
 #
@@ -52,7 +52,7 @@ distribute_files = $(sources) $(scripts) $(tests) $(test_data) \
 scmdir = $(datarootdir)/guile/site/$(guile_effective_version)/$(top_level_module_dir)
 godir = $(libdir)/guile/$(guile_effective_version)/site-ccache/$(top_level_module_dir)
 
-.PHONY: all check clean dist distcheck info install
+.PHONY: all check clean dist distcheck info install ares
 
 # Build
 
@@ -177,3 +177,6 @@ clean:
               $(DOC_SCM:.scm=.cwl) $(DOC_IMAGES) $(DOC_IMAGES:.png=.dot) $(DOC_OUT) \
 	      $(doc_info) doc/skribilo.go
 	rm -rf $(doc_html) website/manual website/fonts
+
+ares:
+	./pre-inst-env $(GUILE) -c '((@ (ares server) run-nrepl-server))'
