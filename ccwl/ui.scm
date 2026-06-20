@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2022, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2022, 2023, 2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -35,7 +35,10 @@ user."
                   ;; the arguments are strings.
                   (string-replace-substring
                    (string-replace-substring
-                    (formatted-message-format exception)
+                    (string-replace-substring
+                     (string-replace-substring
+                      (formatted-message-format exception) "~A" "~a")
+                     "~S" "~s")
                     "~a"
                     (colorize-string "~a" 'BOLD 'MAGENTA))
                    "~s"
