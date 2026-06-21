@@ -772,11 +772,16 @@ represented by <step> objects."
     ;; rename keys (base case)
     ((rename new-key old-key)
      (begin
-       ;; Error out on non-keyword arguments.
+       ;; Error out if new key is not a keyword.
        (unless (keyword? (syntax->datum #'new-key))
          (raise-exception
           (condition (ccwl-violation #'new-key)
                      (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
+       ;; Error out if old key is a keyword.
+       (when (keyword? (syntax->datum #'old-key))
+         (raise-exception
+          (condition (ccwl-violation #'old-key)
+                     (formatted-message "Unexpected keyword; expected symbol (for example: foo, bar)"))))
        ;; Ensure old key exists.
        (unless (memq (syntax->datum #'old-key)
                      (map key-name input-keys))
