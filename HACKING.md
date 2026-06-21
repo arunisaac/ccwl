@@ -24,4 +24,7 @@ guix pack -f squashfs --with-source=ccwl=ccwl-x.x.x.tar.lz bash --file=guix.scm
 Add release tarball and signature to website. Publish release tarball, guix pack, docker and singularity images to GitHub.
 ## Update Guix package
 ## Publicize
-Publicize on the ccwl@systemreboot.net and guix-science@gnu.org mailing lists, and on the [CWL Discourse forum](https://cwl.discourse.group/).
+Publicize on
+- [ccwl public inbox](mailto:ccwl@systemreboot.net)
+- [guix-science mailing list](mailto:guix-science@gnu.org)
+- [CWL Discourse forum](https://cwl.discourse.group/)
