@@ -21,6 +21,13 @@ If you don't have [[https://guix.gnu.org/][GNU Guix]] set up, the easiest way to
 is to using the provided software bundles---either using the Guix
 tarball pack or the Docker image.
 
+*** Using singularity
+
+Download the Singularity image from [[https://github.com/arunisaac/ccwl/releases][the GitHub releases page]]. Then, run ccwl like so:
+#+BEGIN_SRC shell
+  $ singularity exec ccwl.squashfs ccwl [ARGS...]
+#+END_SRC
+
 *** Using the Guix tarball pack
 
 Download the Guix tarball pack from [[https://github.com/arunisaac/ccwl/releases][the GitHub releases page]] and
