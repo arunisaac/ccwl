@@ -28,3 +28,5 @@ Publicize on
 - [ccwl public inbox](mailto:ccwl@systemreboot.net)
 - [guix-science mailing list](mailto:guix-science@gnu.org)
 - [CWL Discourse forum](https://cwl.discourse.group/)
+- genenetwork sphere Matrix room (invite-only room)
+- pangenome Matrix room (invite-only room)
