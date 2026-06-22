@@ -37,7 +37,8 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
              (ccwl conditions)
              (ccwl cwl)
              (ccwl graphviz)
-             (ccwl ui))
+             (ccwl ui)
+             (ccwl utils))
 
 (define (invalid-option opt name arg result)
   (error "Invalid option" name))
@@ -86,8 +87,14 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                          ((ccwl-violation? exception)
                           (report-ccwl-violation exception)
                           (exit #f)))
-                   (load (canonicalize-path source)
-                         read-syntax))))
+                   (let ((source-path (canonicalize-path source)))
+                     ;; Change directory before loading source file.
+                     ;; The source file may reference other files with
+                     ;; paths relative to its directory.
+                     (call-with-current-directory (dirname source-path)
+                       (lambda ()
+                         (load source-path
+                               read-syntax)))))))
      (if (or (command? result)
              (js-expression? result)
              (workflow? result))
