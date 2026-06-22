@@ -6,6 +6,7 @@
  (makefile-gmake-mode
   (indent-tabs-mode t))
  (scheme-mode
+  (eval put 'call-with-current-directory 'scheme-indent-function 1)
   (eval put 'lambda** 'scheme-indent-function 1)
   (eval put 'set-function-inputs 'scheme-indent-function 1)
   (eval put 'set-input-default 'scheme-indent-function 1)

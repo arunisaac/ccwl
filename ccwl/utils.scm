@@ -41,7 +41,8 @@
             mapn
             map2
             foldn
-            filter-mapi))
+            filter-mapi
+            call-with-current-directory))
 
 (define (indent-level port level)
   "Emit whitespaces to PORT corresponding to nesting LEVEL."
@@ -358,3 +359,11 @@ the first call. For example,
                  (call-with-values (cut apply proc element results) list))
                inits
                lst)))
+
+(define (call-with-current-directory curdir thunk)
+  "Call @var{thunk} with current directory set to @var{curdir}. Restore
+current directory after @var{thunk} returns."
+  (let ((original-current-directory (getcwd)))
+    (dynamic-wind (cut chdir curdir)
+                  thunk
+                  (cut chdir original-current-directory))))
