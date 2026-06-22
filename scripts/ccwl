@@ -67,6 +67,23 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                   (acons 'output-file arg result)))
         %help-option))
 
+(define* (ccwl-read #:optional (port (current-input-port)))
+  "Read an S-expression from @var{port}. This function wraps
+@code{read-syntax} to raise read errors the way ccwl likes to handle
+it."
+  (guard (c ((and (eq? (exception-kind c)
+                       'read-error)
+                  (message-condition? c)
+                  (irritants-condition? c))
+             ;; TODO: Once https://codeberg.org/guile/guile/issues/206
+             ;; is fixed, report error in source context using
+             ;; report-ccwl-violation.
+             (raise-exception
+              (apply formatted-message
+                     (condition-message c)
+                     (condition-irritants c)))))
+    (read-syntax port)))
+
 (define (ccwl-compile source to port)
   "Compile @var{source} file to @var{to} format writing output to
 @var{port}. @var{to} is either @code{'cwl} or @code{'dot}."
@@ -94,7 +111,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                      (call-with-current-directory (dirname source-path)
                        (lambda ()
                          (load source-path
-                               read-syntax)))))))
+                               ccwl-read)))))))
      (if (or (command? result)
              (js-expression? result)
              (workflow? result))
@@ -115,17 +132,6 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
         (cond
          ((formatted-message? condition)
           (report-formatted-message condition))
-         ((and (eq? (exception-kind condition)
-                    'read-error)
-               (message-condition? condition)
-               (irritants-condition? condition))
-          ;; TODO: Once https://codeberg.org/guile/guile/issues/206 is
-          ;; fixed, report error in source context using
-          ;; report-ccwl-violation.
-          (report-formatted-message
-           (apply formatted-message
-                  (condition-message condition)
-                  (condition-irritants condition))))
          ((not (quit-exception? condition))
           (display "You have discovered a bug! ccwl crashed! :-(
 Please report this to ccwl@systemreboot.net
