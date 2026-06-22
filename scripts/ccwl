@@ -28,11 +28,13 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 
 (use-modules (rnrs conditions)
              (rnrs exceptions)
+             (srfi srfi-1)
              (srfi srfi-26)
              (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
              (ice-9 exceptions)
+             (ice-9 textual-ports)
              (ccwl ccwl)
              (ccwl conditions)
              (ccwl cwl)
@@ -83,6 +85,28 @@ it."
                      (condition-message c)
                      (condition-irritants c)))))
     (read-syntax port)))
+
+(define (syntax-list->vector x)
+  "Convert syntax @var{x} of a list into syntax of a vector."
+  (datum->syntax #f
+                 (syntax-case x ()
+                   ((elements ...)
+                    #'#(elements ...)))
+                 #:source x))
+
+(define (read-hash-vector chr port)
+  "Read vector from @var{port}. This function is intended for use with
+@code{read-hash-extend}."
+  (unget-char port chr)
+  (let ((lst (read-syntax port)))
+    (if (dotted-list? (syntax->datum lst))
+        (raise-exception
+         (condition (ccwl-violation lst)
+                    (formatted-message "Malformed vector: unexpected dotted list ~a"
+                                       (syntax->datum lst))))
+        (syntax-list->vector lst))))
+
+(read-hash-extend #\( read-hash-vector)
 
 (define (ccwl-compile source to port)
   "Compile @var{source} file to @var{to} format writing output to
