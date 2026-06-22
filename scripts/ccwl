@@ -128,7 +128,7 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                   (condition-irritants condition))))
          ((not (quit-exception? condition))
           (display "You have discovered a bug! ccwl crashed! :-(
-Please report this to https://github.com/arunisaac/ccwl/issues
+Please report this to ccwl@systemreboot.net
 Thank you!\n\n"
                    (current-error-port))
           (write condition (current-error-port))
