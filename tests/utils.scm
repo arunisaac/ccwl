@@ -89,11 +89,13 @@
      '(lambda** (#:key foo #:foo bar)
         foo))))
 
-(test-equal "Allow other keys in lambda**"
+(test-equal "Allow other keys in lambda**, but raise an exception"
   1
-  ((lambda** (#:key foo #:allow-other-keys)
-     foo)
-   #:foo 1 #:bar 2))
+  (with-exception-handler (const #t)
+    (lambda ()
+      ((lambda** (#:key foo)
+         foo)
+       #:foo 1 #:bar 2))))
 
 (test-assert "Unrecognized keyword argument passed to lambda** should raise an &unrecognized-keyword-assertion condition"
   (guard (exception
@@ -138,11 +140,13 @@
   ((syntax-lambda** (#:key* foo)
      foo)))
 
-(test-equal "Allow other keys in syntax-lambda**"
+(test-equal "Allow other keys in syntax-lambda**, but raise an exception"
   1
-  (syntax->datum ((syntax-lambda** (#:key foo #:allow-other-keys)
-                    foo)
-                  #'#:foo #'1 #'#:bar #'2)))
+  (syntax->datum (with-exception-handler (const #t)
+                   (lambda ()
+                     ((syntax-lambda** (#:key foo)
+                        foo)
+                      #'#:foo #'1 #'#:bar #'2)))))
 
 (test-assert "syntax-lambda** should raise an &unrecognized-keyword-assertion on unrecognized keywords in arguments"
   (guard (exception

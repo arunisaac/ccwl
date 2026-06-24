@@ -152,15 +152,6 @@ arguments. Note that the default default value for unary arguments is
  1 2 #:vale 123 #:naal 321 456)
 => (1 2 #f 123 9 (321 456) (7) (3 2 1) ())
 
-Like lambda*, lambda** supports #:allow-other-keys. For example,
-
-((lambda** (#:key foo #:allow-other-keys)
-   foo)
- #:foo 1 #:bar 2)
-=> 1
-
-However, #:optional and #:rest are not supported.
-
 If an unrecognized keyword is passed to the lambda function, a
 &unrecognized-keyword-assertion condition is raised. If a unary
 keyword argument is passed more than one argument, a
@@ -177,9 +168,7 @@ However these exceptions are continuable."
                     (unary-arguments (or (plist-ref grouped-rest #:key)
                                          (list)))
                     (nary-arguments (or (plist-ref grouped-rest #:key*)
-                                        (list)))
-                    (allow-other-keys? (if (plist-ref grouped-rest #:allow-other-keys)
-                                           #t #f)))
+                                        (list))))
                (let ((unrecognized-keywords
                       (lset-difference (lambda (x y)
                                          (let ((x (if (keyword? x) x (syntax->datum x)))
@@ -187,7 +176,7 @@ However these exceptions are continuable."
                                            (eq? x y)))
                                        (filter (compose keyword? syntax->datum)
                                                #'(args-spec ...))
-                                       (list #:key #:key* #:allow-other-keys))))
+                                       (list #:key #:key*))))
                  (unless (null? unrecognized-keywords)
                    (raise-continuable
                     (condition (unrecognized-keyword-assertion)
@@ -200,9 +189,7 @@ However these exceptions are continuable."
                                                      #'(arg (list defaults ...)))
                                                     (arg #'(arg '()))))
                                                 nary-arguments)
-                                           (if allow-other-keys?
-                                               (list #:allow-other-keys)
-                                               (list)))
+                                           (list #:allow-other-keys))
                           body ...)
                         (let ((positionals rest (break keyword? args)))
                           ;; Test for correct number of positional
@@ -223,8 +210,7 @@ However these exceptions are continuable."
                                                                               (arg #'arg)))))
                                                           (append unary-arguments
                                                                   nary-arguments)))))
-                            (unless (or #,allow-other-keys?
-                                        (null? unrecognized-keywords))
+                            (unless (null? unrecognized-keywords)
                               (raise-continuable
                                (condition (unrecognized-keyword-assertion)
                                           (irritants-condition unrecognized-keywords)))))
@@ -254,15 +240,6 @@ that for n-ary arguments is the empty list. For example,
    (list foo aal vale pal naal irandu sol))
  #'1 #'2 #'#:vale #'123 #'#:naal #'321 #'456)
 => (#'1 #'2 #'123 9 (#'321 #'456) (7) (3 2 1))
-
-Like lambda**, syntax-lambda** supports #:allow-other-keys.
-
-((syntax-lambda** (#:key foo #:allow-other-keys)
-     foo)
-   #'#:foo #'1 #'#:bar #'2)
-=> #'1
-
-#:optional and #:rest are not supported.
 
 If an unrecognized keyword is passed to the lambda function, a
 &unrecognized-keyword-assertion condition is raised. If a unary
