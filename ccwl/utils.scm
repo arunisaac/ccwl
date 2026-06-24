@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2023, 2025–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -27,7 +27,7 @@
                                             condition-irritants
                                             (make-irritants-condition . irritants-condition)))
   #:use-module ((rnrs exceptions) #:select (guard
-                                            (raise . raise-exception)))
+                                            raise-continuable))
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
@@ -84,7 +84,7 @@ If a unary keyword is passed multiple arguments, a
                   ;; unary keyword argument
                   (match this-keyword-args
                     ((this-keyword-arg) this-keyword-arg)
-                    (_ (raise-exception
+                    (_ (raise-continuable
                         (condition (invalid-keyword-arity-assertion)
                                    (irritants-condition
                                     (cons this-keyword this-keyword-args))))))
@@ -166,7 +166,8 @@ If an unrecognized keyword is passed to the lambda function, a
 keyword argument is passed more than one argument, a
 &invalid-keyword-arity-assertion condition is raised. If a wrong
 number of positional arguments is passed, a
-&invalid-positional-arguments-arity-assertion condition is raised."
+&invalid-positional-arguments-arity-assertion condition is raised.
+However these exceptions are continuable."
     (syntax-case x ()
       ((_ (args-spec ...) body ...)
        #`(lambda args
@@ -188,7 +189,7 @@ number of positional arguments is passed, a
                                                #'(args-spec ...))
                                        (list #:key #:key* #:allow-other-keys))))
                  (unless (null? unrecognized-keywords)
-                   (raise-exception
+                   (raise-continuable
                     (condition (unrecognized-keyword-assertion)
                                (irritants-condition unrecognized-keywords)))))
                #`(apply (lambda* #,(append positionals
@@ -208,7 +209,7 @@ number of positional arguments is passed, a
                           ;; arguments.
                           (unless (= (length positionals)
                                      #,(length positionals))
-                            (raise-exception
+                            (raise-continuable
                              (condition (invalid-positional-arguments-arity-assertion)
                                         (irritants-condition positionals))))
                           ;; Test if all keywords are recognized.
@@ -224,7 +225,7 @@ number of positional arguments is passed, a
                                                                   nary-arguments)))))
                             (unless (or #,allow-other-keys?
                                         (null? unrecognized-keywords))
-                              (raise-exception
+                              (raise-continuable
                                (condition (unrecognized-keyword-assertion)
                                           (irritants-condition unrecognized-keywords)))))
                           (append positionals
@@ -268,35 +269,40 @@ If an unrecognized keyword is passed to the lambda function, a
 keyword argument is passed more than one argument, a
 &invalid-keyword-arity-assertion condition is raised. If a wrong
 number of positional arguments is passed, a
-&invalid-positional-arguments-arity-assertion condition is raised."
+&invalid-positional-arguments-arity-assertion condition is raised.
+However these exceptions are continuable."
   (lambda args
-    (guard (exception
-            ((unrecognized-keyword-assertion? exception)
-             (raise-exception
-              (condition (unrecognized-keyword-assertion)
-                         (irritants-condition
-                          ;; Resyntax irritant keywords.
-                          (map (lambda (irritant-keyword)
-                                 (find (lambda (arg)
-                                         (eq? (syntax->datum arg)
-                                              irritant-keyword))
-                                       args))
-                               (condition-irritants exception))))))
-            ((invalid-keyword-arity-assertion? exception)
-             (raise-exception
-              (condition (invalid-keyword-arity-assertion)
-                         (irritants-condition
-                          ;; Resyntax irritant keyword.
-                          (match (condition-irritants exception)
-                            ((irritant-keyword . irritant-args)
-                             (cons (find (lambda (arg)
-                                           (eq? (syntax->datum arg)
-                                                irritant-keyword))
-                                         args)
-                                   irritant-args))))))))
-      (apply
-       (lambda** formal-args body ...)
-       (unsyntax-keywords args)))))
+    (with-exception-handler
+        (lambda (c)
+          (cond
+           ((unrecognized-keyword-assertion? c)
+            (raise-continuable
+             (condition (unrecognized-keyword-assertion)
+                        (irritants-condition
+                         ;; Resyntax irritant keywords.
+                         (map (lambda (irritant-keyword)
+                                (find (lambda (arg)
+                                        (eq? (syntax->datum arg)
+                                             irritant-keyword))
+                                      args))
+                              (condition-irritants c))))))
+           ((invalid-keyword-arity-assertion? c)
+            (raise-continuable
+             (condition (invalid-keyword-arity-assertion)
+                        (irritants-condition
+                         ;; Resyntax irritant keyword.
+                         (match (condition-irritants c)
+                           ((irritant-keyword . irritant-args)
+                            (cons (find (lambda (arg)
+                                          (eq? (syntax->datum arg)
+                                               irritant-keyword))
+                                        args)
+                                  irritant-args)))))))
+           (else
+            (raise-continuable c))))
+      (cut apply
+           (lambda** formal-args body ...)
+           (unsyntax-keywords args)))))
 
 (define (filter-mapi proc lst)
   "Indexed filter-map. Like filter-map, but PROC calls are (proc item
