@@ -387,12 +387,17 @@ input, return #f."
     (_ #f)))
 
 (define (validate-separate? separate?)
-  "Validate @var{separate?} and raise an exception if it is not valid."
-  (unless (boolean? separate?)
-    (raise-continuable
-     (condition (ccwl-violation separate?)
-                (formatted-message "Invalid #:separate? flag ~a. #:separate? flag must be a boolean."
-                                   (syntax->datum separate?))))))
+  "Validate @var{separate?} and raise a continuable exception if it is
+not valid. Return validated @var{separate?}---either @code{#'#t} or
+@code{#'#f}."
+  (if (boolean? (syntax->datum separate?))
+      separate?
+      (begin
+        (raise-continuable
+         (condition (ccwl-violation separate?)
+                    (formatted-message "Invalid #:separate? flag ~a. #:separate? flag must be a boolean."
+                                       (syntax->datum separate?))))
+        #'#f)))
 
 (define (run-arg-separate? run-arg)
   "Return the separate? specified in @var{run-arg} syntax. If not a
@@ -400,8 +405,7 @@ prefixed input, return #f."
   (syntax-case run-arg (array)
     ((prefix _ args ...) (string? (syntax->datum #'prefix))
      (apply (syntax-lambda** (#:key (separate? #'#t))
-              (validate-separate? (syntax->datum separate?))
-              separate?)
+              (validate-separate? separate?))
             #'(args ...)))
     (_ #f)))
 
@@ -453,8 +457,7 @@ identifiers defined in the commands."
       ((prefix string-arg args ...) (and (string? (syntax->datum #'prefix))
                                          (string? (syntax->datum #'string-arg)))
        (apply (syntax-lambda** (#:key (separate? #'#t))
-                (validate-separate? (syntax->datum separate?))
-                (if (syntax->datum separate?)
+                (if (syntax->datum (validate-separate? separate?))
                     (list #'prefix #'string-arg)
                     (list #`#,(string-append (syntax->datum #'prefix)
                                              (syntax->datum #'string-arg)))))
