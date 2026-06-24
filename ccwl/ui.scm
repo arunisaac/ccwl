@@ -180,4 +180,5 @@ red. LINE-NUMBER and COLUMN-NUMBER are zero-based."
     (display-with-line-numbers (call-with-input-file file
                                  (cut source-in-context <> line column))
                                (current-error-port)
-                               (max 1 line))))
+                               (max 1 line))
+    (newline (current-error-port))))

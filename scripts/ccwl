@@ -108,6 +108,9 @@ it."
 
 (read-hash-extend #\( read-hash-vector)
 
+(define %compile-error
+  (make-parameter #f))
+
 (define (ccwl-compile source to port)
   "Compile @var{source} file to @var{to} format writing output to
 @var{port}. @var{to} is either @code{'cwl} or @code{'dot}."
@@ -119,31 +122,36 @@ it."
     (raise-exception
      (formatted-message "File ~a does not exist"
                         source)))
-  ((case to
-     ((cwl) function->cwl)
-     ((dot) function->dot))
-   (let ((result (guard (exception
-                         ;; Handle syntax violation exceptions by
-                         ;; reporting them and exiting.
-                         ((ccwl-violation? exception)
-                          (report-ccwl-violation exception)
-                          (exit #f)))
-                   (let ((source-path (canonicalize-path source)))
-                     ;; Change directory before loading source file.
-                     ;; The source file may reference other files with
-                     ;; paths relative to its directory.
-                     (call-with-current-directory (dirname source-path)
-                       (lambda ()
-                         (load source-path
-                               ccwl-read)))))))
-     (if (or (command? result)
-             (js-expression? result)
-             (workflow? result))
-         result
-         (raise-exception
-          (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
-                             source))))
-   port))
+  (parameterize ((%compile-error #f))
+    (let ((result
+           (with-exception-handler (lambda (c)
+                                     (if (ccwl-violation? c)
+                                         ;; Report syntax violations,
+                                         ;; and set the error state.
+                                         (begin
+                                           (report-ccwl-violation c)
+                                           (%compile-error #t))
+                                         (raise-exception c)))
+             (lambda ()
+               (let ((source-path (canonicalize-path source)))
+                 ;; Change directory before loading source file. The
+                 ;; source file may reference other files with paths
+                 ;; relative to its directory.
+                 (call-with-current-directory (dirname source-path)
+                   (lambda ()
+                     (load source-path
+                           ccwl-read))))))))
+      (unless (%compile-error)
+        (if (or (command? result)
+                (js-expression? result)
+                (workflow? result))
+            ((case to
+               ((cwl) function->cwl)
+               ((dot) function->dot))
+             result port)
+            (raise-exception
+             (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
+                                source)))))))
 
 (define (main args)
   (with-exception-handler
