@@ -167,12 +167,12 @@ compared using @code{equal?}."
          (lambda (c)
            (cond
             ((unrecognized-keyword-assertion? c)
-             (raise-continuable
-              (match (condition-irritants c)
-                ((irritant _ ...)
-                 (condition (ccwl-violation irritant)
-                            (formatted-message "Unrecognized keyword argument ~a in input"
-                                               (syntax->datum irritant)))))))
+             (for-each (lambda (irritant)
+                         (raise-continuable
+                          (condition (ccwl-violation irritant)
+                                     (formatted-message "Unrecognized keyword argument ~a in input"
+                                                        (syntax->datum irritant)))))
+                       (condition-irritants c)))
             ((invalid-keyword-arity-assertion? c)
              (raise-continuable
               (match (condition-irritants c)
@@ -237,12 +237,12 @@ compared using @code{equal?}."
          (lambda (c)
            (cond
             ((unrecognized-keyword-assertion? c)
-             (raise-continuable
-              (match (condition-irritants c)
-                ((irritant _ ...)
-                 (condition (ccwl-violation irritant)
-                            (formatted-message "Unrecognized keyword argument ~a in output"
-                                               (syntax->datum irritant)))))))
+             (for-each (lambda (irritant)
+                         (raise-continuable
+                          (condition (ccwl-violation irritant)
+                                     (formatted-message "Unrecognized keyword argument ~a in output"
+                                                        (syntax->datum irritant)))))
+                       (condition-irritants c)))
             ((invalid-keyword-arity-assertion? c)
              (raise-continuable
               (match (condition-irritants c)
@@ -486,12 +486,12 @@ identifiers defined in the commands."
            (lambda (c)
              (cond
               ((unrecognized-keyword-assertion? c)
-               (raise-continuable
-                (match (condition-irritants c)
-                  ((irritant _ ...)
-                   (condition (ccwl-violation irritant)
-                              (formatted-message "Unrecognized keyword argument ~a in command definition"
-                                                 (syntax->datum irritant)))))))
+               (for-each (lambda (irritant)
+                           (raise-continuable
+                            (condition (ccwl-violation irritant)
+                                       (formatted-message "Unrecognized keyword argument ~a in command definition"
+                                                          (syntax->datum irritant)))))
+                         (condition-irritants c)))
               ((invalid-keyword-arity-assertion? c)
                (raise-continuable
                 (match (condition-irritants c)
@@ -575,12 +575,12 @@ identifiers defined in the commands."
            (lambda (c)
              (cond
               ((unrecognized-keyword-assertion? c)
-               (raise-continuable
-                (match (condition-irritants c)
-                  ((irritant _ ...)
-                   (condition (ccwl-violation irritant)
-                              (formatted-message "Unrecognized keyword argument ~a in js-expression definition"
-                                                 (syntax->datum irritant)))))))
+               (for-each (lambda (irritant)
+                           (raise-continuable
+                            (condition (ccwl-violation irritant)
+                                       (formatted-message "Unrecognized keyword argument ~a in js-expression definition"
+                                                          (syntax->datum irritant)))))
+                         (condition-irritants c)))
               ((invalid-keyword-arity-assertion? c)
                (raise-continuable
                 (match (condition-irritants c)
