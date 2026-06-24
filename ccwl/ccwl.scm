@@ -25,7 +25,8 @@
 (define-module (ccwl ccwl)
   #:use-module ((rnrs conditions) #:select (condition
                                             condition-irritants))
-  #:use-module ((rnrs exceptions) #:select (guard (raise . raise-exception)))
+  #:use-module ((rnrs exceptions) #:select (raise-continuable
+                                            guard))
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-2)
   #:use-module (srfi srfi-9)
@@ -138,7 +139,7 @@ compared using @code{equal?}."
   ;; TODO: If tree is a quoted expression, emit a warning.
   (unless (false-if-exception
            (scm->yaml-string (syntax->datum tree)))
-    (raise-exception
+    (raise-continuable
      (condition (ccwl-violation tree)
                 (formatted-message (string-append parameter-name
                                                   " parameter not serializable to YAML"))))))
@@ -162,55 +163,60 @@ compared using @code{equal?}."
   "Return syntax to build an <input> object from INPUT-SPEC."
   (syntax-case input-spec ()
     ((id args ...)
-     (guard (exception
-             ((unrecognized-keyword-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ((irritant _ ...)
-                  (condition (ccwl-violation irritant)
-                             (formatted-message "Unrecognized keyword argument ~a in input"
-                                                (syntax->datum irritant)))))))
-             ((invalid-keyword-arity-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ;; TODO: Report all extra arguments, not just the
-                 ;; first one.
-                 ((keyword _ extra _ ...)
-                  (condition (ccwl-violation extra)
-                             (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
-                                                (syntax->datum extra)
-                                                (syntax->datum keyword)))))))
-             ((invalid-positional-arguments-arity-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ;; TODO: Report all extra positional arguments, not
-                 ;; just the first one.
-                 ((id extra _ ...)
-                  (condition (ccwl-violation extra)
-                             (formatted-message "Unexpected extra positional argument ~a in input"
-                                                (syntax->datum extra))))
-                 (()
-                  (condition (ccwl-violation input-spec)
-                             (formatted-message "Input has no identifier")))))))
-       (apply (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (stage? #'#f) (other #'()))
-                (unless (memq (syntax->datum stage?)
-                              (list #t #f))
-                  (raise-exception
-                   (condition (ccwl-violation stage?)
-                              (formatted-message "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."
-                                                 (syntax->datum stage?)))))
-                (ensure-yaml-serializable other "#:other")
-                (let ((position #f)
-                      (prefix #f))
-                  #`(make-input '#,id
-                                #,(construct-type-syntax type)
-                                #,label
-                                #,(if (unspecified-default? default)
-                                      #'(make-unspecified-default)
-                                      default)
-                                #,position #,prefix #f #f
-                                #,stage? '#,other)))
-              #'(id args ...))))
+     (with-exception-handler
+         (lambda (c)
+           (cond
+            ((unrecognized-keyword-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ((irritant _ ...)
+                 (condition (ccwl-violation irritant)
+                            (formatted-message "Unrecognized keyword argument ~a in input"
+                                               (syntax->datum irritant)))))))
+            ((invalid-keyword-arity-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ;; TODO: Report all extra arguments, not just the
+                ;; first one.
+                ((keyword _ extra _ ...)
+                 (condition (ccwl-violation extra)
+                            (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                               (syntax->datum extra)
+                                               (syntax->datum keyword)))))))
+            ((invalid-positional-arguments-arity-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ;; TODO: Report all extra positional arguments, not
+                ;; just the first one.
+                ((id extra _ ...)
+                 (condition (ccwl-violation extra)
+                            (formatted-message "Unexpected extra positional argument ~a in input"
+                                               (syntax->datum extra))))
+                (()
+                 (condition (ccwl-violation input-spec)
+                            (formatted-message "Input has no identifier"))))))
+            (else
+             (raise-continuable c))))
+       (cut apply
+            (syntax-lambda** (id #:key (type #'File) label (default (make-unspecified-default)) (stage? #'#f) (other #'()))
+              (unless (memq (syntax->datum stage?)
+                            (list #t #f))
+                (raise-continuable
+                 (condition (ccwl-violation stage?)
+                            (formatted-message "Invalid #:stage? parameter ~a. #:stage? must either be #t or #f."
+                                               (syntax->datum stage?)))))
+              (ensure-yaml-serializable other "#:other")
+              (let ((position #f)
+                    (prefix #f))
+                #`(make-input '#,id
+                              #,(construct-type-syntax type)
+                              #,label
+                              #,(if (unspecified-default? default)
+                                    #'(make-unspecified-default)
+                                    default)
+                              #,position #,prefix #f #f
+                              #,stage? '#,other)))
+            #'(id args ...))))
     (id (identifier? #'id) (input #'(id)))
     (_ (error "Invalid input:" (syntax->datum input-spec)))))
 
@@ -227,43 +233,49 @@ compared using @code{equal?}."
   "Return syntax to build an <output> object from OUTPUT-SPEC."
   (syntax-case output-spec ()
     ((id args ...) (identifier? #'id)
-     (guard (exception
-             ((unrecognized-keyword-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ((irritant _ ...)
-                  (condition (ccwl-violation irritant)
-                             (formatted-message "Unrecognized keyword argument ~a in output"
-                                                (syntax->datum irritant)))))))
-             ((invalid-keyword-arity-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ;; TODO: Report all extra arguments, not just the
-                 ;; first one.
-                 ((keyword _ extra _ ...)
-                  (condition (ccwl-violation extra)
-                             (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
-                                                (syntax->datum extra)
-                                                (syntax->datum keyword)))))))
-             ((invalid-positional-arguments-arity-assertion? exception)
-              (raise-exception
-               (match (condition-irritants exception)
-                 ;; TODO: Report all extra positional arguments, not
-                 ;; just the first one.
-                 ((id extra _ ...)
-                  (condition (ccwl-violation extra)
-                             (formatted-message "Unexpected extra positional argument ~a in output"
-                                                (syntax->datum extra))))
-                 (()
-                  (condition (ccwl-violation output-spec)
-                             (formatted-message "Output has no identifier")))))))
-       (apply (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
-                (ensure-yaml-serializable binding "#:binding")
-                (ensure-yaml-serializable other "#:other")
-                #`(make-output '#,id
-                               #,(construct-type-syntax type)
-                               '#,binding #,source '#,other))
-              #'(id args ...))))
+     (with-exception-handler
+         (lambda (c)
+           (cond
+            ((unrecognized-keyword-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ((irritant _ ...)
+                 (condition (ccwl-violation irritant)
+                            (formatted-message "Unrecognized keyword argument ~a in output"
+                                               (syntax->datum irritant)))))))
+            ((invalid-keyword-arity-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ;; TODO: Report all extra arguments, not just the
+                ;; first one.
+                ((keyword _ extra _ ...)
+                 (condition (ccwl-violation extra)
+                            (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                               (syntax->datum extra)
+                                               (syntax->datum keyword)))))))
+            ((invalid-positional-arguments-arity-assertion? c)
+             (raise-continuable
+              (match (condition-irritants c)
+                ;; TODO: Report all extra positional arguments, not
+                ;; just the first one.
+                ((id extra _ ...)
+                 (condition (ccwl-violation extra)
+                            (formatted-message "Unexpected extra positional argument ~a in output"
+                                               (syntax->datum extra))))
+                (()
+                 (condition (ccwl-violation output-spec)
+                            (formatted-message "Output has no identifier"))))))
+            (else
+             (raise-continuable c))))
+       ;; TODO: Why let the user specify source?
+       (cut apply
+            (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
+              (ensure-yaml-serializable binding "#:binding")
+              (ensure-yaml-serializable other "#:other")
+              #`(make-output '#,id
+                             #,(construct-type-syntax type)
+                             '#,binding #,source '#,other))
+            #'(id args ...))))
     (id (identifier? #'id) (output #'(id)))
     (_ (error "Invalid output:" (syntax->datum output-spec)))))
 
@@ -334,13 +346,13 @@ compared using @code{equal?}."
    (syntax-case input-spec ()
      ((id _ ...)
       (if (not (identifier? #'id))
-          (raise-exception
+          (raise-continuable
            (condition (ccwl-violation input-spec)
                       (formatted-message "Input has no identifier")))
           #'id))
      (id (identifier? #'id) #'id)
-     (_ (raise-exception (condition (ccwl-violation input-spec)
-                                    (formatted-message "Invalid input")))))))
+     (_ (raise-continuable (condition (ccwl-violation input-spec)
+                                      (formatted-message "Invalid input")))))))
 
 (define (find-run-arg input-id run-args)
   "Return run argument specification identified by symbol @var{input-id} in
@@ -377,7 +389,7 @@ input, return #f."
 (define (validate-separate? separate?)
   "Validate @var{separate?} and raise an exception if it is not valid."
   (unless (boolean? separate?)
-    (raise-exception
+    (raise-continuable
      (condition (ccwl-violation separate?)
                 (formatted-message "Invalid #:separate? flag ~a. #:separate? flag must be a boolean."
                                    (syntax->datum separate?))))))
@@ -401,7 +413,7 @@ prefixed input, return #f."
      (apply (syntax-lambda** (#:key separator)
               (if (and separator
                        (not (string? (syntax->datum separator))))
-                (raise-exception
+                (raise-continuable
                  (condition (ccwl-violation separator)
                             (formatted-message "Invalid #:separator parameter ~a. #:separator parameter must be a string."
                                                (syntax->datum separator))))
@@ -425,7 +437,7 @@ identifiers defined in the commands."
              (begin
                (unless (memq (syntax->datum #'input)
                              defined-input-identifiers)
-                 (raise-exception
+                 (raise-continuable
                   (condition (ccwl-violation #'input)
                              (formatted-message "Undefined input ~a"
                                                 (syntax->datum #'input)))))
@@ -452,12 +464,12 @@ identifiers defined in the commands."
        (syntax->run-arg #'input))
       ;; Prefixes that are not strings
       ((prefix _ ...)
-       (raise-exception
+       (raise-continuable
         (condition (ccwl-violation #'prefix)
                    (formatted-message "Invalid prefix ~a. Prefixes must be strings."
                                       (syntax->datum #'prefix)))))
       (_
-       (raise-exception
+       (raise-continuable
         (condition (ccwl-violation x)
                    (formatted-message "Invalid command element ~a. Command elements must either be input identifiers or literal strings."
                                       (syntax->datum x)))))))
@@ -470,132 +482,142 @@ identifiers defined in the commands."
   (lambda (x)
     (syntax-case x ()
       ((_ args ...)
-       (guard (exception
-               ((unrecognized-keyword-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ((irritant _ ...)
-                    (condition (ccwl-violation irritant)
-                               (formatted-message "Unrecognized keyword argument ~a in command definition"
-                                                  (syntax->datum irritant)))))))
-               ((invalid-keyword-arity-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ;; TODO: Report all extra arguments, not just the
-                   ;; first one.
-                   ((keyword _ extra _ ...)
-                    (condition (ccwl-violation extra)
-                               (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
-                                                  (syntax->datum extra)
-                                                  (syntax->datum keyword)))))))
-               ((invalid-positional-arguments-arity-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ;; TODO: Report all extra positional arguments, not
-                   ;; just the first one.
-                   ((extra _ ...)
-                    (condition (ccwl-violation extra)
-                               (formatted-message "Unexpected extra positional argument ~a in command definition"
-                                                  (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key stdin stderr stdout (requirements #'()) (other #'()) #:key* inputs outputs run)
-                  (when (null? run)
-                    (raise-exception
-                     (condition (ccwl-violation x)
-                                (formatted-message "Missing ~a key in command definition"
-                                                   #:run))))
-                  (ensure-yaml-serializable requirements "#:requirements")
-                  (ensure-yaml-serializable other "#:other")
-                  (let ((flattened-args (run-args run (map input-spec-id inputs))))
-                    #`(make-command
-                       (list #,@(map (lambda (input-spec)
-                                       (let* ((id (input-spec-id input-spec))
-                                              (run-arg (find-run-arg id run)))
-                                         #`(set-input-separator
-                                            (set-input-separate?
-                                             (set-input-prefix
-                                              (set-input-position
-                                               #,(input input-spec)
-                                               ;; `run-args' returns inputs as quoted symbols.
-                                               ;; So, we add quote.
-                                               #,(list-index (match-lambda
-                                                               (`(quote ,input)
-                                                                (eq? input id))
-                                                               (_ #f))
-                                                             (syntax->datum flattened-args)))
-                                              #,(and run-arg
-                                                     (run-arg-prefix run-arg)))
-                                             #,(and run-arg
-                                                    (run-arg-separate? run-arg)))
+       (with-exception-handler
+           (lambda (c)
+             (cond
+              ((unrecognized-keyword-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ((irritant _ ...)
+                   (condition (ccwl-violation irritant)
+                              (formatted-message "Unrecognized keyword argument ~a in command definition"
+                                                 (syntax->datum irritant)))))))
+              ((invalid-keyword-arity-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ;; TODO: Report all extra arguments, not just the
+                  ;; first one.
+                  ((keyword _ extra _ ...)
+                   (condition (ccwl-violation extra)
+                              (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                 (syntax->datum extra)
+                                                 (syntax->datum keyword)))))))
+              ((invalid-positional-arguments-arity-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ;; TODO: Report all extra positional arguments, not
+                  ;; just the first one.
+                  ((extra _ ...)
+                   (condition (ccwl-violation extra)
+                              (formatted-message "Unexpected extra positional argument ~a in command definition"
+                                                 (syntax->datum extra)))))))
+              (else
+               (raise-continuable c))))
+         (cut apply
+              (syntax-lambda** (#:key stdin stderr stdout (requirements #'()) (other #'()) #:key* inputs outputs run)
+                (when (null? run)
+                  (raise-continuable
+                   (condition (ccwl-violation x)
+                              (formatted-message "Missing ~a key in command definition"
+                                                 #:run))))
+                (ensure-yaml-serializable requirements "#:requirements")
+                (ensure-yaml-serializable other "#:other")
+                (let ((flattened-args (run-args run (map input-spec-id inputs))))
+                  #`(make-command
+                     (list #,@(map (lambda (input-spec)
+                                     (let* ((id (input-spec-id input-spec))
+                                            (run-arg (find-run-arg id run)))
+                                       #`(set-input-separator
+                                          (set-input-separate?
+                                           (set-input-prefix
+                                            (set-input-position
+                                             #,(input input-spec)
+                                             ;; `run-args' returns inputs as quoted symbols.
+                                             ;; So, we add quote.
+                                             #,(list-index (match-lambda
+                                                             (`(quote ,input)
+                                                              (eq? input id))
+                                                             (_ #f))
+                                                           (syntax->datum flattened-args)))
                                             #,(and run-arg
-                                                   (run-arg-separator run-arg)))))
-                                     inputs))
-                       (list #,@(map output outputs))
-                       (list #,@flattened-args)
-                       #,(and stdin #`'#,stdin)
-                       #,(if (and stderr
-                                  (not (string? (syntax->datum stderr))))
-                             (raise-exception
-                              (condition (ccwl-violation stderr)
-                                         (formatted-message "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"
-                                                            (syntax->datum stderr))))
-                             stderr)
-                       #,(if (and stdout
-                                  (not (string? (syntax->datum stdout))))
-                             (raise-exception
-                              (condition (ccwl-violation stdout)
-                                         (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
-                                                            (syntax->datum stdout))))
-                             stdout)
-                       '#,requirements
-                       '#,other)))
-                #'(args ...)))))))
+                                                   (run-arg-prefix run-arg)))
+                                           #,(and run-arg
+                                                  (run-arg-separate? run-arg)))
+                                          #,(and run-arg
+                                                 (run-arg-separator run-arg)))))
+                                   inputs))
+                     (list #,@(map output outputs))
+                     (list #,@flattened-args)
+                     #,(and stdin #`'#,stdin)
+                     #,(if (and stderr
+                                (not (string? (syntax->datum stderr))))
+                           (raise-continuable
+                            (condition (ccwl-violation stderr)
+                                       (formatted-message "Invalid #:stderr parameter ~a. #:stderr parameter must be a string"
+                                                          (syntax->datum stderr))))
+                           stderr)
+                     #,(if (and stdout
+                                (not (string? (syntax->datum stdout))))
+                           (raise-continuable
+                            (condition (ccwl-violation stdout)
+                                       (formatted-message "Invalid #:stdout parameter ~a. #:stdout parameter must be a string"
+                                                          (syntax->datum stdout))))
+                           stdout)
+                     '#,requirements
+                     '#,other)))
+              #'(args ...)))))))
 
 (define-syntax js-expression
   (lambda (x)
     (syntax-case x ()
       ((_ args ...)
-       (guard (exception
-               ((unrecognized-keyword-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ((irritant _ ...)
-                    (condition (ccwl-violation irritant)
-                               (formatted-message "Unrecognized keyword argument ~a in js-expression definition"
-                                                  (syntax->datum irritant)))))))
-               ((invalid-keyword-arity-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ;; TODO: Report all extra arguments, not just the
-                   ;; first one.
-                   ((keyword _ extra _ ...)
-                    (condition (ccwl-violation extra)
-                               (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
-                                                  (syntax->datum extra)
-                                                  (syntax->datum keyword)))))))
-               ((invalid-positional-arguments-arity-assertion? exception)
-                (raise-exception
-                 (match (condition-irritants exception)
-                   ;; TODO: Report all extra positional arguments, not
-                   ;; just the first one.
-                   ((extra _ ...)
-                    (condition (ccwl-violation extra)
-                               (formatted-message "Unexpected extra positional argument ~a in js-expression definition"
-                                                  (syntax->datum extra))))))))
-         (apply (syntax-lambda** (#:key expression (requirements #'()) (other #'()) #:key* inputs outputs)
-                  (unless expression
-                    (raise-exception
-                     (condition (ccwl-violation x)
-                                (formatted-message "Missing ~a key in command definition"
-                                                   #:expression))))
-                  (ensure-yaml-serializable requirements "#:requirements")
-                  (ensure-yaml-serializable other "#:other")
-                  #`(make-js-expression
-                     (list #,@(map input inputs))
-                     #,expression
-                     (list #,@(map output outputs))
-                     '#,requirements
-                     '#,other))
-                #'(args ...)))))))
+       (with-exception-handler
+           (lambda (c)
+             (cond
+              ((unrecognized-keyword-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ((irritant _ ...)
+                   (condition (ccwl-violation irritant)
+                              (formatted-message "Unrecognized keyword argument ~a in js-expression definition"
+                                                 (syntax->datum irritant)))))))
+              ((invalid-keyword-arity-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ;; TODO: Report all extra arguments, not just the
+                  ;; first one.
+                  ((keyword _ extra _ ...)
+                   (condition (ccwl-violation extra)
+                              (formatted-message "Unexpected extra argument ~a for unary keyword argument ~a"
+                                                 (syntax->datum extra)
+                                                 (syntax->datum keyword)))))))
+              ((invalid-positional-arguments-arity-assertion? c)
+               (raise-continuable
+                (match (condition-irritants c)
+                  ;; TODO: Report all extra positional arguments, not
+                  ;; just the first one.
+                  ((extra _ ...)
+                   (condition (ccwl-violation extra)
+                              (formatted-message "Unexpected extra positional argument ~a in js-expression definition"
+                                                 (syntax->datum extra)))))))
+              (else
+               (raise-continuable c))))
+         (cut apply
+              (syntax-lambda** (#:key expression (requirements #'()) (other #'()) #:key* inputs outputs)
+                (unless expression
+                  (raise-continuable
+                   (condition (ccwl-violation x)
+                              (formatted-message "Missing ~a key in command definition"
+                                                 #:expression))))
+                (ensure-yaml-serializable requirements "#:requirements")
+                (ensure-yaml-serializable other "#:other")
+                #`(make-js-expression
+                   (list #,@(map input inputs))
+                   #,expression
+                   (list #,@(map output outputs))
+                   '#,requirements
+                   '#,other))
+              #'(args ...)))))))
 
 (define-syntax cwl-workflow
   (lambda (x)
@@ -620,7 +642,7 @@ identifiers defined in the commands."
                                   (string->symbol (assoc-ref alist "type")))))
                          parameters)))))
          (unless (file-exists? file)
-           (raise-exception
+           (raise-continuable
             (condition (ccwl-violation #'file-syntax)
                        (formatted-message "CWL workflow file ~a does not exist" file))))
          ;; Read inputs/outputs from CWL workflow YAML file and build
@@ -774,18 +796,18 @@ represented by <step> objects."
      (begin
        ;; Error out if new key is not a keyword.
        (unless (keyword? (syntax->datum #'new-key))
-         (raise-exception
+         (raise-continuable
           (condition (ccwl-violation #'new-key)
                      (formatted-message "Expected keyword (for example: #:foo, #:bar)"))))
        ;; Error out if old key is a keyword.
        (when (keyword? (syntax->datum #'old-key))
-         (raise-exception
+         (raise-continuable
           (condition (ccwl-violation #'old-key)
                      (formatted-message "Unexpected keyword; expected symbol (for example: foo, bar)"))))
        ;; Ensure old key exists.
        (unless (memq (syntax->datum #'old-key)
                      (map key-name input-keys))
-         (raise-exception
+         (raise-continuable
           (condition (ccwl-violation #'old-key)
                      (formatted-message "Unknown key ~a. Known keys at this step are ~a."
                                         (syntax->datum #'old-key)
@@ -818,7 +840,7 @@ represented by <step> objects."
            (step-id-symbol (syntax->datum #'step-id)))
        ;; Test for undefined command.
        (unless function-object
-         (raise-exception
+         (raise-continuable
           (condition (ccwl-violation #'function)
                      (formatted-message "Undefined ccwl command ~a"
                                         (syntax->datum #'function)))))
@@ -835,7 +857,7 @@ represented by <step> objects."
                     (syntax->datum (pairify #'(args ...)))))
          (() #t)
          (missing-parameters
-          (raise-exception
+          (raise-continuable
            ;; TODO: Report entire form, not just the name of the
            ;; step.
            (condition (ccwl-violation #'function)
@@ -847,7 +869,7 @@ represented by <step> objects."
                    ((arg . value)
                     (unless (memq (keyword->symbol (syntax->datum arg))
                                   (function-input-keys function-object))
-                      (raise-exception
+                      (raise-continuable
                        ;; TODO: Report arg and value, not just arg.
                        (condition (ccwl-violation arg)
                                   ;; TODO: Do not report accepted keys
@@ -862,7 +884,7 @@ represented by <step> objects."
                     (when (and (symbol? (syntax->datum value))
                                (not (memq (syntax->datum value)
                                           input-key-symbols)))
-                      (raise-exception
+                      (raise-continuable
                        (condition (ccwl-violation value)
                                   (formatted-message "Step ~a supplied with unknown key ~a. Known keys at this step are ~a."
                                                      step-id-symbol
@@ -874,7 +896,7 @@ represented by <step> objects."
                (((key-syntax . _) seen)
                 (let ((key (syntax->datum key-syntax)))
                   (when (memq key seen)
-                    (raise-exception
+                    (raise-continuable
                      (condition (ccwl-violation key-syntax)
                                 (formatted-message "~a argument already supplied"
                                                    key))))
@@ -927,7 +949,7 @@ represented by <step> objects."
     ((function args ...)
      ;; Ensure that steps with expression commands have identifiers.
      (unless (symbol? (syntax->datum #'function))
-       (raise-exception
+       (raise-continuable
         (condition (ccwl-violation #'function)
                    (formatted-message "Step with expression ~a that evaluates to a command must have identifier"
                                       (syntax->datum #'function)))))
@@ -1034,7 +1056,7 @@ commands."
       ;; Guess that these are multiple unconnected expressions in the
       ;; workflow body, and try to produce a helpful error message.
       ((_ (inputs ...) expressions ...)
-       (raise-exception
+       (raise-continuable
         (condition
          (ccwl-violation x)
          (formatted-message "More than one expression ~a in workflow body. Perhaps you need to combine them with a pipe or a tee?"
@@ -1044,6 +1066,6 @@ commands."
                                       (cut write expression <>)))
                                   (syntax->datum #'(expressions ...))))))))
       (x
-       (raise-exception
+       (raise-continuable
         (condition (ccwl-violation #'x)
                    (formatted-message "Unrecognized workflow syntax [expected (workflow (input ...) tree)]")))))))
