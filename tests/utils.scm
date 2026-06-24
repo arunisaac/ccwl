@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2022, 2023, 2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021–2023, 2025–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -138,14 +138,11 @@
   ((syntax-lambda** (#:key* foo)
      foo)))
 
-;; We cannot use test-equal to compare syntax objects, since
-;; test-equal does not preserve the lexical contexts of the test
-;; expressions.
-(test-assert "Allow other keys in syntax-lambda**"
-  (equal? #'1
-          ((syntax-lambda** (#:key foo #:allow-other-keys)
-             foo)
-           #'#:foo #'1 #'#:bar #'2)))
+(test-equal "Allow other keys in syntax-lambda**"
+  1
+  (syntax->datum ((syntax-lambda** (#:key foo #:allow-other-keys)
+                    foo)
+                  #'#:foo #'1 #'#:bar #'2)))
 
 (test-assert "syntax-lambda** should raise an &unrecognized-keyword-assertion on unrecognized keywords in arguments"
   (guard (exception
