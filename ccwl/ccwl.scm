@@ -272,6 +272,25 @@ compared using @code{equal?}."
             (syntax-lambda** (id #:key (type #'File) binding source (other #'()))
               (ensure-yaml-serializable binding "#:binding")
               (ensure-yaml-serializable other "#:other")
+              (when (and (eq? (syntax->datum type)
+                              'stdout)
+                         (syntax->datum binding))
+                (raise-continuable
+                 (condition (ccwl-violation
+                             ;; Find the syntax object corresponding
+                             ;; to the #:binding keyword. The binding
+                             ;; variable is only the value of the
+                             ;; argument. TODO: Highlight both the
+                             ;; #:binding keyword and its value in the
+                             ;; error message once our condition
+                             ;; system is capable of representing
+                             ;; that.
+                             (find (lambda (arg)
+                                     (eq? (syntax->datum arg)
+                                          #:binding))
+                                   #'(args ...)))
+                            (formatted-message "~a not allowed with stdout type output"
+                                               #:binding))))
               #`(make-output '#,id
                              #,(construct-type-syntax type)
                              '#,binding #,source '#,other))

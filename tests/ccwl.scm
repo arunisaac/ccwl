@@ -108,6 +108,11 @@
   ccwl-violation?
   (output #'(message #:type int string)))
 
+(test-condition "output, when passed a #:binding to an stdout type, must raise a &ccwl-violation condition"
+  ccwl-violation?
+  (output #'(message #:type stdout
+                     #:binding ((glob . "output.txt")))))
+
 (test-condition "command, when passed positional arguments, must raise a &ccwl-violation condition"
   ccwl-violation?
   (macroexpand
