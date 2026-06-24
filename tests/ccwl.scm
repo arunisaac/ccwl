@@ -331,6 +331,13 @@
    '(command #:inputs (messages #:type (array string))
              #:run "echo" (array messages #:separator foo))))
 
+(test-condition "Non-boolean #:separate? flag must raise a &ccwl-violation condition"
+  (ccwl-violation-with-message?
+   "Invalid #:separate? flag ~a. #:separate? flag must be a boolean.")
+  (macroexpand
+   '(command #:inputs (arg #:type string)
+             #:run "foo" ("-o" arg #:separate? bar))))
+
 (test-assert "tee must deduplicate global workflow input keys"
   (let ((keys steps (collect-steps #'(tee (print #:message message)
                                           (identity))
