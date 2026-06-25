@@ -17,12 +17,15 @@
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
 (define-module (ccwl lang)
+  #:declarative? #f
   #:use-module (rnrs conditions)
   #:use-module (rnrs exceptions)
   #:use-module (srfi srfi-1)
   #:use-module (ice-9 textual-ports)
   #:use-module (ccwl conditions)
-  #:export (ccwl-read))
+  #:use-module (ccwl utils)
+  #:export (ccwl-read
+            ccwl-load))
 
 (define (syntax-list->vector x)
   "Convert syntax @var{x} of a list into syntax of a vector."
@@ -62,3 +65,12 @@ it."
                      (condition-message c)
                      (condition-irritants c)))))
     (read-syntax port)))
+
+(define (ccwl-load file)
+  "Load ccwl source @var{file}."
+  (let ((source-path (canonicalize-path file)))
+    ;; Change directory before loading source file. The source file
+    ;; may reference other files with paths relative to its directory.
+    (call-with-current-directory (dirname source-path)
+      (lambda ()
+        (load source-path ccwl-read)))))
