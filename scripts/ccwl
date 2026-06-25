@@ -26,19 +26,17 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
 
 ;;; Code:
 
-(use-modules (rnrs conditions)
-             (rnrs exceptions)
-             (srfi srfi-1)
+(use-modules (rnrs exceptions)
              (srfi srfi-26)
              (srfi srfi-28)
              (srfi srfi-37)
              (ice-9 match)
              (ice-9 exceptions)
-             (ice-9 textual-ports)
              (ccwl ccwl)
              (ccwl conditions)
              (ccwl cwl)
              (ccwl graphviz)
+             (ccwl lang)
              (ccwl ui)
              (ccwl utils))
 
@@ -68,45 +66,6 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                 (lambda (opt name arg result)
                   (acons 'output-file arg result)))
         %help-option))
-
-(define* (ccwl-read #:optional (port (current-input-port)))
-  "Read an S-expression from @var{port}. This function wraps
-@code{read-syntax} to raise read errors the way ccwl likes to handle
-it."
-  (guard (c ((and (eq? (exception-kind c)
-                       'read-error)
-                  (message-condition? c)
-                  (irritants-condition? c))
-             ;; TODO: Once https://codeberg.org/guile/guile/issues/206
-             ;; is fixed, report error in source context using
-             ;; report-ccwl-violation.
-             (raise-exception
-              (apply formatted-message
-                     (condition-message c)
-                     (condition-irritants c)))))
-    (read-syntax port)))
-
-(define (syntax-list->vector x)
-  "Convert syntax @var{x} of a list into syntax of a vector."
-  (datum->syntax #f
-                 (syntax-case x ()
-                   ((elements ...)
-                    #'#(elements ...)))
-                 #:source x))
-
-(define (read-hash-vector chr port)
-  "Read vector from @var{port}. This function is intended for use with
-@code{read-hash-extend}."
-  (unget-char port chr)
-  (let ((lst (read-syntax port)))
-    (if (dotted-list? (syntax->datum lst))
-        (raise-exception
-         (condition (ccwl-violation lst)
-                    (formatted-message "Malformed vector: unexpected dotted list ~a"
-                                       (syntax->datum lst))))
-        (syntax-list->vector lst))))
-
-(read-hash-extend #\( read-hash-vector)
 
 (define %compile-error
   (make-parameter #f))
