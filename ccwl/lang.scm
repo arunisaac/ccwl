@@ -66,11 +66,22 @@ it."
                      (condition-irritants c)))))
     (read-syntax port)))
 
-(define (ccwl-load file)
+(define (ccwl-load-helper file file-syntax)
+  "Load ccwl source @var{file}. @var{file-syntax} is the syntax object
+wrapping @var{file}."
+  (if (file-exists? file)
+      (let ((source-path (canonicalize-path file)))
+        ;; Change directory before loading source file. The source
+        ;; file may reference other files with paths relative to its
+        ;; directory.
+        (call-with-current-directory (dirname source-path)
+          (lambda ()
+            (load source-path ccwl-read))))
+      (raise-continuable
+       (condition (ccwl-violation file-syntax)
+                  (formatted-message "File ~a does not exist"
+                                     file)))))
+
+(define-syntax-rule (ccwl-load file)
   "Load ccwl source @var{file}."
-  (let ((source-path (canonicalize-path file)))
-    ;; Change directory before loading source file. The source file
-    ;; may reference other files with paths relative to its directory.
-    (call-with-current-directory (dirname source-path)
-      (lambda ()
-        (load source-path ccwl-read)))))
+  (ccwl-load-helper file #'file))
