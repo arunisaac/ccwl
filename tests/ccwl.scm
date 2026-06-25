@@ -16,11 +16,11 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with ccwl.  If not, see <https://www.gnu.org/licenses/>.
 
-(use-modules (rnrs exceptions)
-             (srfi srfi-1)
+(use-modules (srfi srfi-1)
              (srfi srfi-64)
              (srfi srfi-71)
              (ice-9 match)
+             (test-utils utils)
              (ccwl ccwl)
              (ccwl conditions))
 
@@ -45,13 +45,6 @@
       ((_ type-spec)
        ((@@ (ccwl ccwl) construct-type-syntax)
         #'type-spec)))))
-
-(define-syntax-rule (test-condition test-name condition-predicate test-expression)
-  (test-assert test-name
-    (guard (condition
-            (else (condition-predicate condition)))
-      (begin test-expression
-             #f))))
 
 (define (ccwl-violation-with-message? message)
   (lambda (condition)
