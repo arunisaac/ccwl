@@ -31,6 +31,7 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-26)
   #:use-module (srfi srfi-71)
+  #:use-module (ice-9 filesystem)
   #:use-module (ice-9 match)
   #:use-module (ccwl conditions)
   #:export (indent-level
@@ -42,7 +43,8 @@
             map2
             foldn
             filter-mapi
-            call-with-current-directory))
+            call-with-current-directory
+            resolve-file-syntax))
 
 (define (indent-level port level)
   "Emit whitespaces to PORT corresponding to nesting LEVEL."
@@ -350,3 +352,15 @@ current directory after @var{thunk} returns."
     (dynamic-wind (cut chdir curdir)
                   thunk
                   (cut chdir original-current-directory))))
+
+(define (resolve-file-syntax file-path file-syntax)
+  "Resolve @var{file-path} relative to the file location of
+@var{file-syntax}. If @var{file-syntax} has no source location,
+resolve relative to the current directory."
+  (let ((source-file (assq-ref (syntax-source file-syntax)
+                               'filename)))
+    (if (file-name-absolute? file-path)
+        file-path
+        (expand-file-name file-path
+                          (and source-file
+                               (dirname (canonicalize-path source-file)))))))

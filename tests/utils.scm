@@ -21,6 +21,7 @@
              (srfi srfi-1)
              (srfi srfi-64)
              (srfi srfi-71)
+             (ice-9 filesystem)
              (ccwl conditions)
              (ccwl utils))
 
@@ -221,5 +222,18 @@
 (test-equal "pairify must ignore extra elements when list has an odd number of elements"
   '((1 . 2) (3 . 4) (5 . 6))
   (pairify (list 1 2 3 4 5 6 7)))
+
+(test-equal "resolve file syntax relative path"
+  (expand-file-name "foo.scm"
+                    (dirname (current-filename)))
+  (resolve-file-syntax "foo.scm" #'"foo.scm"))
+
+(test-equal "resolve file syntax absolute path"
+  "/foo/bar.scm"
+  (resolve-file-syntax "/foo/bar.scm" #'"/foo/bar.scm"))
+
+(test-equal "resolve file syntax relative to current directory"
+  (expand-file-name "foo.scm")
+  (resolve-file-syntax "foo.scm" (datum->syntax #f "foo.scm" #:source '())))
 
 (test-end "utils")
