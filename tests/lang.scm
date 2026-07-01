@@ -23,9 +23,6 @@
 
 (test-begin "lang")
 
-(test-assert "load source file referencing external CWL workflow relative to it"
-  (ccwl-load "test-data/external-cwl-workflow.scm"))
-
 (test-condition "loading non-existent source file must raise a &ccwl-violation"
   ccwl-violation?
   (ccwl-load "/non-existent/file.scm"))

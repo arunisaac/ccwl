@@ -63,6 +63,9 @@
              #:stdin file))
    'inputs))
 
+(test-assert "resolve CWL workflow relative to source file"
+  (cwl-workflow "echo.cwl"))
+
 (test-equal "read all forms of inputs and outputs from a CWL workflow"
   '(((spam string))
     ((ham stdout)
