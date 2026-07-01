@@ -18,6 +18,7 @@
 
 (define-module (ccwl-package)
   #:use-module ((gnu packages bioinformatics) #:prefix guix:)
+  #:use-module ((gnu packages guile-xyz) #:select (guile-filesystem))
   #:use-module (guix gexp)
   #:use-module (guix git-download)
   #:use-module (guix packages)
@@ -30,7 +31,9 @@
                         "ccwl-checkout"
                         #:recursive? #t
                         #:select? (or (git-predicate (dirname (current-source-directory)))
-                                      (const #t))))))
-
+                                      (const #t))))
+    (propagated-inputs
+     (modify-inputs (package-propagated-inputs guix:ccwl)
+       (prepend guile-filesystem)))))
 
 ccwl
