@@ -91,17 +91,18 @@ exec guile --no-auto-compile -e main -s "$0" "$@"
                                            (%compile-error #t))
                                          (raise-exception c)))
              (cut ccwl-load source))))
-      (unless (%compile-error)
-        (if (or (command? result)
-                (js-expression? result)
-                (workflow? result))
-            ((case to
-               ((cwl) function->cwl)
-               ((dot) function->dot))
-             result port)
-            (raise-exception
-             (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
-                                source)))))))
+      (if (%compile-error)
+          (exit #f)
+          (if (or (command? result)
+                  (js-expression? result)
+                  (workflow? result))
+              ((case to
+                 ((cwl) function->cwl)
+                 ((dot) function->dot))
+               result port)
+              (raise-exception
+               (formatted-message "Last expression in file ~a returns none of workflow, command or js-expression"
+                                  source)))))))
 
 (define (main args)
   (with-exception-handler
