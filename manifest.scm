@@ -1,4 +1,5 @@
-(use-modules ((gnu packages guile-xyz) #:select (guile-ares-rs))
+(use-modules ((gnu packages fonts) #:select (font-charter font-fira-code))
+             ((gnu packages guile-xyz) #:select (guile-ares-rs))
              ((gnu packages task-management) #:select (git-bug))
              ((ccwl-package) #:select (ccwl))
              (srfi srfi-1))
@@ -11,6 +12,8 @@ with PACKAGES and all packages in ONTO-MANIFEST."
     (manifest (append (map package->manifest-entry packages)
                       (manifest-entries onto-manifest)))))
 
-(manifest-cons* git-bug
+(manifest-cons* font-charter
+                font-fira-code
+                git-bug
                 guile-ares-rs
                 (package->development-manifest ccwl))
