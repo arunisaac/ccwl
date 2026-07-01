@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023–2025 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023–2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -232,6 +232,7 @@ following output.])
 compiled executable is in ,(file "run-output.txt"). Success!]))
 
       (subsection :title [tee]
+                  :ident "section-tee"
         (p [Next, the tee topology. The following workflow computes
 three different checksums of a given input file.])
 
@@ -396,6 +397,14 @@ workflow is an array of strings that is scattered over the ,(code
 [print]) step. Each run of the ,(code [print]) step gets an element of
 ,(code [other-messages]) as its ,(code [other-message]) argument.]
          (scheme-source "doc/scatter-gather.scm")))
+    (section :title [Reuse workflows from other files]
+      :ident "section-reuse-workflows-from-other-files"
+      (p [It's sometimes useful to break up long ccwl workflows into
+separate files. You can load a ccwl workflow from another file using
+,(code "ccwl-load"). Here is an example that loads the ,(file
+"checksum.scm") from the ,(ref :ident "section-tee" :text "tee")
+section and reuses it in another workflow.]
+         (scheme-source "doc/ccwl-load.scm")))
     (section :title [Reuse external CWL workflows]
              :ident "section-reuse-external-cwl-workflows"
       (p [Even though you may be a ccwl convert (hurrah!), others may
