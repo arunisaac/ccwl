@@ -67,7 +67,7 @@
   '(((spam string))
     ((ham stdout)
      (eggs stdout)))
-  (let ((cwl-workflow (cwl-workflow "tests/input-output-parameters.cwl")))
+  (let ((cwl-workflow (cwl-workflow "input-output-parameters.cwl")))
     (list (map (lambda (input)
                  (list (input-id input)
                        (input-type input)))

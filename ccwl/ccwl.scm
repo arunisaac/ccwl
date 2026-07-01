@@ -645,45 +645,47 @@ identifiers defined in the commands."
   (lambda (x)
     (syntax-case x ()
       ((_ file-syntax)
-       (let ((file (syntax->datum #'file-syntax))
-             (parameters->id+type
-              (lambda (parameters)
-                (if (vector? parameters)
-                    ;; Vector of dictionaries
-                    (map (lambda (alist)
-                           (cons (string->symbol (assoc-ref alist "id"))
-                                 (string->symbol (assoc-ref alist "type"))))
-                         (vector->list parameters))
-                    ;; One dictionary
-                    (map (match-lambda
-                           ((id . (? string? type))
-                            (cons (string->symbol id)
-                                  (string->symbol type)))
-                           ((id . alist)
-                            (cons (string->symbol id)
-                                  (string->symbol (assoc-ref alist "type")))))
-                         parameters)))))
-         (unless (file-exists? file)
-           (raise-continuable
-            (condition (ccwl-violation #'file-syntax)
-                       (formatted-message "CWL workflow file ~a does not exist" file))))
-         ;; Read inputs/outputs from CWL workflow YAML file and build
-         ;; a <cwl-workflow> object.
-         (let ((yaml (read-yaml-file file)))
-           #`(make-cwl-workflow
-              file-syntax
-              (list #,@(map (match-lambda
-                             ((id . type)
-                              (with-syntax ((id (datum->syntax #f id))
-                                            (type (datum->syntax #f type)))
-                                #`(make-input 'id 'type #f #f #f #f #f #f #f '()))))
-                           (parameters->id+type (assoc-ref yaml "inputs"))))
-              (list #,@(map (match-lambda
-                             ((id . type)
-                              (with-syntax ((id (datum->syntax #f id))
-                                            (type (datum->syntax #f type)))
-                                #`(make-output 'id 'type '() #f '()))))
-                           (parameters->id+type (assoc-ref yaml "outputs")))))))))))
+       (let* ((parameters->id+type
+               (lambda (parameters)
+                 (if (vector? parameters)
+                     ;; Vector of dictionaries
+                     (map (lambda (alist)
+                            (cons (string->symbol (assoc-ref alist "id"))
+                                  (string->symbol (assoc-ref alist "type"))))
+                          (vector->list parameters))
+                     ;; One dictionary
+                     (map (match-lambda
+                            ((id . (? string? type))
+                             (cons (string->symbol id)
+                                   (string->symbol type)))
+                            ((id . alist)
+                             (cons (string->symbol id)
+                                   (string->symbol (assoc-ref alist "type")))))
+                          parameters))))
+              (file (syntax->datum #'file-syntax))
+              (path (resolve-file-syntax file #'file-syntax))
+              (yaml
+               (if (file-exists? path)
+                   (read-yaml-file path)
+                   (raise-continuable
+                    (condition (ccwl-violation #'file-syntax)
+                               (formatted-message "CWL workflow file ~a does not exist"
+                                                  file))))))
+         ;; Build a <cwl-workflow> object from read CWL workflow YAML.
+         #`(make-cwl-workflow
+            file-syntax
+            (list #,@(map (match-lambda
+                            ((id . type)
+                             (with-syntax ((id (datum->syntax #f id))
+                                           (type (datum->syntax #f type)))
+                               #`(make-input 'id 'type #f #f #f #f #f #f #f '()))))
+                          (parameters->id+type (assoc-ref yaml "inputs"))))
+            (list #,@(map (match-lambda
+                            ((id . type)
+                             (with-syntax ((id (datum->syntax #f id))
+                                           (type (datum->syntax #f type)))
+                               #`(make-output 'id 'type '() #f '()))))
+                          (parameters->id+type (assoc-ref yaml "outputs"))))))))))
 
 (define (function-inputs function)
   "Return the list of inputs accepted by @var{function}---a
