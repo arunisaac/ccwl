@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023, 2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -57,10 +57,13 @@ serialized to YAML. Else, return @code{#f}."
     ;;   string can therefore be misinterpreted as a number
     ;; - string contains indicator characters as mentioned in the YAML
     ;;   spec https://yaml.org/spec/1.2.2/#53-indicator-characters
+    ;; - string contains whitespace characters other than space
     (if (or (string-every (char-set-union char-set:digit (char-set #\.)) atom)
             (string-any (char-set #\- #\? #\: #\, #\[ #\] #\{ #\} #\# #\&
                                   #\* #\! #\| #\> #\' #\" #\% #\@ #\`)
-                        atom))
+                        atom)
+            (and (string-any char-set:whitespace atom)
+                 (not (string-any #\space atom))))
         (write atom port)
         (display atom port)))
    ((boolean? atom)

@@ -1,5 +1,5 @@
 ;;; ccwl --- Concise Common Workflow Language
-;;; Copyright © 2021, 2023 Arun Isaac <arunisaac@systemreboot.net>
+;;; Copyright © 2021, 2023, 2026 Arun Isaac <arunisaac@systemreboot.net>
 ;;;
 ;;; This file is part of ccwl.
 ;;;
@@ -40,6 +40,12 @@ bar: {}
 - \"*bar\"
 "
   (scm->yaml-string #("*foo" "*bar")))
+
+(test-equal "strings with whitespace characters other than space must be escaped"
+  "- \"foo\\nbar\"
+- \"foo\\tbar\"
+"
+  (scm->yaml-string #("foo\nbar" "foo\tbar")))
 
 (test-equal "single element vectors must be serialized on the same line"
   "[foo]
